@@ -1,0 +1,5 @@
+[project]
+name = "sample-priority-api"
+version = "0.1.0"
+description = "Independent sample project used to validate the VibeFlow workflow"
+requires-python = ">=3.11"

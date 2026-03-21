@@ -1,0 +1,21 @@
+{
+    "template":  "api-standard",
+    "build":  {
+                  "tdd":  true,
+                  "quality":  true,
+                  "feature_st":  true,
+                  "spec_review":  true
+              },
+    "quality_gates":  {
+                          "line_coverage":  90,
+                          "branch_coverage":  80,
+                          "mutation_score":  80
+                      },
+    "test":  {
+                 "system":  true,
+                 "qa":  false
+             },
+    "reflect":  {
+                    "required":  false
+                }
+}

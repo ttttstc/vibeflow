@@ -1,0 +1,76 @@
+name: "Enterprise Engineering"
+template: "enterprise"
+created_at: "TEMPLATE_DATE"
+
+think:
+  depth: "deep"
+
+plan:
+  reviews:
+    ceo: true
+  ceo_mode: "expansion"
+  specs:
+    - id: requirements
+      skill: "vibeflow-requirements"
+      required: true
+    - id: ucd
+      skill: "vibeflow-ucd"
+      required: false
+      skip_when: "no-ui"
+    - id: design
+      skill: "vibeflow-design"
+      required: true
+
+build:
+  init_skill: "vibeflow-build-init"
+  work_skill: "vibeflow-build-work"
+  steps:
+    - id: tdd
+      skill: "vibeflow-tdd"
+      required: true
+    - id: quality
+      skill: "vibeflow-quality"
+      required: true
+      gates:
+        line_coverage: 95
+        branch_coverage: 85
+        mutation_score: 85
+    - id: feature-st
+      skill: "vibeflow-feature-st"
+      required: true
+    - id: review
+      skill: "vibeflow-spec-review"
+      required: true
+
+review:
+  required: true
+  codex: true
+
+test:
+  st:
+    skill: "vibeflow-test-system"
+    required: true
+  qa:
+    required: false
+    skip_when: "no-ui"
+  design_review:
+    required: false
+    skip_when: "no-ui"
+
+ship:
+  version_strategy: "semver"
+  create_pr: true
+  create_tag: true
+  document_release: true
+
+reflect:
+  required: true
+  metrics:
+    - "one_pass_rate"
+    - "defect_density"
+    - "coverage_trend"
+
+quality_gates:
+  line_coverage: 95
+  branch_coverage: 85
+  mutation_score: 85

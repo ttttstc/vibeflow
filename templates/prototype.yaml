@@ -1,0 +1,74 @@
+name: "Prototype"
+template: "prototype"
+created_at: "TEMPLATE_DATE"
+
+think:
+  depth: "quick"
+
+plan:
+  reviews:
+    ceo: true
+  ceo_mode: "reduction"
+  specs:
+    - id: requirements
+      skill: "vibeflow-requirements"
+      required: true
+    - id: ucd
+      skill: "vibeflow-ucd"
+      required: false
+      skip_when: "no-ui"
+    - id: design
+      skill: "vibeflow-design"
+      required: true
+
+build:
+  init_skill: "vibeflow-build-init"
+  work_skill: "vibeflow-build-work"
+  steps:
+    - id: tdd
+      skill: "vibeflow-tdd"
+      required: true
+    - id: quality
+      skill: "vibeflow-quality"
+      required: true
+      gates:
+        line_coverage: 60
+        branch_coverage: 40
+        mutation_score: 50
+    - id: feature-st
+      skill: "vibeflow-feature-st"
+      required: false
+    - id: review
+      skill: "vibeflow-spec-review"
+      required: false
+
+review:
+  required: false
+  codex: false
+
+test:
+  st:
+    skill: "vibeflow-test-system"
+    required: false
+  qa:
+    required: false
+    skip_when: "no-ui"
+  design_review:
+    required: false
+    skip_when: "no-ui"
+
+ship:
+  version_strategy: "manual"
+  create_pr: false
+  create_tag: false
+  document_release: false
+
+reflect:
+  required: false
+  metrics:
+    - "one_pass_rate"
+
+quality_gates:
+  line_coverage: 60
+  branch_coverage: 40
+  mutation_score: 50
