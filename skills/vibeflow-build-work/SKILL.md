@@ -3,25 +3,25 @@ name: vibeflow-build-work
 description: Use when build initialization is done and some features are still failing.
 ---
 
-# Build Work Orchestration for VibeFlow
+# VibeFlow 构建工作编排
 
-Drive one feature at a time through the implementation pipeline. Each feature follows a strict sequence: TDD → Quality Gates → Feature Acceptance → Spec Review.
+每次将一个特性推进到实现流水线中。每个特性遵循严格的顺序：TDD → 质量门禁 → 特性验收 → Spec审查。
 
-**Announce at start:** "I'm using the vibeflow-build-work skill. Let me orient myself on the current state."
+**开始时宣布：** "我正在使用 vibeflow-build-work skill。让我确认当前状态。"
 
-## The Iron Law
+## 铁律
 
 ```
-ONE FEATURE PER CYCLE — DO NOT SKIP STEPS
+每次循环一个特性——不要跳过步骤
 ```
 
-Each step has its own skill. Follow the orchestration order exactly. No shortcuts.
+每个步骤都有其对应的skill。请严格按编排顺序执行。不要走捷径。
 
-## Step 1: Orient — Load Current State
+## 步骤1：定向——加载当前状态
 
-### 1.1 Read Work Config
+### 1.1 读取工作配置
 
-Read `.vibeflow/work-config.json` to determine enabled steps:
+读取 `.vibeflow/work-config.json` 以确定启用的步骤：
 ```json
 {
   "build": {
@@ -33,139 +33,139 @@ Read `.vibeflow/work-config.json` to determine enabled steps:
 }
 ```
 
-### 1.2 Read Feature List
+### 1.2 读取特性列表
 
-Read `feature-list.json`:
-- Note all features with `"status": "failing"`
-- Note feature priorities
-- Note feature dependencies
-- Skip features with `"deprecated": true`
+读取 `feature-list.json`：
+- 记录所有 `"status": "failing"` 的特性
+- 记录特性优先级
+- 记录特性依赖关系
+- 跳过 `"deprecated": true` 的特性
 
-### 1.3 Read Task Progress
+### 1.3 读取任务进度
 
-Read `task-progress.md`:
-- Progress stats (X/Y features passing)
-- Last completed feature
-- Next feature up
+读取 `task-progress.md`：
+- 进度统计（X/Y 个特性通过）
+- 最后完成的特性
+- 下一个待处理的特性
 
-### 1.4 Select Next Feature
+### 1.4 选择下一个特性
 
-**Dependency satisfaction check:**
-1. Pick next `"status": "failing"` feature by priority (high → medium → low)
-2. Verify ALL features in `dependencies[]` have `"status": "passing"`
-3. If any dependency is still `"failing"`:
-   - Log: "Feature #{id} ({title}) skipped — unsatisfied deps: #{dep1}, #{dep2}"
-   - Pick the next eligible failing feature
-4. If NO features have all dependencies satisfied → escalate to user
+**依赖关系满足检查：**
+1. 按优先级从高到低选择下一个 `"status": "failing"` 的特性
+2. 验证 `dependencies[]` 中的所有特性都具有 `"status": "passing"`
+3. 如果任何依赖项仍为 `"failing"`：
+   - 记录日志："特性 #{id} ({title}) 跳过——未满足的依赖：#{dep1}, #{dep2}"
+   - 选择下一个符合条件的失败特性
+4. 如果没有特性满足所有依赖关系 → 升级给用户
 
-### 1.5 Load Feature Context
+### 1.5 加载特性上下文
 
-For the selected feature, read:
-- Feature spec from `feature-list.json`
-- Requirements section from `docs/plans/*-srs.md`
-- Design section from `docs/plans/*-design.md`
-- Any previous implementation notes from `task-progress.md`
+对于选定的特性，读取：
+- 来自 `feature-list.json` 的特性规格
+- 来自 `docs/plans/*-srs.md` 的需求部分
+- 来自 `docs/plans/*-design.md` 的设计部分
+- 来自 `task-progress.md` 的任何先前实现笔记
 
-## Step 2: TDD Cycle (if enabled in work-config)
+## 步骤2：TDD循环（如果在 work-config 中启用）
 
-**Invoke skill:** `vibeflow-tdd`
+**调用 skill：** `vibeflow-tdd`
 
-### 2.1 TDD Red — Write Failing Tests
+### 2.1 TDD 红色阶段——编写失败的测试
 
-Context to carry forward:
-- Feature object from `feature-list.json`
-- `verification_steps[]` from the feature
-- `tech_stack` from `feature-list.json`
+需要传递的上下文：
+- 来自 `feature-list.json` 的特性对象
+- 来自特性的 `verification_steps[]`
+- 来自 `feature-list.json` 的 `tech_stack`
 
-### 2.2 TDD Green — Minimal Implementation
+### 2.2 TDD 绿色阶段——最小化实现
 
-Implement only enough to pass failing tests.
+仅实现足够使失败测试通过所需的代码。
 
-### 2.3 TDD Refactor — Clean Up
+### 2.3 TDD 重构阶段——清理
 
-Clean up without breaking green.
+在不让绿色阶段失败的情况下清理代码。
 
-### 2.4 Verify TDD Complete
+### 2.4 验证 TDD 完成
 
-All tests pass. Proceed to Step 3.
+所有测试通过。继续步骤3。
 
-## Step 3: Quality Gates (if enabled in work-config)
+## 步骤3：质量门禁（如果在 work-config 中启用）
 
-**Invoke skill:** `vibeflow-quality`
+**调用 skill：** `vibeflow-quality`
 
-### 3.1 Gate 0: Real Test Verification
+### 3.1 门禁0：真实测试验证
 
-Verify integration tests exist and pass (or exemption declared).
+验证集成测试存在并通过（或已声明豁免）。
 
-### 3.2 Gate 1: Coverage
+### 3.2 门禁1：覆盖率
 
-Run coverage tool. Verify line and branch coverage meet thresholds.
+运行覆盖率工具。验证行覆盖率和分支覆盖率是否达到阈值。
 
-### 3.3 Gate 2: Mutation Testing
+### 3.3 门禁2：变异测试
 
-Run mutation testing. Verify mutation score meets threshold.
+运行变异测试。验证变异分数是否达到阈值。
 
-### 3.4 Gate 3: Verify & Mark
+### 3.4 门禁3：验证并标记
 
-Run full verification in session. Mark feature passing only if all gates pass.
+在当前会话中运行完整验证。只有所有门禁都通过时才将特性标记为通过。
 
-### 3.5 Verify Quality Complete
+### 3.5 验证质量完成
 
-All gates pass. Proceed to Step 4.
+所有门禁通过。继续步骤4。
 
-## Step 4: Feature Acceptance Testing (if enabled)
+## 步骤4：特性验收测试（如果启用）
 
-**Invoke skill:** `vibeflow-feature-st`
+**调用 skill：** `vibeflow-feature-st`
 
-### 4.1 Create Test Cases
+### 4.1 创建测试用例
 
-For each `verification_step`, create black-box acceptance test cases:
-- Happy path tests
-- Error handling tests
-- Boundary tests
-- UI tests (if `ui: true`)
+对于每个 `verification_step`，创建黑盒验收测试用例：
+- 愉快路径测试
+- 错误处理测试
+- 边界测试
+- UI 测试（如果 `ui: true`）
 
-### 4.2 Execute Test Cases
+### 4.2 执行测试用例
 
-Run all test cases against the running system.
-Document results in `docs/test-cases/feature-{id}-{slug}.md`.
+针对运行中的系统执行所有测试用例。
+将结果记录到 `docs/test-cases/feature-{id}-{slug}.md`。
 
-### 4.3 Verify All Pass
+### 4.3 验证全部通过
 
-All acceptance tests pass. Proceed to Step 5.
+所有验收测试通过。继续步骤5。
 
-## Step 5: Spec Compliance Review (if enabled)
+## 步骤5：规格合规审查（如果启用）
 
-**Invoke skill:** `vibeflow-spec-review`
+**调用 skill：** `vibeflow-spec-review`
 
-### 5.1 Review Against Spec
+### 5.1 对照规格审查
 
-Verify implementation matches:
-- SRS requirement section
-- Design document
-- Plan document
+验证实现是否匹配：
+- SRS 需求部分
+- 设计文档
+- 计划文档
 
-### 5.2 Review Against UCD (if ui: true)
+### 5.2 对照 UCD 审查（如果 ui: true）
 
-Verify implementation follows UCD style guide.
+验证实现是否遵循 UCD 样式指南。
 
-### 5.3 Verify Compliance
+### 5.3 验证合规性
 
-Spec compliance confirmed. Proceed to Step 6.
+规格合规性确认。继续步骤6。
 
-## Step 6: Persist
+## 步骤6：持久化
 
-### 6.1 Git Commit
+### 6.1 Git 提交
 
-Commit the completed feature:
-- Implementation code
-- Tests
-- Test case documents
-- Updated `task-progress.md`
+提交已完成的特性：
+- 实现代码
+- 测试
+- 测试用例文档
+- 更新的 `task-progress.md`
 
-### 6.2 Update Feature Status
+### 6.2 更新特性状态
 
-In `feature-list.json`:
+在 `feature-list.json` 中：
 ```json
 {
   "id": 1,
@@ -174,52 +174,52 @@ In `feature-list.json`:
 }
 ```
 
-### 6.3 Update Task Progress
+### 6.3 更新任务进度
 
-In `task-progress.md`:
-- Update progress count
-- Record completed feature
-- Note next feature
+在 `task-progress.md` 中：
+- 更新进度计数
+- 记录已完成的特性
+- 记录下一个特性
 
-## Step 7: Continue or Complete
+## 步骤7：继续或完成
 
-### 7.1 Check Remaining Features
+### 7.1 检查剩余特性
 
-If failing non-deprecated features remain → return to Step 1.
+如果仍有失败的未废弃特性 → 返回步骤1。
 
-### 7.2 All Features Complete
+### 7.2 所有特性完成
 
-If NO failing features remain:
-- All active features are passing
-- Invoke `vibeflow-test-system` to begin system testing
+如果没有失败的特性：
+- 所有活跃特性都正在通过
+- 调用 `vibeflow-test-system` 开始系统测试
 
-## Checklist
+## 检查清单
 
-Per feature cycle:
+每个特性循环：
 
-- [ ] Step 1: Orient — state loaded, next feature selected
-- [ ] Step 2: TDD complete (if enabled) — all tests pass
-- [ ] Step 3: Quality gates pass (if enabled) — coverage, mutation verified
-- [ ] Step 4: Feature acceptance pass (if enabled) — test cases executed
-- [ ] Step 5: Spec review pass (if enabled) — compliance confirmed
-- [ ] Step 6: Persist — git commit, status updated
-- [ ] Step 7: Continue or complete
+- [ ] 步骤1：定向——状态已加载，下一个特性已选择
+- [ ] 步骤2：TDD 完成（如果启用）——所有测试通过
+- [ ] 步骤3：质量门禁通过（如果启用）——覆盖率、变异已验证
+- [ ] 步骤4：特性验收通过（如果启用）——测试用例已执行
+- [ ] 步骤5：规格审查通过（如果启用）——合规性已确认
+- [ ] 步骤6：持久化——git 提交，状态已更新
+- [ ] 步骤7：继续或完成
 
-## Critical Rules
+## 关键规则
 
-- **One feature per cycle** — prevents context exhaustion
-- **Strict step order** — no skipping, no reordering
-- **Never mark "passing" without fresh evidence** — run tests, read output, then mark
-- **Dependency check before starting** — never develop a feature whose dependencies are still failing
-- **Config gate before planning** — never code when required configs are missing
+- **每次循环一个特性**——防止上下文耗尽
+- **严格按步骤顺序**——不跳过，不重排序
+- **没有新鲜证据就不标记"通过"**——运行测试，读取输出，然后标记
+- **启动前检查依赖**——永远不要开发依赖项仍在失败的特性
+- **计划前配置门控**——缺少必需配置时不要编码
 
-## Integration
+## 集成
 
-**Called by:** `vibeflow` router (when feature-list.json exists and build is active)
-**Invokes (in strict order when enabled):**
-1. `vibeflow-tdd` (Step 2) — Red-Green-Refactor
-2. `vibeflow-quality` (Step 3) — Coverage + Mutation
-3. `vibeflow-feature-st` (Step 4) — Black-Box Feature Acceptance
-4. `vibeflow-spec-review` (Step 5) — Spec & Design Compliance
-**Reads/Writes:** `feature-list.json`, `task-progress.md`
-**Chains to:** `vibeflow-test-system` (when all features pass)
+**被调用者：** `vibeflow` 路由器（当 feature-list.json 存在且构建处于活跃状态）
+**调用（启用时按严格顺序）：**
+1. `vibeflow-tdd`（步骤2）——红-绿-重构
+2. `vibeflow-quality`（步骤3）——覆盖率 + 变异
+3. `vibeflow-feature-st`（步骤4）——黑盒特性验收
+4. `vibeflow-spec-review`（步骤5）——规格与设计合规
+**读取/写入：** `feature-list.json`、`task-progress.md`
+**链接到：** `vibeflow-test-system`（当所有特性通过时）

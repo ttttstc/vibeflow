@@ -3,306 +3,306 @@ name: vibeflow-test-qa
 description: Use when UI validation is required after system testing.
 ---
 
-# QA Testing for VibeFlow
+# VibeFlow QA 测试
 
-Run browser-oriented QA validation after system testing. Generate QA report.
+在系统测试后运行面向浏览器的 QA 验证。生成 QA 报告。
 
-**Announce at start:** "I'm using the vibeflow-test-qa skill to run QA validation."
+**开始时宣布：** "我正在使用 vibeflow-test-qa skill 运行 QA 验证。"
 
-## Purpose
+## 目的
 
-Perform human-oriented QA validation for UI-bearing features:
-- Browser-based testing
-- Visual verification
-- User experience validation
-- Accessibility checks
+对带 UI 的功能执行面向人类的 QA 验证：
+- 基于浏览器的测试
+- 视觉验证
+- 用户体验验证
+- 可访问性检查
 
-## When to Run
+## 何时运行
 
-- After system testing (vibeflow-test-system)
-- For UI-bearing projects (features with `"ui": true`)
-- Before ship stage
-- Invoked by `vibeflow` router when UI validation required
+- 系统测试后（vibeflow-test-system）
+- 对于带 UI 的项目（`"ui": true` 的功能）
+- 发布阶段前
+- 当需要 UI 验证时由 `vibeflow` 路由器调用
 
-## Prerequisites
+## 先决条件
 
-Before running this skill:
-- UI features implemented
-- System testing passed
-- Browser automation tools available
-- QA environment ready
+运行此 skill 之前：
+- UI 功能已实现
+- 系统测试通过
+- 浏览器自动化工具可用
+- QA 环境就绪
 
-## Step 1: Load QA Context
+## 步骤 1: 加载 QA 上下文
 
-### 1.1 Read Feature List
+### 1.1 读取功能列表
 
-From `feature-list.json`:
-- All features with `"ui": true`
-- UI entry points
-- UI interaction requirements
+从 `feature-list.json`:
+- 所有 `"ui": true` 的功能
+- UI 入口点
+- UI 交互需求
 
-### 1.2 Read UCD
+### 1.2 读取 UCD
 
-From `docs/plans/*-ucd.md`:
-- Design specifications
-- Visual requirements
-- Component behaviors
+从 `docs/plans/*-ucd.md`:
+- 设计规格
+- 视觉需求
+- 组件行为
 
-### 1.3 Read Test Case Documents
+### 1.3 读取测试用例文档
 
-From `docs/test-cases/feature-{id}-{slug}.md`:
-- UI test case results
-- Known issues
+从 `docs/test-cases/feature-{id}-{slug}.md`:
+- UI 测试用例结果
+- 已知问题
 
-### 1.4 Read System Test Report
+### 1.4 读取系统测试报告
 
-From `docs/plans/*-st-report.md`:
-- Overall system status
-- UI-related findings
+从 `docs/plans/*-st-report.md`:
+- 总体系统状态
+- UI 相关发现
 
-## Step 2: Define QA Test Cases
+## 步骤 2: 定义 QA 测试用例
 
-### 2.1 Visual QA Tests
+### 2.1 视觉 QA 测试
 
-For each UI feature:
-- [ ] Page renders correctly
-- [ ] Colors match design spec
-- [ ] Typography matches design spec
-- [ ] Spacing consistent with design
-- [ ] Images load correctly
-- [ ] Responsive behavior correct
+对于每个 UI 功能：
+- [ ] 页面正确渲染
+- [ ] 颜色符合设计规格
+- [ ] 排版符合设计规格
+- [ ] 间距与设计一致
+- [ ] 图片正确加载
+- [ ] 响应式行为正确
 
-### 2.2 Interaction QA Tests
+### 2.2 交互 QA 测试
 
-For each UI feature:
-- [ ] Button clicks work
-- [ ] Form submissions work
-- [ ] Navigation works
-- [ ] State changes correct
-- [ ] Animations smooth
-- [ ] Loading states work
+对于每个 UI 功能：
+- [ ] 按钮点击正常工作
+- [ ] 表单提交正常工作
+- [ ] 导航正常工作
+- [ ] 状态变更正确
+- [ ] 动画流畅
+- [ ] 加载状态正常工作
 
-### 2.3 Accessibility QA Tests
+### 2.3 可访问性 QA 测试
 
-For each UI feature:
-- [ ] Keyboard navigation works
-- [ ] Focus indicators visible
-- [ ] Color contrast adequate
-- [ ] Screen reader compatible
-- [ ] ARIA labels present
-- [ ] Skip links work (if applicable)
+对于每个 UI 功能：
+- [ ] 键盘导航正常工作
+- [ ] 焦点指示器可见
+- [ ] 颜色对比度足够
+- [ ] 屏幕阅读器兼容
+- [ ] ARIA 标签存在
+- [ ] 跳转链接正常工作（如果适用）
 
-### 2.4 Cross-browser QA Tests
+### 2.4 跨浏览器 QA 测试
 
-For each UI feature:
-- [ ] Chrome works
-- [ ] Firefox works (if supported)
-- [ ] Safari works (if supported)
-- [ ] Mobile browsers work (if applicable)
+对于每个 UI 功能：
+- [ ] Chrome 正常工作
+- [ ] Firefox 正常工作（如果支持）
+- [ ] Safari 正常工作（如果支持）
+- [ ] 移动浏览器正常工作（如果适用）
 
-## Step 3: Execute QA Tests
+## 步骤 3: 执行 QA 测试
 
-### 3.1 Start Browser Environment
+### 3.1 启动浏览器环境
 
-1. Start application in browser-capable environment
-2. Verify application loads
-3. Record browser version
-4. Prepare screenshot tools
+1. 在支持浏览器的环境中启动应用
+2. 验证应用加载
+3. 记录浏览器版本
+4. 准备截图工具
 
-### 3.2 Execute Visual QA
+### 3.2 执行视觉 QA
 
-For each UI feature:
-1. Navigate to UI entry point
-2. Take snapshot
-3. Compare against design spec
-4. Document any visual discrepancies
+对于每个 UI 功能：
+1. 导航到 UI 入口点
+2. 拍摄快照
+3. 与设计规格比较
+4. 记录任何视觉差异
 
-### 3.3 Execute Interaction QA
+### 3.3 执行交互 QA
 
-For each UI feature:
-1. Execute critical user interactions
-2. Verify response
-3. Check error handling
-4. Document any issues
+对于每个 UI 功能：
+1. 执行关键用户交互
+2. 验证响应
+3. 检查错误处理
+4. 记录任何问题
 
-### 3.4 Execute Accessibility QA
+### 3.4 执行可访问性 QA
 
-For each UI feature:
-1. Run keyboard-only navigation
-2. Run screen reader test (if tools available)
-3. Check color contrast ratios
-4. Document accessibility issues
+对于每个 UI 功能：
+1. 运行仅键盘导航
+2. 运行屏幕阅读器测试（如果有工具）
+3. 检查颜色对比度比率
+4. 记录可访问性问题
 
-### 3.5 Execute Cross-browser QA
+### 3.5 执行跨浏览器 QA
 
-For each UI feature:
-1. Test in primary browser
-2. Test in secondary browsers
-3. Document browser-specific issues
+对于每个 UI 功能：
+1. 在主浏览器测试
+2. 在辅助浏览器测试
+3. 记录浏览器特定问题
 
-## Step 4: Document Findings
+## 步骤 4: 记录发现
 
-### 4.1 QA Issue Format
+### 4.1 QA 问题格式
 
 ```
-## QA-XXX: [Issue Title]
-**Feature**: [Feature name]
-**Severity**: Critical | Important | Minor
-**Category**: Visual | Interaction | Accessibility | Cross-browser
-**Description**: Detailed description
-**Expected**: What should happen
-**Actual**: What is happening
-**Evidence**: Screenshots/Steps to reproduce
-**Fix**: Recommended fix
+## QA-XXX: [问题标题]
+**功能**: [功能名称]
+**严重性**: Critical | Important | Minor
+**类别**: Visual | Interaction | Accessibility | Cross-browser
+**描述**: 详细描述
+**预期**: 应该发生什么
+**实际**: 正在发生什么
+**证据**: 截图/复现步骤
+**修复**: 建议的修复
 ```
 
-### 4.2 Issue Categories
+### 4.2 问题类别
 
-| Severity | Definition | Action |
+| 严重性 | 定义 | 操作 |
 |----------|------------|--------|
-| Critical | Blocks usage | Fix immediately |
-| Important | Degrades experience | Fix before ship |
-| Minor | Cosmetic issue | Fix in next release |
+| Critical | 阻塞使用 | 立即修复 |
+| Important | 降低体验 | 发布前修复 |
+| Minor |  cosmetic 问题 | 下一版本修复 |
 
-## Step 5: Fix Issues
+## 步骤 5: 修复问题
 
-### 5.1 Fix Critical Issues
+### 5.1 修复关键问题
 
-For each critical QA issue:
-1. Fix implementation
-2. Re-test the fix
-3. Verify issue resolved
-4. Document resolution
+对于每个关键 QA 问题：
+1. 修复实现
+2. 重新测试修复
+3. 验证问题已解决
+4. 记录解决方案
 
-### 5.2 Document Unfixed Issues
+### 5.2 记录未修复问题
 
-For issues not fixed:
-1. Document as known limitation
-2. Assess impact on ship decision
-3. Update issue with explanation
+对于未修复的问题：
+1. 记录为已知限制
+2. 评估对发布决定的影响
+3. 用解释更新问题
 
-## Step 6: Generate QA Report
+## 步骤 6: 生成 QA 报告
 
-### 6.1 Create QA Report
+### 6.1 创建 QA 报告
 
-File: `.vibeflow/qa-report.md`
+文件: `.vibeflow/qa-report.md`
 
 ```markdown
-# QA Report — YYYY-MM-DD
+# QA 报告 — YYYY-MM-DD
 
-## Summary
-- **Project**: [Project name]
-- **Version**: [Version]
-- **Date**: YYYY-MM-DD
-- **QA performed by**: [Name/tool]
-- **Overall Status**: PASS | CONDITIONAL | FAIL
+## 摘要
+- **项目**: [项目名称]
+- **版本**: [版本]
+- **日期**: YYYY-MM-DD
+- **QA 执行者**: [名称/工具]
+- **总体状态**: PASS | CONDITIONAL | FAIL
 
-## Features Tested
+## 测试的功能
 
-| Feature ID | Feature | Status |
+| 功能 ID | 功能 | 状态 |
 |------------|---------|--------|
-| 1 | Feature name | Pass/Fail |
-| 2 | Feature name | Pass/Fail |
+| 1 | 功能名称 | Pass/Fail |
+| 2 | 功能名称 | Pass/Fail |
 
-## Visual QA Results
+## 视觉 QA 结果
 
-| Feature | Page | Colors | Typography | Spacing | Images |
+| 功能 | 页面 | 颜色 | 排版 | 间距 | 图片 |
 |---------|------|--------|-----------|---------|--------|
 | 1 | Pass | Pass | Pass | Fail | Pass |
 
-## Interaction QA Results
+## 交互 QA 结果
 
-| Feature | Buttons | Forms | Navigation | States |
+| 功能 | 按钮 | 表单 | 导航 | 状态 |
 |---------|---------|-------|------------|--------|
 | 1 | Pass | Pass | Pass | Pass |
 
-## Accessibility QA Results
+## 可访问性 QA 结果
 
-| Feature | Keyboard | Focus | Contrast | ARIA |
+| 功能 | 键盘 | 焦点 | 对比度 | ARIA |
 |---------|----------|-------|----------|------|
 | 1 | Pass | Pass | Fail | Pass |
 
-## Cross-browser QA Results
+## 跨浏览器 QA 结果
 
-| Feature | Chrome | Firefox | Safari | Mobile |
+| 功能 | Chrome | Firefox | Safari | 移动端 |
 |---------|--------|---------|--------|--------|
 | 1 | Pass | N/A | N/A | Pass |
 
-## Issues Found
+## 发现的问题
 
-### Critical
-[Issues]
+### 关键
+[问题]
 
-### Important
-[Issues]
+### 重要
+[问题]
 
-### Minor
-[Issues]
+### 次要
+[问题]
 
-## Resolutions
+## 解决方案
 
-| Issue | Resolution | Verified |
+| 问题 | 解决方案 | 已验证 |
 |-------|------------|----------|
-| QA-001 | Fixed | Yes |
-| QA-002 | Known limitation | No |
+| QA-001 | 已修复 | Yes |
+| QA-002 | 已知限制 | No |
 
-## Sign-off
+## 签收
 
-- [ ] All critical issues resolved
-- [ ] All important issues documented
-- [ ] QA report complete
-- [ ] Ready for ship
+- [ ] 所有关键问题已解决
+- [ ] 所有重要问题已文档化
+- [ ] QA 报告完整
+- [ ] 可以发布
 ```
 
-### 6.2 Save QA Report
+### 6.2 保存 QA 报告
 
-Write to `.vibeflow/qa-report.md`.
+写入 `.vibeflow/qa-report.md`。
 
-## Step 7: Complete QA
+## 步骤 7: 完成 QA
 
-### 7.1 Final Status
+### 7.1 最终状态
 
-If ALL QA passes:
-- QA validation complete
-- Ready for ship
+如果所有 QA 通过：
+- QA 验证完成
+- 可以发布
 
-If critical issues fixed but important remain:
-- Document as conditional
-- Ready for ship with known issues
+如果关键问题已修复但重要问题仍然存在：
+- 记录为有条件
+- 带已知问题可以发布
 
-If critical issues remain:
-- Cannot ship
-- Fix issues first
+如果关键问题仍然存在：
+- 不能发布
+- 先修复问题
 
-### 7.2 Update Task Progress
+### 7.2 更新任务进度
 
-In `task-progress.md`:
-- QA status
-- Issues found and resolved
-- Any known limitations
+在 `task-progress.md` 中：
+- QA 状态
+- 发现和解决的问题
+- 任何已知限制
 
-## Checklist
+## 检查清单
 
-Before marking QA complete:
+在标记 QA 完成之前：
 
-- [ ] All UI features tested visually
-- [ ] All UI interactions tested
-- [ ] Accessibility tests executed
-- [ ] Cross-browser tests executed (if applicable)
-- [ ] Critical issues fixed
-- [ ] Important issues documented
-- [ ] QA report saved to `.vibeflow/qa-report.md`
-- [ ] QA verdict: PASS or CONDITIONAL
+- [ ] 所有 UI 功能已视觉测试
+- [ ] 所有 UI 交互已测试
+- [ ] 可访问性测试已执行
+- [ ] 跨浏览器测试已执行（如果适用）
+- [ ] 关键问题已修复
+- [ ] 重要问题已文档化
+- [ ] QA 报告已保存到 `.vibeflow/qa-report.md`
+- [ ] QA 结论: PASS 或 CONDITIONAL
 
-## Integration
+## 集成
 
-**Called by:** `vibeflow` router (after system testing, when UI features exist)
-**Requires:**
-- All UI features implemented
-- System test report
-- UCD design spec
-- Browser automation tools
-**Produces:**
-- QA report at `.vibeflow/qa-report.md`
-- QA findings with resolutions
-**Chains to:** `vibeflow-review` or `vibeflow-ship`
+**调用者:** `vibeflow` 路由器（系统测试后，当存在 UI 功能时）
+**需要:**
+- 所有 UI 功能已实现
+- 系统测试报告
+- UCD 设计规格
+- 浏览器自动化工具
+**产出:**
+- `.vibeflow/qa-report.md` 中的 QA 报告
+- 带解决方案的 QA 发现
+**链接到:** `vibeflow-review` 或 `vibeflow-ship`

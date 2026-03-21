@@ -3,242 +3,242 @@ name: vibeflow-feature-st
 description: Use for feature-level acceptance testing during the VibeFlow build stage.
 ---
 
-# Feature System Testing for VibeFlow
+# VibeFlow 特性系统测试
 
-Create and execute black-box acceptance test cases for a feature. Runs after TDD and quality gates pass.
+为特性创建和执行黑盒验收测试用例。在 TDD 和质量门禁通过后运行。
 
-**Announce at start:** "I'm using the vibeflow-feature-st skill to run acceptance testing for this feature."
+**开始时宣布：** "我正在使用 vibeflow-feature-st skill 为这个特性运行验收测试。"
 
-## Purpose
+## 目的
 
-Verify the feature works as a user or external system would see it. Tests validate behavior through the real interface (API, UI, CLI), not by inspecting implementation code.
+验证特性是否按用户或外部系统所见的方式工作。测试通过真实接口（API、UI、CLI）验证行为，而不是通过检查实现代码。
 
-## When to Run
+## 何时运行
 
-- After TDD cycle completes (all tests pass)
-- After quality gates pass (coverage, mutation)
-- Before spec compliance review
-- Invoked by `vibeflow-build-work` (Step 4)
+- TDD 循环完成后（所有测试通过）
+- 质量门禁通过后（覆盖率、变异）
+- 规格合规审查之前
+- 由 `vibeflow-build-work` 调用（步骤4）
 
-## Black-Box Philosophy
+## 黑盒哲学
 
-TDD has verified the implementation from the inside (unit tests, coverage, mutation). This skill verifies from the **outside**:
+TDD 已从内部验证了实现（单元测试、覆盖率、变异）。这个 skill 从**外部**验证：
 
-- Inputs go through the real interface (HTTP endpoints, UI, CLI)
-- Outputs observed through the real interface (responses, rendered UI, stdout)
-- Internal implementation is NOT consulted during test design
-- Expected results derivable from SRS specification only
+- 输入通过真实接口（HTTP 端点、UI、CLI）
+- 输出通过真实接口观察（响应、渲染的 UI、stdout）
+- 测试设计时不咨询内部实现
+- 预期结果仅从 SRS 规格推导
 
-**Rule:** If a test case requires reading source code to determine expected result, it is not a black-box test.
+**规则：** 如果测试用例需要阅读源代码来确定预期结果，它就不是黑盒测试。
 
-## Step 1: Load Feature Context
+## 步骤1：加载特性上下文
 
-### 1.1 Read Feature Spec
+### 1.1 读取特性规格
 
-From `feature-list.json`:
-- Feature ID, title, description
+从 `feature-list.json`：
+- 特性 ID、标题、描述
 - `verification_steps[]`
-- `ui` flag
+- `ui` 标志
 - `dependencies[]`
 
-### 1.2 Read Requirements Section
+### 1.2 读取需求部分
 
-From `docs/plans/*-srs.md`:
-- FR-xxx section for this feature
-- Given/When/Then acceptance criteria
-- Boundary conditions
-- Error paths
+从 `docs/plans/*-srs.md`：
+- 该特性的 FR-xxx 部分
+- Given/When/Then 验收标准
+- 边界条件
+- 错误路径
 
-### 1.3 Read Design Section
+### 1.3 读取设计部分
 
-From `docs/plans/*-design.md`:
-- Interface contracts
-- Data flows
-- Integration points
+从 `docs/plans/*-design.md`：
+- 接口契约
+- 数据流
+- 集成点
 
-### 1.4 Read UCD (if ui: true)
+### 1.4 读取 UCD（如果 ui: true）
 
-From `docs/plans/*-ucd.md`:
-- Style tokens
-- Component visual spec
-- Page layouts
+从 `docs/plans/*-ucd.md`：
+- 样式标记
+- 组件视觉规格
+- 页面布局
 
-## Step 2: Derive Test Cases
+## 步骤2：派生测试用例
 
-### 2.1 Category Assignment
+### 2.1 类别分配
 
-For each `verification_step`, derive test cases:
+对于每个 `verification_step`，派生测试用例：
 
-| Category | When to generate |
+| 类别 | 何时生成 |
 |----------|-----------------|
-| `functional` | Always — happy path + error path |
-| `boundary` | Always — edge cases, limits, empty/max/zero |
-| `ui` | Only when `"ui": true` — browser interaction |
-| `security` | When feature handles user input or auth |
-| `accessibility` | Only when `"ui": true` — WCAG checks |
+| `functional` | 始终——愉快路径 + 错误路径 |
+| `boundary` | 始终——边缘用例、限制、空/最大/零 |
+| `ui` | 仅当 `"ui": true` 时——浏览器交互 |
+| `security` | 当特性处理用户输入或认证时 |
+| `accessibility` | 仅当 `"ui": true` 时——WCAG 检查 |
 
-### 2.2 Minimum Coverage
+### 2.2 最低覆盖率
 
-Every feature MUST have:
-- At least one functional test case
-- At least one boundary test case
-- At least one UI test case (if `"ui": true`)
-- At least one accessibility test case (if `"ui": true`)
+每个特性必须具有：
+- 至少一个功能测试用例
+- 至少一个边界测试用例
+- 至少一个 UI 测试用例（如果 `"ui": true`）
+- 至少一个可访问性测试用例（如果 `"ui": true`）
 
-### 2.3 Test Case Format
+### 2.3 测试用例格式
 
-**Case ID:** `ST-{CATEGORY}-{FEATURE_ID}-{SEQ}`
-Examples: `ST-FUNC-001-001`, `ST-BNDRY-001-002`, `ST-UI-001-001`
+**用例 ID：** `ST-{CATEGORY}-{FEATURE_ID}-{SEQ}`
+示例：`ST-FUNC-001-001`、`ST-BNDRY-001-002`、`ST-UI-001-001`
 
-**Test Case Structure:**
+**测试用例结构：**
 ```
-## Test Case: ST-FUNC-001-001
+## 测试用例：ST-FUNC-001-001
 
-**Feature:** Feature title
-**Category:** functional
-**Test type:** Real (not mock)
+**特性：** 特性标题
+**类别：** functional
+**测试类型：** 真实（非 mock）
 
-### Preconditions
-- Condition 1
-- Condition 2
+### 前置条件
+- 条件 1
+- 条件 2
 
-### Test Steps
-1. Step description
-2. Step description
+### 测试步骤
+1. 步骤描述
+2. 步骤描述
 
-### Expected Results
-- Result 1
-- Result 2
+### 预期结果
+- 结果 1
+- 结果 2
 
-### Verification Steps
-- Check 1
-- Check 2
+### 验证步骤
+- 检查 1
+- 检查 2
 ```
 
-### 2.4 UI Test Case Requirements (if ui: true)
+### 2.4 UI 测试用例要求（如果 ui: true）
 
-For UI features, test cases must include:
-- Navigation path from `ui_entry` or specific route
-- Interaction sequence (click, fill, press_key)
-- EXPECT/REJECT clauses for each verification point
-- Console error check (0 errors unless expected)
-- Accessibility checkpoint (keyboard navigability, ARIA if applicable)
+对于 UI 特性，测试用例必须包括：
+- 从 `ui_entry` 或特定路由的导航路径
+- 交互序列（点击、填写、按键）
+- 每个验证点的 EXPECT/REJECT 子句
+- 控制台错误检查（除非预期否则为 0 错误）
+- 可访问性检查点（键盘导航、ARIA 如果适用）
 
-## Step 3: Write Test Case Document
+## 步骤3：编写测试用例文档
 
-### 3.1 Create Document
+### 3.1 创建文档
 
-Output file: `docs/test-cases/feature-{id}-{slug}.md`
+输出文件：`docs/test-cases/feature-{id}-{slug}.md`
 
-Document structure:
-1. **Header** — Feature ID, related requirements, date
-2. **Summary table** — count by category
-3. **Test case blocks** — one per case
-4. **Traceability matrix** — Case ID ↔ Requirement ↔ verification_step ↔ Result
+文档结构：
+1. **头部** ——特性 ID、相关需求、日期
+2. **汇总表** ——按类别计数
+3. **测试用例块** ——每个用例一个
+4. **可追溯性矩阵** ——用例 ID ↔ 需求 ↔ verification_step ↔ 结果
 
-### 3.2 Traceability Matrix
+### 3.2 可追溯性矩阵
 
-| Case ID | Category | verification_step | Status |
+| 用例 ID | 类别 | verification_step | 状态 |
 |---------|----------|-------------------|--------|
-| ST-FUNC-001-001 | functional | Step 1 text | PENDING |
-| ST-BNDRY-001-001 | boundary | Step 2 text | PENDING |
+| ST-FUNC-001-001 | functional | 步骤 1 文本 | 待定 |
+| ST-BNDRY-001-001 | boundary | 步骤 2 文本 | 待定 |
 
-## Step 4: Execute Test Cases
+## 步骤4：执行测试用例
 
-### 4.1 Start Services (if needed)
+### 4.1 启动服务（如需要）
 
-For features requiring running services:
-1. Read service start commands from project documentation
-2. Start services
-3. Verify health endpoints respond
-4. Record service PIDs for cleanup
+对于需要运行服务的特性：
+1. 从项目文档读取服务启动命令
+2. 启动服务
+3. 验证健康端点响应
+4. 记录服务 PID 以便清理
 
-### 4.2 Execute Non-UI Tests
+### 4.2 执行非 UI 测试
 
-Run test cases against the running system:
-1. For each functional test: execute via API/CLI
-2. For each boundary test: execute with edge case inputs
-3. Record PASS/FAIL for each
+针对运行中的系统执行测试用例：
+1. 对于每个功能测试：通过 API/CLI 执行
+2. 对于每个边界测试：用边缘用例输入执行
+3. 记录每个的 PASS/FAIL
 
-### 4.3 Execute UI Tests (if ui: true)
+### 4.3 执行 UI 测试（如果 ui: true）
 
-For UI features:
-1. Use browser automation (e.g., Chrome DevTools MCP or project tool)
-2. Navigate to the UI entry point
-3. Execute interaction sequences
-4. Verify EXPECT/REJECT conditions
-5. Check for console errors
+对于 UI 特性：
+1. 使用浏览器自动化（例如 Chrome DevTools MCP 或项目工具）
+2. 导航到 UI 入口点
+3. 执行交互序列
+4. 验证 EXPECT/REJECT 条件
+5. 检查控制台错误
 
-### 4.4 Update Traceability Matrix
+### 4.4 更新可追溯性矩阵
 
-After each test case:
-- Update result to PASS or FAIL
-- If FAIL: record actual vs expected
+每个测试用例之后：
+- 将结果更新为 PASS 或 FAIL
+- 如果 FAIL：记录实际值与预期值
 
-## Step 5: Handle Failures
+## 步骤5：处理失败
 
-### 5.1 Any Test Case Failure
+### 5.1 任何测试用例失败
 
-- Report failed case ID, step details, actual vs expected
-- Fix implementation code
-- Re-execute failed test cases
-- Do NOT skip or bypass any test case
+- 报告失败的用例 ID、步骤详情、实际值与预期值
+- 修复实现代码
+- 重新执行失败的测试用例
+- 不要跳过或绕过任何测试用例
 
-### 5.2 Escalation
+### 5.2 升级
 
-After 3 failed attempts to fix:
-- Document the issue
-- Escalate to user via `AskUserQuestion`
-- Options: fix code, modify test case, terminate feature
+3 次失败修复尝试后：
+- 记录问题
+- 通过 `AskUserQuestion` 升级给用户
+- 选项：修复代码、修改测试用例、终止特性
 
-## Step 6: Complete Testing
+## 步骤6：完成测试
 
-### 6.1 Final Status
+### 6.1 最终状态
 
-If ALL test cases PASS:
-- Update final status in traceability matrix
-- Proceed to spec review (vibeflow-spec-review)
+如果所有测试用例都 PASS：
+- 更新可追溯性矩阵中的最终状态
+- 继续进行规格审查（vibeflow-spec-review）
 
-### 6.2 Stop Services
+### 6.2 停止服务
 
-If services were started for testing:
-1. Stop services by PID
-2. Verify ports no longer respond
-3. Record cleanup status
+如果为测试启动了服务：
+1. 按 PID 停止服务
+2. 验证端口不再响应
+3. 记录清理状态
 
-## Checklist
+## 检查清单
 
-Before marking feature acceptance complete:
+在标记特性验收完成之前：
 
-- [ ] All test cases written and documented
-- [ ] Test case document saved to `docs/test-cases/feature-{id}-{slug}.md`
-- [ ] All functional tests executed and passed
-- [ ] All boundary tests executed and passed
-- [ ] All UI tests executed and passed (if ui: true)
-- [ ] All accessibility tests executed and passed (if ui: true)
-- [ ] All console error checks passed (if ui: true)
-- [ ] Services stopped and cleaned up
-- [ ] Traceability matrix updated with final results
+- [ ] 所有测试用例已编写并记录
+- [ ] 测试用例文档已保存到 `docs/test-cases/feature-{id}-{slug}.md`
+- [ ] 所有功能测试已执行并通过
+- [ ] 所有边界测试已执行并通过
+- [ ] 所有 UI 测试已执行并通过（如果 ui: true）
+- [ ] 所有可访问性测试已执行并通过（如果 ui: true）
+- [ ] 所有控制台错误检查已通过（如果 ui: true）
+- [ ] 服务已停止并清理
+- [ ] 可追溯性矩阵已更新最终结果
 
-## Quality Gates
+## 质量门禁
 
-| Gate | Requirement |
+| 门禁 | 要求 |
 |------|-------------|
-| Coverage | All verification_steps have corresponding test cases |
-| Execution | All test cases executed with PASS result |
-| Traceability | Traceability matrix complete |
+| 覆盖率 | 所有 verification_steps 都有对应的测试用例 |
+| 执行 | 所有测试用例已执行并获得 PASS 结果 |
+| 可追溯性 | 可追溯性矩阵完整 |
 
-## Integration
+## 集成
 
-**Called by:** `vibeflow-build-work` (Step 4 — Feature acceptance)
-**Requires:**
-- Feature spec from `feature-list.json`
-- SRS requirement section from `docs/plans/*-srs.md`
-- Design section from `docs/plans/*-design.md`
-- UCD (if ui: true) from `docs/plans/*-ucd.md`
-- TDD tests passing
-- Quality gates passing
-**Produces:**
-- Test case document at `docs/test-cases/feature-{id}-{slug}.md`
-- Executed results in traceability matrix
-**Chains to:** `vibeflow-spec-review` (after all tests pass)
+**被调用者：** `vibeflow-build-work`（步骤4——特性验收）
+**需要：**
+- 来自 `feature-list.json` 的特性规格
+- 来自 `docs/plans/*-srs.md` 的 SRS 需求部分
+- 来自 `docs/plans/*-design.md` 的设计部分
+- 来自 `docs/plans/*-ucd.md` 的 UCD（如果 ui: true）
+- TDD 测试通过
+- 质量门禁通过
+**产出：**
+- `docs/test-cases/feature-{id}-{slug}.md` 中的测试用例文档
+- 可追溯性矩阵中的执行结果
+**链接到：** `vibeflow-spec-review`（所有测试通过后）

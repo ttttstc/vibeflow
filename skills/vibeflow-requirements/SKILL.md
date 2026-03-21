@@ -3,390 +3,390 @@ name: vibeflow-requirements
 description: Use when VibeFlow needs an approved requirements specification in docs/plans.
 ---
 
-# Requirements Specification for VibeFlow
+# VibeFlow 需求规格说明书
 
-Produce the project requirements document (SRS) in `docs/plans/*-srs.md`.
+在 `docs/plans/*-srs.md` 中生成项目需求文档（SRS）。
 
-**Announce at start:** "I'm using the vibeflow-requirements skill to author the requirements specification."
+**开始时宣布：**"我正在使用 vibeflow-requirements skill 来编写需求规格说明书。"
 
-## Purpose
+## 目的
 
-Create a complete requirements specification based on:
-- Think stage output
-- Plan review decisions
-- Workflow template requirements
+基于以下内容创建完整的需求规格说明书：
+- Think 阶段输出
+- Plan 审查决策
+- 工作流模板需求
 
-## Prerequisites
+## 前置条件
 
-Before running this skill:
-- Think stage complete (`.vibeflow/think-output.md` exists)
-- Plan review approved
-- Scope tier determined
+运行此 skill 前：
+- Think 阶段完成（`.vibeflow/think-output.md` 存在）
+- Plan 审查已批准
+- 范围层级已确定
 
-## Step 1: Load Input Context
+## 第一步：加载输入上下文
 
-### 1.1 Read Think Output
+### 1.1 读取 Think 输出
 
-From `.vibeflow/think-output.md`:
-- Problem statement
-- Proposed solution
-- Success criteria
-- User stories (if any)
+从 `.vibeflow/think-output.md` 获取：
+- 问题陈述
+- 提出的解决方案
+- 成功标准
+- 用户故事（如有）
 
-### 1.2 Read Plan Review
+### 1.2 读取 Plan 审查
 
-From `.vibeflow/plan-review.md` or `docs/plans/YYYY-MM-DD-plan-review.md`:
-- Scope tier
-- Risk assessment
-- Modifications required
-- Scope adjustments
+从 `.vibeflow/plan-review.md` 或 `docs/plans/YYYY-MM-DD-plan-review.md` 获取：
+- 范围层级
+- 风险评估
+- 需要的修改
+- 范围调整
 
-### 1.3 Read Workflow Config
+### 1.3 读取工作流配置
 
-From `.vibeflow/workflow.yaml`:
-- Template selected
-- Stage sequence
-- Quality requirements
+从 `.vibeflow/workflow.yaml` 获取：
+- 选择的模板
+- 阶段顺序
+- 质量要求
 
-## Step 2: Define Document Structure
+## 第二步：定义文档结构
 
-### 2.1 SRS Template Structure
+### 2.1 SRS 模板结构
 
-Based on template tier:
+根据模板层级：
 
-**Prototype:**
+**Prototype（原型）：**
 ```
-1. Introduction
-   1.1 Purpose
-   1.2 Scope
-   1.3 Definitions
-2. Overall Description
-   2.1 User Personas
-   2.2 Assumptions
-3. Functional Requirements
-   3.1 FR-xxx: [Feature]
-4. Acceptance Criteria
-```
-
-**Web Standard / API Standard:**
-```
-1. Introduction
-   1.1 Purpose
-   1.2 Scope
-   1.3 Definitions
-   1.4 References
-2. Overall Description
-   2.1 User Personas
-   2.2 Assumptions
-   2.3 Constraints
-3. Functional Requirements
-   3.1 FR-xxx: [Feature]
-4. Non-Functional Requirements
-   4.1 NFR-xxx: [Requirement]
-5. Interface Requirements
-   5.1 IFR-xxx: [Interface]
-6. Acceptance Criteria
+1. 引言
+   1.1 目的
+   1.2 范围
+   1.3 定义
+2. 总体描述
+   2.1 用户画像
+   2.2 假设条件
+3. 功能需求
+   3.1 FR-xxx: [功能]
+4. 验收标准
 ```
 
-**Enterprise:**
+**Web Standard / API Standard（Web标准/API标准）：**
 ```
-1. Introduction
-   1.1 Purpose
-   1.2 Scope
-   1.3 Definitions
-   1.4 References
-2. Overall Description
-   2.1 User Personas
-   2.2 Assumptions
-   2.3 Constraints
-   2.4 Dependencies
-3. Functional Requirements
-   3.1 FR-xxx: [Feature]
-4. Non-Functional Requirements
-   4.1 NFR-xxx: [Requirement]
-5. Interface Requirements
-   5.1 IFR-xxx: [Interface]
-6. Data Requirements
-   6.1 DR-xxx: [Data]
-7. Acceptance Criteria
-8. Glossary
+1. 引言
+   1.1 目的
+   1.2 范围
+   1.3 定义
+   1.4 参考文献
+2. 总体描述
+   2.1 用户画像
+   2.2 假设条件
+   2.3 约束条件
+3. 功能需求
+   3.1 FR-xxx: [功能]
+4. 非功能需求
+   4.1 NFR-xxx: [需求]
+5. 接口需求
+   5.1 IFR-xxx: [接口]
+6. 验收标准
 ```
 
-## Step 3: Author Introduction Section
+**Enterprise（企业级）：**
+```
+1. 引言
+   1.1 目的
+   1.2 范围
+   1.3 定义
+   1.4 参考文献
+2. 总体描述
+   2.1 用户画像
+   2.2 假设条件
+   2.3 约束条件
+   2.4 依赖关系
+3. 功能需求
+   3.1 FR-xxx: [功能]
+4. 非功能需求
+   4.1 NFR-xxx: [需求]
+5. 接口需求
+   5.1 IFR-xxx: [接口]
+6. 数据需求
+   6.1 DR-xxx: [数据]
+7. 验收标准
+8. 术语表
+```
 
-### 3.1 Purpose
+## 第三步：编写引言部分
 
-Define why this document exists:
+### 3.1 目的
+
+定义此文档存在的原因：
 ```markdown
-## 1.1 Purpose
+## 1.1 目的
 
-This Software Requirements Specification (SRS) describes the functional and non-functional requirements for [project name]. This document specifies what the system must do and the constraints it must operate within.
+本软件需求规格说明书（SRS）描述了[项目名称]的功能需求和非功能需求。本文档规定系统必须做什么，以及它必须运行的约束条件。
 ```
 
-### 3.2 Scope
+### 3.2 范围
 
-Define what the project includes/excludes:
+定义项目包含/排除的内容：
 ```markdown
-## 1.2 Scope
+## 1.2 范围
 
-**In scope:**
-- [What is included]
+**在范围内：**
+- [包含的内容]
 
-**Out of scope:**
-- [What is explicitly excluded]
+**在范围外：**
+- [明确排除的内容]
 ```
 
-### 3.3 Definitions
+### 3.3 定义
 
-Define key terms:
+定义关键术语：
 ```markdown
-## 1.3 Definitions
+## 1.3 定义
 
-| Term | Definition |
-|------|------------|
-| Term 1 | Definition |
-| Term 2 | Definition |
+| 术语 | 定义 |
+|------|------|
+| 术语1 | 定义 |
+| 术语2 | 定义 |
 ```
 
-### 3.4 References (if applicable)
+### 3.4 参考文献（如适用）
 
-List referenced documents:
+列出参考文档：
 ```markdown
-## 1.4 References
+## 1.4 参考文献
 
-- [Reference 1]
-- [Reference 2]
+- [参考文献1]
+- [参考文献2]
 ```
 
-## Step 4: Author Overall Description
+## 第四步：编写总体描述
 
-### 4.1 User Personas
+### 4.1 用户画像
 
-Define target users:
+定义目标用户：
 ```markdown
-## 2.1 User Personas
+## 2.1 用户画像
 
-### Persona 1: [Name]
-**Role**: [What they do]
-**Goals**: [What they want to achieve]
-**Pain points**: [Their challenges]
+### 画像1：[姓名]
+**角色**： [他们的职责]
+**目标**： [他们想实现什么]
+**痛点**： [他们面临的挑战]
 
-### Persona 2: [Name]
+### 画像2：[姓名]
 ...
 ```
 
-### 4.2 Assumptions
+### 4.2 假设条件
 
-Document assumptions:
+记录假设条件：
 ```markdown
-## 2.2 Assumptions
+## 2.2 假设条件
 
-- ASM-xxx: [Assumption description]
-- ASM-xxx: [Assumption description]
+- ASM-xxx: [假设描述]
+- ASM-xxx: [假设描述]
 ```
 
-### 4.3 Constraints (if applicable)
+### 4.3 约束条件（如适用）
 
-Document constraints:
+记录约束条件：
 ```markdown
-## 2.3 Constraints
+## 2.3 约束条件
 
-- CON-xxx: [Constraint description]
-- CON-xxx: [Constraint description]
+- CON-xxx: [约束描述]
+- CON-xxx: [约束描述]
 ```
 
-## Step 5: Author Functional Requirements
+## 第五步：编写功能需求
 
-### 5.1 Identify Features
+### 5.1 识别功能
 
-Based on Think output and plan review:
-1. List all features
-2. Group by module/area
-3. Prioritize (high/medium/low)
+基于 Think 输出和 plan 审查：
+1. 列出所有功能
+2. 按模块/领域分组
+3. 设定优先级（高/中/低）
 
-### 5.2 Document Each Requirement
+### 5.2 记录每个需求
 
-For each feature (FR-xxx):
-
-```markdown
-## 3.x FR-xxx: [Feature Name]
-
-**Priority**: High | Medium | Low
-**Module**: [Module name]
-
-### Description
-[What this feature does]
-
-### User Story
-As a [persona], I want [action], so that [benefit].
-
-### Given/When/Then Acceptance Criteria
-**Given** [precondition]
-**When** [action]
-**Then** [expected result]
-
-**Given** [precondition]
-**When** [action]
-**Then** [expected result]
-```
-
-### 5.3 Verify Completeness
-
-- [ ] All user needs addressed
-- [ ] All features from Think output captured
-- [ ] Acceptance criteria specific and testable
-- [ ] Priority levels assigned
-
-## Step 6: Author Non-Functional Requirements
-
-### 6.1 Performance
+对于每个功能（FR-xxx）：
 
 ```markdown
-## 4.x NFR-xxx: Performance
+## 3.x FR-xxx: [功能名称]
 
-**Metric**: [What is measured]
-**Target**: [Numeric target]
-**Measurement**: [How to verify]
+**优先级**：高 | 中 | 低
+**模块**：[模块名称]
+
+### 描述
+[此功能的作用]
+
+### 用户故事
+作为 [用户类型]，我想要 [操作]，以便 [收益]。
+
+### Given/When/Then 验收标准
+**Given** [前置条件]
+**When** [操作]
+**Then** [预期结果]
+
+**Given** [前置条件]
+**When** [操作]
+**Then** [预期结果]
 ```
 
-### 6.2 Security
+### 5.3 验证完整性
+
+- [ ] 所有用户需求已解决
+- [ ] Think 输出中的所有功能已捕获
+- [ ] 验收标准具体且可测试
+- [ ] 已设定优先级
+
+## 第六步：编写非功能需求
+
+### 6.1 性能
 
 ```markdown
-## 4.x NFR-xxx: Security
+## 4.x NFR-xxx: 性能
 
-**Requirement**: [What is required]
-**Validation**: [How to verify]
+**指标**： [测量什么]
+**目标**： [数值目标]
+**测量方法**： [如何验证]
 ```
 
-### 6.3 Reliability
+### 6.2 安全性
 
 ```markdown
-## 4.x NFR-xxx: Reliability
+## 4.x NFR-xxx: 安全性
 
-**Requirement**: [What is required]
-**Validation**: [How to verify]
+**需求**： [需要什么]
+**验证方法**： [如何验证]
 ```
 
-### 6.4 Scalability
+### 6.3 可靠性
 
 ```markdown
-## 4.x NFR-xxx: Scalability
+## 4.x NFR-xxx: 可靠性
 
-**Requirement**: [What is required]
-**Validation**: [How to verify]
+**需求**： [需要什么]
+**验证方法**： [如何验证]
 ```
 
-## Step 7: Author Interface Requirements (if applicable)
-
-### 7.1 User Interfaces
+### 6.4 可扩展性
 
 ```markdown
-## 5.x IFR-xxx: [Interface Name]
+## 4.x NFR-xxx: 可扩展性
 
-**Type**: Web | CLI | API | Mobile
-**Entry point**: [URL/path]
-**Description**: [What this interface provides]
+**需求**： [需要什么]
+**验证方法**： [如何验证]
 ```
 
-### 7.2 External Interfaces
+## 第七步：编写接口需求（如适用）
+
+### 7.1 用户界面
 
 ```markdown
-## 5.x IFR-xxx: [External Service]
+## 5.x IFR-xxx: [接口名称]
 
-**Type**: REST | GraphQL | gRPC | Webhook
-**Endpoint**: [URL]
-**Description**: [What is exchanged]
+**类型**：Web | CLI | API | Mobile
+**入口点**： [URL/路径]
+**描述**： [此接口提供什么]
 ```
 
-### 7.3 Internal Interfaces
+### 7.2 外部接口
 
 ```markdown
-## 5.x IFR-xxx: [Internal API]
+## 5.x IFR-xxx: [外部服务]
 
-**Module**: [Module name]
-**Interface**: [Method/endpoint]
-**Description**: [What it provides]
+**类型**：REST | GraphQL | gRPC | Webhook
+**端点**： [URL]
+**描述**： [交换什么]
 ```
 
-## Step 8: Author Acceptance Criteria
-
-### 8.1 Overall Acceptance Criteria
+### 7.3 内部接口
 
 ```markdown
-## 6. Acceptance Criteria
+## 5.x IFR-xxx: [内部API]
 
-The system is considered complete when:
-
-1. [ ] All functional requirements verified
-2. [ ] All NFR metrics met
-3. [ ] All interfaces operational
-4. [ ] Documentation complete
+**模块**： [模块名称]
+**接口**： [方法/端点]
+**描述**： [提供什么]
 ```
 
-### 8.2 Definition of Done
+## 第八步：编写验收标准
+
+### 8.1 总体验收标准
 
 ```markdown
-## 6.x [Feature Area]
+## 6. 验收标准
 
-**Done when**:
-- [ ] [Criterion 1]
-- [ ] [Criterion 2]
+当满足以下条件时，系统视为完成：
+
+1. [ ] 所有功能需求已验证
+2. [ ] 所有 NFR 指标已满足
+3. [ ] 所有接口已运行
+4. [ ] 文档已完成
 ```
 
-## Step 9: Review and Finalize
+### 8.2 完成定义
 
-### 9.1 Self-Review Checklist
+```markdown
+## 6.x [功能领域]
 
-- [ ] All Think output requirements captured
-- [ ] All plan review modifications addressed
-- [ ] Requirements are complete and consistent
-- [ ] Acceptance criteria are testable
-- [ ] No conflicting requirements
-- [ ] Scope boundaries clear
+**完成条件**：
+- [ ] [标准1]
+- [ ] [标准2]
+```
 
-### 9.2 Peer Review (if available)
+## 第九步：审查并定稿
 
-If another human reviewer available:
-- Submit for review
-- Address feedback
-- Finalize document
+### 9.1 自我审查清单
 
-### 9.3 Save Document
+- [ ] 所有 Think 输出需求已捕获
+- [ ] 所有 plan 审查修改已处理
+- [ ] 需求完整且一致
+- [ ] 验收标准可测试
+- [ ] 无冲突需求
+- [ ] 范围边界清晰
 
-File: `docs/plans/YYYY-MM-DD-<topic>-srs.md`
+### 9.2 同行审查（如有）
+
+如有其他审查者可用：
+- 提交审查
+- 处理反馈
+- 定稿文档
+
+### 9.3 保存文档
+
+文件：`docs/plans/YYYY-MM-DD-<topic>-srs.md`
 
 ```bash
 git add docs/plans/YYYY-MM-DD-<topic>-srs.md
 git commit -m "docs: add SRS for [project name]"
 ```
 
-## Checklist
+## 检查清单
 
-Before marking requirements complete:
+在标记需求完成前：
 
-- [ ] Introduction section complete
-- [ ] Overall description section complete
-- [ ] All functional requirements documented
-- [ ] All NFRs documented
-- [ ] All interfaces documented (if applicable)
-- [ ] Acceptance criteria defined
-- [ ] Self-review passed
-- [ ] Document saved to `docs/plans/*-srs.md`
-- [ ] Document committed to git
+- [ ] 引言部分已完成
+- [ ] 总体描述部分已完成
+- [ ] 所有功能需求已记录
+- [ ] 所有 NFR 已记录
+- [ ] 所有接口已记录（如适用）
+- [ ] 已定义验收标准
+- [ ] 自我审查已通过
+- [ ] 文档已保存至 `docs/plans/*-srs.md`
+- [ ] 文档已提交至 git
 
-## Outputs
+## 输出
 
-| Output | Location | Format |
-|--------|----------|--------|
-| SRS Document | `docs/plans/YYYY-MM-DD-<topic>-srs.md` | Markdown |
+| 输出 | 位置 | 格式 |
+|------|------|------|
+| SRS 文档 | `docs/plans/YYYY-MM-DD-<topic>-srs.md` | Markdown |
 
-## Integration
+## 集成
 
-**Called by:** `vibeflow` router (after plan review approved)
-**Requires:**
-- Think output at `.vibeflow/think-output.md`
-- Plan review at `.vibeflow/plan-review.md`
-- Workflow config at `.vibeflow/workflow.yaml`
-**Produces:**
-- SRS document at `docs/plans/YYYY-MM-DD-<topic>-srs.md`
-**Chains to:** `vibeflow-design` (after SRS approved)
+**调用者：** `vibeflow` 路由（在 plan 审查批准后）
+**需要：**
+- Think 输出位于 `.vibeflow/think-output.md`
+- Plan 审查位于 `.vibeflow/plan-review.md`
+- 工作流配置位于 `.vibeflow/workflow.yaml`
+**产生：**
+- SRS 文档位于 `docs/plans/YYYY-MM-DD-<topic>-srs.md`
+**链至：** `vibeflow-design`（SRS 批准后）

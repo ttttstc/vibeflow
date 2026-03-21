@@ -3,209 +3,209 @@ name: vibeflow-test-system
 description: Use when all active features are passing and system-level testing must begin.
 ---
 
-# System Testing for VibeFlow
+# VibeFlow 系统测试
 
-Run system-level testing after build completion. Validate integration behavior across all features.
+在构建完成后运行系统级测试。验证所有功能的集成行为。
 
-**Announce at start:** "I'm using the vibeflow-test-system skill to run system-level testing."
+**开始时宣布：** "我正在使用 vibeflow-test-system skill 运行系统级测试。"
 
-## Purpose
+## 目的
 
-Verify the complete system works correctly:
-- All features integrated together
-- End-to-end scenarios work
-- Non-functional requirements met
-- No regressions introduced
+验证完整系统正常工作：
+- 所有功能集成在一起
+- 端到端场景正常工作
+- 满足非功能性需求
+- 没有引入回归
 
-## When to Run
+## 何时运行
 
-- After ALL individual features pass their reviews
-- After build-work completes
-- Before ship stage
-- Invoked by `vibeflow-build-work` (when all features pass) or `vibeflow` router
+- 所有单个功能通过审查后
+- 构建工作完成后
+- 发布前
+- 由 `vibeflow-build-work` 调用（所有功能通过时）或 `vibeflow` 路由器调用
 
-## Prerequisites
+## 先决条件
 
-Before running this skill:
-- All features marked `"status": "passing"` in `feature-list.json`
-- System documentation available
-- Test environment ready
+运行此 skill 之前：
+- `feature-list.json` 中所有功能标记为 `"status": "passing"`
+- 系统文档可用
+- 测试环境就绪
 
-## Step 1: Load System Context
+## 步骤 1: 加载系统上下文
 
-### 1.1 Read Feature List
+### 1.1 读取功能列表
 
-From `feature-list.json`:
-- All completed features
-- Feature categories
-- Feature integration points
+从 `feature-list.json`:
+- 所有已完成的功能
+- 功能类别
+- 功能集成点
 
-### 1.2 Read System Documentation
+### 1.2 读取系统文档
 
-From `docs/plans/`:
-- System architecture
-- Integration points
-- Data flows
-- External dependencies
+从 `docs/plans/`:
+- 系统架构
+- 集成点
+- 数据流
+- 外部依赖
 
-### 1.3 Read Requirements
+### 1.3 读取需求
 
-From `docs/plans/*-srs.md`:
-- NFR-xxx (non-functional requirements)
-- System-level acceptance criteria
-- Performance requirements
-- Security requirements
+从 `docs/plans/*-srs.md`:
+- NFR-xxx（非功能性需求）
+- 系统级验收标准
+- 性能需求
+- 安全需求
 
-### 1.4 Read Design Document
+### 1.4 读取设计文档
 
-From `docs/plans/*-design.md`:
-- System architecture
-- Component interactions
-- External service integrations
+从 `docs/plans/*-design.md`:
+- 系统架构
+- 组件交互
+- 外部服务集成
 
-## Step 2: Identify System Test Scenarios
+## 步骤 2: 识别系统测试场景
 
-### 2.1 End-to-End Scenarios
+### 2.1 端到端场景
 
-For each major user journey:
-- [ ] Complete user workflow tested
-- [ ] All features in path verified
-- [ ] Data flows correctly end-to-end
-- [ ] Error handling works
+对于每个主要用户旅程：
+- [ ] 完整的用户工作流已测试
+- [ ] 路径中的所有功能已验证
+- [ ] 数据端到端正确流动
+- [ ] 错误处理正常工作
 
-### 2.2 Integration Points
+### 2.2 集成点
 
-For each integration:
-- [ ] Data exchange verified
-- [ ] Error handling at boundaries
-- [ ] Timeout behavior correct
-- [ ] Retry logic works
+对于每个集成：
+- [ ] 数据交换已验证
+- [ ] 边界处的错误处理
+- [ ] 超时行为正确
+- [ ] 重试逻辑正常工作
 
-### 2.3 NFR Verification
+### 2.3 NFR 验证
 
-For each NFR:
-- [ ] Performance criteria measurable
-- [ ] Security criteria testable
-- [ ] Scalability criteria verifiable
-- [ ] Reliability criteria demonstrable
+对于每个 NFR：
+- [ ] 性能标准可测量
+- [ ] 安全标准可测试
+- [ ] 可扩展性标准可验证
+- [ ] 可靠性标准可证明
 
-## Step 3: Create System Test Cases
+## 步骤 3: 创建系统测试用例
 
-### 3.1 Define Test Cases
+### 3.1 定义测试用例
 
-**Case ID:** `ST-SYS-{SEQ}`
+**用例 ID:** `ST-SYS-{SEQ}`
 
-**Categories:**
+**类别:**
 
-| Category | Description |
+| 类别 | 描述 |
 |----------|-------------|
-| `e2e` | End-to-end user scenarios |
-| `integration` | Component integrations |
-| `performance` | NFR performance tests |
-| `security` | NFR security tests |
-| `regression` | Previously fixed bugs |
+| `e2e` | 端到端用户场景 |
+| `integration` | 组件集成 |
+| `performance` | NFR 性能测试 |
+| `security` | NFR 安全测试 |
+| `regression` | 之前修复的 bug |
 
-### 3.2 Minimum System Tests
+### 3.2 最低系统测试
 
-Every system test cycle MUST include:
+每个系统测试周期必须包括：
 
-**End-to-end tests (at least):**
-- Primary user journey test
-- Secondary user journey test
-- Error recovery journey test
+**端到端测试（至少）：**
+- 主要用户旅程测试
+- 次要用户旅程测试
+- 错误恢复旅程测试
 
-**Integration tests (at least):**
-- All external service integrations tested
-- All internal component integrations tested
+**集成测试（至少）：**
+- 所有外部服务集成已测试
+- 所有内部组件集成已测试
 
-**NFR tests (if specified):**
-- Performance test (response time < threshold)
-- Load test (concurrent users)
-- Security test (auth/authz verification)
+**NFR 测试（如果指定）：**
+- 性能测试（响应时间 < 阈值）
+- 负载测试（并发用户）
+- 安全测试（auth/authz 验证）
 
-## Step 4: Execute System Tests
+## 步骤 4: 执行系统测试
 
-### 4.1 Start Test Environment
+### 4.1 启动测试环境
 
-1. Start all required services
-2. Verify health endpoints
-3. Ensure test data is available
-4. Record PIDs for cleanup
+1. 启动所有需要的服务
+2. 验证健康端点
+3. 确保测试数据可用
+4. 记录 PID 用于清理
 
-### 4.2 Run End-to-End Tests
+### 4.2 运行端到端测试
 
-For each E2E scenario:
-1. Execute the complete user journey
-2. Verify all steps complete successfully
-3. Verify data integrity at end
-4. Record PASS/FAIL
+对于每个 E2E 场景：
+1. 执行完整的用户旅程
+2. 验证所有步骤成功完成
+3. 验证最终数据完整性
+4. 记录 PASS/FAIL
 
-### 4.3 Run Integration Tests
+### 4.3 运行集成测试
 
-For each integration point:
-1. Trigger integration
-2. Verify data exchange
-3. Verify error handling
-4. Record PASS/FAIL
+对于每个集成点：
+1. 触发集成
+2. 验证数据交换
+3. 验证错误处理
+4. 记录 PASS/FAIL
 
-### 4.4 Run NFR Tests
+### 4.4 运行 NFR 测试
 
-For each NFR requirement:
-1. Execute performance/load/security test
-2. Measure against threshold
-3. Record metric value
-4. Record PASS/FAIL
+对于每个 NFR 需求：
+1. 执行性能/负载/安全测试
+2. 对照阈值测量
+3. 记录指标值
+4. 记录 PASS/FAIL
 
-### 4.5 Run Regression Tests
+### 4.5 运行回归测试
 
-For each previously fixed bug:
-1. Execute regression scenario
-2. Verify fix still works
-3. No new side effects
-4. Record PASS/FAIL
+对于每个之前修复的 bug：
+1. 执行回归场景
+2. 验证修复仍然有效
+3. 没有新的副作用
+4. 记录 PASS/FAIL
 
-## Step 5: Handle Failures
+## 步骤 5: 处理失败
 
-### 5.1 Any Test Failure
+### 5.1 任何测试失败
 
-Document failure:
+记录失败：
 ```
-## Failure: [Test case ID]
-**Type:** E2E | Integration | NFR | Regression
-**Description:** What failed
-**Expected:** What should happen
-**Actual:** What happened
-**Impact:** System impact
-**Fix:** Required fix
+## 失败: [测试用例 ID]
+**类型:** E2E | Integration | NFR | Regression
+**描述:** 什么失败了
+**预期:** 应该发生什么
+**实际:** 发生了什么
+**影响:** 系统影响
+**修复:** 需要的修复
 ```
 
-### 5.2 Fix or Escalate
+### 5.2 修复或升级
 
-**For critical failures:**
-1. Fix implementation
-2. Re-run failed tests
-3. Re-run related tests
-4. Do not skip or bypass
+**对于关键失败：**
+1. 修复实现
+2. 重新运行失败的测试
+3. 重新运行相关测试
+4. 不要跳过或绕过
 
-**For NFR failures:**
-1. Document the gap
-2. Determine if shippable
-3. Escalate to user if blocking
+**对于 NFR 失败：**
+1. 记录差距
+2. 确定是否可以发布
+3. 如果阻塞则升级给用户
 
-## Step 6: Compile Results
+## 步骤 6: 编译结果
 
-### 6.1 Test Summary
+### 6.1 测试摘要
 
 ```
-## System Test Summary
+## 系统测试摘要
 
-**Date**: YYYY-MM-DD
-**Total tests**: N
-**Passed**: N
-**Failed**: N
+**日期**: YYYY-MM-DD
+**总测试数**: N
+**通过**: N
+**失败**: N
 
-### Results by Category
-| Category | Total | Pass | Fail |
+### 按类别的结果
+| 类别 | 总数 | 通过 | 失败 |
 |----------|-------|------|------|
 | E2E | N | N | N |
 | Integration | N | N | N |
@@ -214,107 +214,107 @@ Document failure:
 | Regression | N | N | N |
 ```
 
-### 6.2 Create Report
+### 6.2 创建报告
 
-File: `docs/plans/*-st-report.md`
+文件: `docs/plans/*-st-report.md`
 
 ```markdown
-# System Test Report — YYYY-MM-DD
+# 系统测试报告 — YYYY-MM-DD
 
-## Summary
-- **System**: [Project name]
-- **Version**: [Version]
-- **Date**: YYYY-MM-DD
-- **Overall Status**: PASS | FAIL
+## 摘要
+- **系统**: [项目名称]
+- **版本**: [版本]
+- **日期**: YYYY-MM-DD
+- **总体状态**: PASS | FAIL
 
-## Test Results
+## 测试结果
 
-### End-to-End Tests
-[Results table]
+### 端到端测试
+[结果表]
 
-### Integration Tests
-[Results table]
+### 集成测试
+[结果表]
 
-### NFR Tests
-[Results table with metrics]
+### NFR 测试
+[带指标的结果表]
 
-### Regression Tests
-[Results table]
+### 回归测试
+[结果表]
 
-## Issues Found
+## 发现的问题
 
-### Critical
-[Issues that must be fixed]
+### 关键
+[必须修复的问题]
 
-### Important
-[Issues that should be fixed]
+### 重要
+[应该修复的问题]
 
-### Minor
-[Issues to address later]
+### 次要
+[稍后处理的问题]
 
-## Sign-off
+## 签收
 
-- [ ] System testing complete
-- [ ] All critical issues resolved
-- [ ] Ready for ship
+- [ ] 系统测试完成
+- [ ] 所有关键问题已解决
+- [ ] 可以发布
 ```
 
-### 6.3 Save Report
+### 6.3 保存报告
 
-Write to `docs/plans/*-st-report.md`.
+写入 `docs/plans/*-st-report.md`。
 
-## Step 7: Complete Testing
+## 步骤 7: 完成测试
 
-### 7.1 Final Status
+### 7.1 最终状态
 
-If ALL tests pass:
-- System testing complete
-- Proceed to review (vibeflow-review)
+如果所有测试通过：
+- 系统测试完成
+- 进入审查（vibeflow-review）
 
-If tests fail with known issues:
-- Document as conditional approval
-- Proceed to review
+如果测试失败但有已知问题：
+- 记录为有条件批准
+- 进入审查
 
-If tests fail critically:
-- Fix issues
-- Re-run system tests
+如果测试关键失败：
+- 修复问题
+- 重新运行系统测试
 
-### 7.2 Stop Test Environment
+### 7.2 停止测试环境
 
-1. Stop all test services
-2. Verify cleanup
-3. Record status
+1. 停止所有测试服务
+2. 验证清理
+3. 记录状态
 
-## Checklist
+## 检查清单
 
-Before marking system testing complete:
+在标记系统测试完成之前：
 
-- [ ] All E2E scenarios tested and passed
-- [ ] All integration points tested and passed
-- [ ] All NFR tests executed with results documented
-- [ ] All regression tests passed
-- [ ] Report saved to `docs/plans/*-st-report.md`
-- [ ] Test environment stopped and cleaned up
-- [ ] System testing verdict: PASS or CONDITIONAL
+- [ ] 所有 E2E 场景已测试并通过
+- [ ] 所有集成点已测试并通过
+- [ ] 所有 NFR 测试已执行并记录结果
+- [ ] 所有回归测试通过
+- [ ] 报告已保存到 `docs/plans/*-st-report.md`
+- [ ] 测试环境已停止并清理
+- [ ] 系统测试结论: PASS 或 CONDITIONAL
 
-## Quality Gates
+## 质量门
 
-| Gate | Requirement |
+| 门 | 要求 |
 |------|-------------|
-| E2E coverage | All primary user journeys tested |
-| Integration coverage | All integration points tested |
-| NFR verification | All NFR requirements verified |
-| Regression | All previously fixed bugs verified |
+| E2E 覆盖率 | 所有主要用户旅程已测试 |
+| 集成覆盖率 | 所有集成点已测试 |
+| NFR 验证 | 所有 NFR 需求已验证 |
+| 回归 | 所有之前修复的 bug 已验证 |
 
-## Integration
+## 集成
 
-**Called by:** `vibeflow` router (after all features pass) or `vibeflow-build-work` (Step 7)
-**Requires:**
-- All features `"status": "passing"`
-- System documentation at `docs/plans/`
-- SRS with NFRs
-- Test environment ready
-**Produces:**
-- System test report at `docs/plans/*-st-report.md`
-- Test execution evidence
-**Chains to:** `vibeflow-review` (if tests pass)
+**调用者:** `vibeflow` 路由器（所有功能通过后）或 `vibeflow-build-work`（步骤 7）
+**需要:**
+- 所有功能 `"status": "passing"`
+- `docs/plans/` 中的系统文档
+- 带 NFR 的 SRS
+- 测试环境就绪
+**产出:**
+- `docs/plans/*-st-report.md` 中的系统测试报告
+- 测试执行证据
+**链接到:** `vibeflow-review`（如果测试通过）

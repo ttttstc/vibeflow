@@ -1,103 +1,103 @@
 ---
 name: vibeflow-plan-review
-description: Use during Plan to run the executive scope review before specs are authored.
+description: 在Plan期间用于在规范编写之前运行执行范围审查。
 ---
 
-# Plan Review for VibeFlow
+# VibeFlow计划审查
 
-Perform the VibeFlow plan review pass before requirements and design authoring continue.
+在需求和设计继续编写之前，执行VibeFlow计划审查。
 
-**Announce at start:** "I'm using the vibeflow-plan-review skill to run the plan review."
+**开始时宣布：** "我正在使用vibeflow-plan-review skill来运行计划审查。"
 
-## Purpose
+## 目的
 
-Before authoring requirements and design, validate:
-- Problem framing is correct
-- Scope tier is appropriate
-- Major risks are identified
-- Recommended path forward is sound
+在编写需求和设计之前，验证：
+- 问题框定是正确的
+- 范围层级是适当的
+- 主要风险已识别
+- 推荐的路径是合理的
 
-## When to Run
+##何时运行
 
-- After Think stage (vibeflow-think)
-- Before Requirements stage (vibeflow-requirements)
-- Invoked by `vibeflow` router
+- Think阶段之后（vibeflow-think）
+- Requirements阶段之前（vibeflow-requirements）
+- 由`vibeflow`路由器调用
 
-## Inputs
+## 输入
 
-- `VIBEFLOW-DESIGN.md` (if exists)
-- `.vibeflow/think-output.md` — Think stage output
-- `.vibeflow/workflow.yaml` — Selected template config (if exists)
+- `VIBEFLOW-DESIGN.md`（如果存在）
+- `.vibeflow/think-output.md` — Think阶段输出
+- `.vibeflow/workflow.yaml` — 选择的模板配置（如果存在）
 
-## Step 1: Load Review Context
+## 步骤1：加载审查上下文
 
-### 1.1 Read Think Output
+### 1.1 阅读Think输出
 
-From `.vibeflow/think-output.md`:
-- Problem statement
-- Proposed solution
-- Success criteria
-- Initial scope assessment
+从`.vibeflow/think-output.md`：
+- 问题陈述
+- 提出的解决方案
+- 成功标准
+- 初始范围评估
 
-### 1.2 Read Workflow Config
+### 1.2 阅读工作流程配置
 
-From `.vibeflow/workflow.yaml`:
-- Selected template
-- Stage sequence
-- Enabled features
+从`.vibeflow/workflow.yaml`：
+- 选择的模板
+- 阶段序列
+- 启用的功能
 
-### 1.3 Read Design Doc (if exists)
+### 1.3 阅读设计文档（如果存在）
 
-From `VIBEFLOW-DESIGN.md` or `docs/plans/*-design.md`:
-- Previous design work
-- Architecture decisions
+从`VIBEFLOW-DESIGN.md`或`docs/plans/*-design.md`：
+- 先前的设计工作
+- 架构决策
 
-## Step 2: Challenge Problem Framing
+## 步骤2：挑战问题框定
 
-### 2.1 Problem Validation
+### 2.1 问题验证
 
-Review the problem statement:
-- [ ] Problem is clearly stated
-- [ ] Problem is actually the root cause
-- [ ] Problem is worth solving
-- [ ] Problem is scoped appropriately
+审查问题陈述：
+- [ ] 问题已清晰陈述
+- [ ] 问题实际上是根本原因
+- [ ] 问题值得解决
+- [ ] 问题范围适当
 
-### 2.2 Solution Validation
+### 2.2 解决方案验证
 
-Review the proposed solution:
-- [ ] Solution addresses root cause
-- [ ] Solution is technically feasible
-- [ ] Solution is cost-effective
-- [ ] Alternative solutions considered
+审查提出的解决方案：
+- [ ] 解决方案解决根本原因
+- [ ] 解决方案在技术上是可行的
+- [ ] 解决方案具有成本效益
+- [ ] 已考虑替代解决方案
 
-### 2.3 Success Criteria Validation
+### 2.3 成功标准验证
 
-Review success criteria:
-- [ ] Criteria are measurable
-- [ ] Criteria are achievable
-- [ ] Criteria validate problem solved
-- [ ] Criteria don't miss important outcomes
+审查成功标准：
+- [ ] 标准是可衡量的
+- [ ] 标准是可实现的
+- [ ] 标准验证问题已解决
+- [ ] 标准没有遗漏重要结果
 
-## Step 3: Scope Tier Review
+## 步骤3：范围层级审查
 
-### 3.1 Assess Scope Tier
+### 3.1 评估范围层级
 
-Based on the problem and solution, recommend scope tier:
+根据问题和解决方案，推荐范围层级：
 
-| Tier | Characteristics | When |
-|------|-----------------|------|
-| **Prototype** | Quick validation, minimal features | Exploratory, learning |
-| **Web Standard** | Full web app, no complex integrations | Standard web product |
-| **API Standard** | Backend API, may have multiple clients | API-first product |
-| **Enterprise** | Complex integrations, high reliability | Mission-critical |
+| 层级 | 特点 | 何时使用 |
+|------|------|----------|
+| **Prototype** | 快速验证、最少功能 | 探索性、学习 |
+| **Web Standard** | 完整Web应用、无复杂集成 | 标准Web产品 |
+| **API Standard** | 后端API、可能有多个客户端 | API优先产品 |
+| **Enterprise** | 复杂集成、高可靠性 | 任务关键型 |
 
-### 3.2 Confirm Tier Appropriateness
+### 3.2 确认层级适当性
 
-- [ ] Template matches scope complexity
-- [ ] Workflow steps appropriate for tier
-- [ ] Quality gates appropriate for tier
+- [ ] 模板与范围复杂度匹配
+- [ ] 工作流程步骤适合层级
+- [ ] 质量关卡适合层级
 
-### 3.3 Document Tier Decision
+### 3.3 记录层级决策
 
 ```markdown
 ## Scope Tier Recommendation
@@ -107,43 +107,43 @@ Based on the problem and solution, recommend scope tier:
 **Alternative considered**: [Tier name] — why not chosen
 ```
 
-## Step 4: Risk Assessment
+## 步骤4：风险评估
 
-### 4.1 Product Risks
+### 4.1 产品风险
 
-| Risk | Likelihood | Impact | Mitigation |
-|------|------------|--------|------------|
+| 风险 | 可能性 | 影响 | 缓解策略 |
+|------|--------|------|----------|
 | Risk 1 | High/Medium/Low | High/Medium/Low | Mitigation strategy |
 
-### 4.2 Technical Risks
+### 4.2 技术风险
 
-| Risk | Likelihood | Impact | Mitigation |
-|------|------------|--------|------------|
+| 风险 | 可能性 | 影响 | 缓解策略 |
+|------|--------|------|----------|
 | Risk 1 | High/Medium/Low | High/Medium/Low | Mitigation strategy |
 
-### 4.3 Delivery Risks
+### 4.3 交付风险
 
-| Risk | Likelihood | Impact | Mitigation |
-|------|------------|--------|------------|
+| 风险 | 可能性 | 影响 | 缓解策略 |
+|------|--------|------|----------|
 | Risk 1 | High/Medium/Low | High/Medium/Low | Mitigation strategy |
 
-## Step 5: Review Recommendations
+## 步骤5：审查建议
 
-### 5.1 Proceed to Requirements
+### 5.1 继续进行需求
 
-**Recommended** — Problem framed correctly, risks manageable
+**推荐** — 问题框定正确，风险可管理
 
-**Conditional** — Proceed with modifications:
+**有条件** — 带修改继续：
 - [ ] Modification 1
 - [ ] Modification 2
 
-**Not Recommended** — Significant issues:
+**不推荐** — 重大问题：
 - [ ] Issue 1
 - [ ] Issue 2
 
-### 5.2 Scope Adjustments
+### 5.2 范围调整
 
-If scope adjustments needed:
+如果需要范围调整：
 ```
 ## Scope Adjustments
 
@@ -157,11 +157,11 @@ If scope adjustments needed:
 - [Item to defer to later iteration]
 ```
 
-## Step 6: Document Review
+## 步骤6：记录审查
 
-### 6.1 Create Review Notes
+### 6.1 创建审查笔记
 
-Save to `.vibeflow/plan-review.md` or `docs/plans/YYYY-MM-DD-plan-review.md`:
+保存到`.vibeflow/plan-review.md`或`docs/plans/YYYY-MM-DD-plan-review.md`：
 
 ```markdown
 # Plan Review — YYYY-MM-DD
@@ -208,43 +208,43 @@ Save to `.vibeflow/plan-review.md` or `docs/plans/YYYY-MM-DD-plan-review.md`:
 - [ ] Address modifications before proceeding
 ```
 
-### 6.2 Save Review Notes
+### 6.2 保存审查笔记
 
-Write review notes to appropriate location.
+将审查笔记写入适当位置。
 
-## Checklist
+## 检查表
 
-Before completing plan review:
+完成计划审查之前：
 
-- [ ] Problem framing validated
-- [ ] Solution approach validated
-- [ ] Success criteria validated
-- [ ] Scope tier recommended
-- [ ] Product risks identified
-- [ ] Technical risks identified
-- [ ] Delivery risks identified
-- [ ] Recommendation documented
-- [ ] Review notes saved
-- [ ] Decision: Proceed / Conditional / Not Recommended
+- [ ] 问题框定已验证
+- [ ] 解决方案方法已验证
+- [ ] 成功标准已验证
+- [ ] 范围层级已推荐
+- [ ] 产品风险已识别
+- [ ] 技术风险已识别
+- [ ] 交付风险已识别
+- [ ] 建议已记录
+- [ ] 审查笔记已保存
+- [ ] 决定：继续 / 有条件 / 不推荐
 
-## Expected Output
+## 预期输出
 
-| Output | Location | Purpose |
-|--------|----------|---------|
+| 输出 | 位置 | 目的 |
+|------|------|------|
 | Scope decision | Review notes | Expand / Hold / Reduce |
-| Review notes | `.vibeflow/plan-review.md` or `docs/plans/` | Decision documentation |
-| Risk assessment | Review notes | Risk awareness |
-| Recommendation | Review notes | Go/No-go guidance |
+| Review notes | `.vibeflow/plan-review.md` or `docs/plans/` | 决定文档 |
+| Risk assessment | Review notes | 风险意识 |
+| Recommendation | Review notes | Go/No-go指导 |
 
-## Integration
+## 集成
 
-**Called by:** `vibeflow` router (after Think, before Requirements)
-**Requires:**
-- Think output at `.vibeflow/think-output.md`
-- Workflow config at `.vibeflow/workflow.yaml` (if exists)
-- Design doc (if exists)
-**Produces:**
-- Review notes with scope decision
-- Risk assessment
-- Go/No-go recommendation
-**Chains to:** `vibeflow-requirements` (if approved)
+**由以下调用：** `vibeflow`路由器（Think之后，Requirements之前）
+**需要：**
+- Think输出在`.vibeflow/think-output.md`
+- 工作流程配置在`.vibeflow/workflow.yaml`（如果存在）
+- 设计文档（如果存在）
+**产生：**
+- 带范围决定的审查笔记
+- 风险评估
+- Go/No-go建议
+**链接到：** `vibeflow-requirements`（如果批准）

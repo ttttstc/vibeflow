@@ -3,248 +3,248 @@ name: vibeflow-spec-review
 description: Use for per-feature compliance review against requirements and design.
 ---
 
-# Spec Compliance Review for VibeFlow
+# VibeFlow 规格合规审查
 
-Review the implemented feature against the approved requirements and design. Per-feature review before marking complete.
+对照已批准的需 求和设计审查已实现的特性。在将特性标记为完成之前进行每个特性审查。
 
-**Announce at start:** "I'm using the vibeflow-spec-review skill to review this feature's compliance."
+**开始时宣布：** "我正在使用 vibeflow-spec-review skill 审查这个特性的合规性。"
 
-## Purpose
+## 目的
 
-Verify that implementation matches:
-1. Approved requirements specification (SRS)
-2. Approved technical design
-3. Agreed implementation approach
-4. UCD style guide (for UI features)
+验证实现是否匹配：
+1. 已批准的需求规格（SRS）
+2. 已批准的技术设计
+3. 商定的实现方法
+4. UCD 样式指南（对于 UI 特性）
 
-## When to Run
+## 何时运行
 
-- After TDD cycle completes
-- After quality gates pass
-- After feature acceptance testing (if enabled)
-- Before marking feature complete
-- Invoked by `vibeflow-build-work` (Step 5)
+- TDD 循环完成后
+- 质量门禁通过后
+- 特性验收测试完成后（如果启用）
+- 将特性标记为完成之前
+- 由 `vibeflow-build-work` 调用（步骤5）
 
-## Step 1: Load Review Context
+## 步骤1：加载审查上下文
 
-### 1.1 Read Feature Spec
+### 1.1 读取特性规格
 
-From `feature-list.json`:
-- Feature ID, title, description
+从 `feature-list.json`：
+- 特性 ID、标题、描述
 - `verification_steps[]`
 - `dependencies[]`
-- `ui` flag
+- `ui` 标志
 
-### 1.2 Read SRS Requirement Section
+### 1.2 读取 SRS 需求部分
 
-From `docs/plans/*-srs.md`:
-- Full FR-xxx section for this feature
-- Given/When/Then acceptance criteria
-- Priority and severity
-- Related NFRs
+从 `docs/plans/*-srs.md`：
+- 该特性的完整 FR-xxx 部分
+- Given/When/Then 验收标准
+- 优先级和严重性
+- 相关的 NFR
 
-### 1.3 Read Design Section
+### 1.3 读取设计部分
 
-From `docs/plans/*-design.md`:
-- Full §4.N subsection for this feature
-- Architecture decisions
-- Interface contracts
-- Data flows
+从 `docs/plans/*-design.md`：
+- 该特性的完整 §4.N 小节
+- 架构决策
+- 接口契约
+- 数据流
 
-### 1.4 Read Plan Document
+### 1.4 读取计划文档
 
-From `docs/plans/YYYY-MM-DD-<feature-name>.md`:
-- Implementation approach agreed
-- Task decomposition
-- Design decisions made
+从 `docs/plans/YYYY-MM-DD-<feature-name>.md`：
+- 商定的实现方法
+- 任务分解
+- 做出的设计决策
 
-### 1.5 Read UCD (if ui: true)
+### 1.5 读取 UCD（如果 ui: true）
 
-From `docs/plans/*-ucd.md`:
-- Style tokens
-- Component visual spec
-- Page layouts
+从 `docs/plans/*-ucd.md`：
+- 样式标记
+- 组件视觉规格
+- 页面布局
 
-### 1.6 Read Test Results
+### 1.6 读取测试结果
 
-From `docs/test-cases/feature-{id}-{slug}.md`:
-- Executed test case results
-- PASS/FAIL status
-- Any failures encountered
+从 `docs/test-cases/feature-{id}-{slug}.md`：
+- 已执行的测试用例结果
+- PASS/FAIL 状态
+- 遇到的任何失败
 
-### 1.7 Read Git Diff
+### 1.7 读取 Git Diff
 
-Get changes made during implementation:
+获取实现期间所做的更改：
 ```bash
 git diff --stat
 git diff
 ```
 
-## Step 2: Spec Compliance Review
+## 步骤2：规格合规审查
 
-### 2.1 Requirements Traceability
+### 2.1 需求可追溯性
 
-For each `verification_step`:
-- [ ] Step is covered by at least one test
-- [ ] Test verifies the behavior described in the step
-- [ ] Test result is PASS
-- [ ] No undocumented side effects
+对于每个 `verification_step`：
+- [ ] 步骤至少有一个测试覆盖
+- [ ] 测试验证步骤中描述的行为
+- [ ] 测试结果为 PASS
+- [ ] 没有未记录的副作用
 
-### 2.2 Acceptance Criteria Compliance
+### 2.2 验收标准合规性
 
-For each Given/When/Then from SRS:
-- [ ] Given conditions are met in implementation
-- [ ] When actions trigger expected behavior
-- [ ] Then results match expected outcomes
-- [ ] Edge cases from spec are handled
+对于 SRS 中的每个 Given/When/Then：
+- [ ] Given 条件在实现中满足
+- [ ] When 操作触发预期行为
+- [ ] Then 结果匹配预期结果
+- [ ] 处理了规范中的边缘用例
 
-### 2.3 Verification Completeness
+### 2.3 验证完整性
 
-- [ ] All `verification_steps` have corresponding tests
-- [ ] Tests verify behavior, not implementation details
-- [ ] No verification gaps
+- [ ] 所有 `verification_steps` 都有对应的测试
+- [ ] 测试验证行为，而不是实现细节
+- [ ] 没有验证缺口
 
-## Step 3: Design Compliance Review
+## 步骤3：设计合规审查
 
-### 3.1 Architecture Compliance
+### 3.1 架构合规性
 
-- [ ] Class/module structure matches design
-- [ ] Interaction flows match design
-- [ ] Third-party dependency versions match design
-- [ ] Architectural layers/boundaries respected
+- [ ] 类/模块结构与设计匹配
+- [ ] 交互流与设计匹配
+- [ ] 第三方依赖版本与设计匹配
+- [ ] 架构层/边界被尊重
 
-### 3.2 Interface Compliance
+### 3.2 接口合规性
 
-For each interface contract in design:
-- [ ] Method signatures match
-- [ ] Parameter types match
-- [ ] Return types match
-- [ ] Exception handling matches
+对于设计中的每个接口契约：
+- [ ] 方法签名匹配
+- [ ] 参数类型匹配
+- [ ] 返回类型匹配
+- [ ] 异常处理匹配
 
-### 3.3 Algorithm Compliance
+### 3.3 算法合规性
 
-- [ ] Core algorithm matches pseudocode
-- [ ] Control flow matches design
-- [ ] Data transformations correct
-- [ ] Boundary conditions handled
+- [ ] 核心算法与伪代码匹配
+- [ ] 控制流与设计匹配
+- [ ] 数据转换正确
+- [ ] 边界条件已处理
 
-## Step 4: Implementation Review
+## 步骤4：实现审查
 
-### 4.1 Code Quality
+### 4.1 代码质量
 
-- [ ] No placeholder comments (TODO with no follow-up)
-- [ ] No commented-out code
-- [ ] Consistent naming conventions
-- [ ] Error handling appropriate
+- [ ] 没有占位符注释（没有后续的 TODO）
+- [ ] 没有注释掉的代码
+- [ ] 命名约定一致
+- [ ] 错误处理适当
 
-### 4.2 Test Quality
+### 4.2 测试质量
 
-- [ ] Unit tests exist for core logic
-- [ ] Integration tests exist for external dependencies
-- [ ] Tests are maintainable
-- [ ] No test code duplication
+- [ ] 核心逻辑存在单元测试
+- [ ] 外部依赖存在集成测试
+- [ ] 测试可维护
+- [ ] 没有测试代码重复
 
-## Step 5: UCD Compliance (if ui: true)
+## 步骤5：UCD 合规性（如果 ui: true）
 
-### 5.1 Visual Compliance
+### 5.1 视觉合规性
 
-- [ ] Color values match UCD palette tokens
-- [ ] Typography matches UCD scale
-- [ ] Spacing follows UCD tokens
-- [ ] Component structure matches UCD prompts
+- [ ] 颜色值与 UCD 调色板标记匹配
+- [ ] 排版与 UCD 比例匹配
+- [ ] 间距遵循 UCD 标记
+- [ ] 组件结构与 UCD 提示匹配
 
-### 5.2 Interaction Compliance
+### 5.2 交互合规性
 
-- [ ] Interactive elements behave as specified
-- [ ] State transitions match UCD descriptions
-- [ ] Accessibility features implemented
+- [ ] 交互元素按规格行为
+- [ ] 状态转换与 UCD 描述匹配
+- [ ] 已实现可访问性功能
 
-## Step 6: Compile Review Findings
+## 步骤6：汇编审查结果
 
-### 6.1 Issue List
+### 6.1 问题列表
 
-For each issue found:
+对于发现的每个问题：
 ```
-## Issue: [Title]
-**Severity:** Critical | Important | Minor
-**Location:** File, line, component
-**Description:** What is wrong
-**Evidence:** How it was detected
-**Fix:** Recommended fix
+## 问题：[标题]
+**严重性：** 关键 | 重要 | 次要
+**位置：** 文件、行、组件
+**描述：** 什么是错的
+**证据：** 如何检测到的
+**修复：** 建议的修复
 ```
 
-### 6.2 Severity Classification
+### 6.2 严重性分类
 
-| Severity | Response | Blocks? |
+| 严重性 | 响应 | 阻塞？ |
 |----------|----------|---------|
-| Critical | Fix immediately | Yes |
-| Important | Fix before next feature | Yes |
-| Minor | Fix in refactor or next session | No |
+| 关键 | 立即修复 | 是 |
+| 重要 | 在下一个特性之前修复 | 是 |
+| 次要 | 在重构或下次会议中修复 | 否 |
 
-### 6.3 Review Verdict
+### 6.3 审查 verdict
 
-**PASS** — All critical and important issues fixed
-**FAIL** — Critical or important issues remain
+**通过** — 所有关键和重要问题已修复
+**失败** — 仍有关键或重要问题
 
-## Step 7: Fix Issues (if any)
+## 步骤7：修复问题（如有）
 
-### 7.1 For Critical Issues
+### 7.1 对于关键问题
 
-1. Fix immediately in this session
-2. Re-run relevant tests
-3. Re-verify the fix
-4. Update issue status
+1. 在本会话中立即修复
+2. 重新运行相关测试
+3. 重新验证修复
+4. 更新问题状态
 
-### 7.2 For Important Issues
+### 7.2 对于重要问题
 
-1. Fix before proceeding to next feature
-2. Document fix in task-progress.md
-3. Track for follow-up
+1. 在继续下一个特性之前修复
+2. 在 task-progress.md 中记录修复
+3. 跟踪待处理
 
-### 7.3 For Minor Issues
+### 7.3 对于次要问题
 
-1. Document for refactor or next session
-2. Track in issue list
+1. 记录以待重构或下次会议修复
+2. 在问题列表中跟踪
 
-## Step 8: Complete Review
+## 步骤8：完成审查
 
-### 8.1 Update Feature Status
+### 8.1 更新特性状态
 
-If review PASS:
-- Mark feature review complete in task-progress.md
-- Proceed to persist (git commit)
+如果审查通过：
+- 在 task-progress.md 中标记特性审查完成
+- 继续进行持久化（git 提交）
 
-### 8.2 Escalation (if review fails after fixes)
+### 8.2 升级（如修复后审查仍失败）
 
-After 3 rounds of fixes:
-- Document all issues found
-- Document what was tried
-- Escalate to user
+3 轮修复后：
+- 记录发现的所有问题
+- 记录尝试过的方法
+- 升级给用户
 
-## Checklist
+## 检查清单
 
-Before marking spec review complete:
+在标记规格审查完成之前：
 
-- [ ] All verification_steps verified by tests
-- [ ] All Given/When/Then acceptance criteria met
-- [ ] Architecture matches design document
-- [ ] Interface contracts match design
-- [ ] Algorithm matches pseudocode
-- [ ] UCD style guide followed (if ui: true)
-- [ ] No critical issues remain
-- [ ] No important issues remain (or tracked for fix)
-- [ ] Review verdict: PASS
+- [ ] 所有 verification_steps 已通过测试验证
+- [ ] 所有 Given/When/Then 验收标准已满足
+- [ ] 架构与设计文档匹配
+- [ ] 接口契约与设计匹配
+- [ ] 算法与伪代码匹配
+- [ ] 遵循了 UCD 样式指南（如果 ui: true）
+- [ ] 没有剩余的关键问题
+- [ ] 没有剩余的重要问题（或已跟踪待修复）
+- [ ] 审查 verdict：通过
 
-## Integration
+## 集成
 
-**Called by:** `vibeflow-build-work` (Step 5 — Spec review)
-**Requires:**
-- Feature spec from `feature-list.json`
-- SRS requirement section from `docs/plans/*-srs.md`
-- Design section from `docs/plans/*-design.md`
-- Plan document from `docs/plans/YYYY-MM-DD-<feature-name>.md`
-- Test case document from `docs/test-cases/feature-{id}-{slug}.md`
-- UCD (if ui: true) from `docs/plans/*-ucd.md`
-- Git diff of implementation changes
-**Produces:** Review verdict with findings
-**Returns to:** `vibeflow-build-work` for persist step
+**被调用者：** `vibeflow-build-work`（步骤5——规格审查）
+**需要：**
+- 来自 `feature-list.json` 的特性规格
+- 来自 `docs/plans/*-srs.md` 的 SRS 需求部分
+- 来自 `docs/plans/*-design.md` 的设计部分
+- 来自 `docs/plans/YYYY-MM-DD-<feature-name>.md` 的计划文档
+- 来自 `docs/test-cases/feature-{id}-{slug}.md` 的测试用例文档
+- 来自 `docs/plans/*-ucd.md` 的 UCD（如果 ui: true）
+- 实现更改的 Git diff
+**产出：** 带结果的审查 verdict
+**返回到：** `vibeflow-build-work` 进行持久化步骤

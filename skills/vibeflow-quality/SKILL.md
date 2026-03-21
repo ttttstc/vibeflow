@@ -3,53 +3,53 @@ name: vibeflow-quality
 description: Use for coverage and mutation quality gates during the VibeFlow build stage.
 ---
 
-# Quality Gates for VibeFlow
+# VibeFlow 质量门禁
 
-Validate the current feature against `.vibeflow/work-config.json` quality thresholds. Four sequential gates that MUST pass before marking a feature complete.
+根据 `.vibeflow/work-config.json` 中的质量阈值验证当前特性。四个顺序门禁，在将特性标记为完成之前必须全部通过。
 
-**Announce at start:** "I'm using the vibeflow-quality skill to run quality gates."
+**开始时宣布：** "我正在使用 vibeflow-quality skill 运行质量门禁。"
 
-## The Iron Law
+## 铁律
 
 ```
-NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE
+没有新鲜的验证证据就不能声称完成
 ```
 
-If you have not run the verification command in this session, you cannot claim it passes.
+如果在本会话中没有运行验证命令，就不能声称它通过了。
 
-## Step 1: Real Test Verification (Gate 0)
+## 步骤1：真实测试验证（门禁0）
 
-Gate 0 runs BEFORE coverage. Coverage numbers are meaningless when the test suite is all-mock.
+门禁0在覆盖率之前运行。当测试套件全是 mock 时，覆盖率数据毫无意义。
 
-### 1.1 Check Real Test Existence
+### 1.1 检查真实测试存在
 
-For features with external dependencies (DB, HTTP, file system):
-1. Verify at least one `[integration]` labeled test exists
-2. Verify the integration test uses a real dependency (not mocked)
-3. If no integration test exists → FAIL Gate 0
+对于有外部依赖的特 性（DB、HTTP、文件系统）：
+1. 验证至少存在一个 `[integration]` 标记的测试
+2. 验证集成测试使用真实依赖（不是 mock）
+3. 如果不存在集成测试 → 门禁0 失败
 
-### 1.2 Execute Real Tests
+### 1.2 执行真实测试
 
-Run the test suite and verify all tests pass:
+运行测试套件并验证所有测试通过：
 ```bash
-pytest tests/ -v  # or project-specific command
+pytest tests/ -v  # 或项目特定命令
 ```
 
-Any test failure → Gate 0 FAIL. Fix before proceeding.
+任何测试失败 → 门禁0 失败。继续之前先修复。
 
-**Evidence required:**
+**需要的证据：**
 ```
-Gate 0 Result:
-- Real test count: N
-- All tests passing: YES/NO
-- Gate 0: PASS/FAIL
+门禁0 结果：
+- 真实测试数量：N
+- 所有测试通过：是/否
+- 门禁0：通过/失败
 ```
 
-## Step 2: Coverage Gate (Gate 1)
+## 步骤2：覆盖率门禁（门禁1）
 
-After all tests pass, run coverage verification.
+所有测试通过后，运行覆盖率验证。
 
-### 2.1 Run Coverage Tool
+### 2.1 运行覆盖率工具
 
 ```bash
 # Python
@@ -63,9 +63,9 @@ npm test -- --coverage
 mvn test jacoco:report
 ```
 
-### 2.2 Verify Thresholds
+### 2.2 验证阈值
 
-Read `.vibeflow/work-config.json` for thresholds:
+读取 `.vibeflow/work-config.json` 获取阈值：
 ```json
 {
   "quality": {
@@ -78,32 +78,32 @@ Read `.vibeflow/work-config.json` for thresholds:
 }
 ```
 
-| Metric | Threshold | If Below |
+| 指标 | 阈值 | 低于阈值时 |
 |--------|-----------|----------|
-| Line coverage | `line_coverage_min` | Add tests for uncovered lines |
-| Branch coverage | `branch_coverage_min` | Add tests for uncovered branches |
+| 行覆盖率 | `line_coverage_min` | 为未覆盖的行添加测试 |
+| 分支覆盖率 | `branch_coverage_min` | 为未覆盖的分支添加测试 |
 
-### 2.3 If Coverage Fails
+### 2.3 如果覆盖率失败
 
-1. Identify uncovered lines/branches from the coverage report
-2. Add tests targeting the gaps
-3. Return to TDD cycle (vibeflow-tdd) to add tests
-4. Re-run coverage verification
-5. Do NOT skip or bypass coverage requirements
+1. 从覆盖率报告中识别未覆盖的行/分支
+2. 添加针对缺口的测试
+3. 返回 TDD 循环（vibeflow-tdd）添加测试
+4. 重新运行覆盖率验证
+5. 不要跳过或绕过覆盖率要求
 
-**Evidence required:**
+**需要的证据：**
 ```
-Gate 1 Result:
-- Line coverage: XX% (threshold: Y%)
-- Branch coverage: XX% (threshold: Y%)
-- Gate 1: PASS/FAIL
+门禁1 结果：
+- 行覆盖率：XX%（阈值：Y%）
+- 分支覆盖率：XX%（阈值：Y%）
+- 门禁1：通过/失败
 ```
 
-## Step 3: Mutation Testing Gate (Gate 2)
+## 步骤3：变异测试门禁（门禁2）
 
-After coverage passes, run mutation testing on changed files.
+覆盖率通过后，对更改的文件运行变异测试。
 
-### 3.1 Run Mutation Testing
+### 3.1 运行变异测试
 
 ```bash
 # Python
@@ -116,9 +116,9 @@ mvn pitest:mutationCoverage
 stryker
 ```
 
-### 3.2 Verify Mutation Score
+### 3.2 验证变异分数
 
-Check `.vibeflow/work-config.json` for mutation threshold:
+检查 `.vibeflow/work-config.json` 中的变异阈值：
 ```json
 {
   "quality": {
@@ -129,100 +129,100 @@ Check `.vibeflow/work-config.json` for mutation threshold:
 }
 ```
 
-| Score | Action |
+| 分数 | 行动 |
 |-------|--------|
-| >= threshold | PASS Gate 2 |
-| < threshold | Analyze surviving mutants |
+| >= 阈值 | 门禁2 通过 |
+| < 阈值 | 分析存活的变异体 |
 
-### 3.3 Analyze Surviving Mutants
+### 3.3 分析存活的变异体
 
-For each surviving mutant:
-- **Equivalent mutant** (code change has no observable effect) → document and skip
-- **Real gap** (test doesn't catch the mutation) → add/strengthen test
-- **Unreachable code** → remove dead code
+对于每个存活的变异体：
+- **等效变异体**（代码更改没有可观察效果）→ 记录并跳过
+- **真实缺口**（测试没有捕获变异）→ 添加/加强测试
+- **不可达代码** → 删除死代码
 
-After analysis:
-- Add/strengthen tests for real gaps
-- Re-run mutation testing
-- Do NOT skip mutation testing
+分析后：
+- 为真实缺口添加/加强测试
+- 重新运行变异测试
+- 不要跳过变异测试
 
-**Evidence required:**
+**需要的证据：**
 ```
-Gate 2 Result:
-- Mutation score: XX% (threshold: Y%)
-- Surviving mutants: N
-- Equivalent: N, Real gap: N, Unreachable: N
-- Gate 2: PASS/FAIL
+门禁2 结果：
+- 变异分数：XX%（阈值：Y%）
+- 存活变异体：N
+- 等效：N，真实缺口：N，不可达：N
+- 门禁2：通过/失败
 ```
 
-## Step 4: Verify & Mark (Gate 3)
+## 步骤4：验证并标记（门禁3）
 
-Final gate before marking feature complete.
+标记特性完成前的最终门禁。
 
-### 4.1 Run Full Verification
+### 4.1 运行完整验证
 
-Execute ALL verification in THIS session (not cached):
+在当前会话中执行所有验证（不是缓存的）：
 ```bash
-# 1. All tests pass
+# 1. 所有测试通过
 pytest tests/ -v
 
-# 2. Coverage meets thresholds
+# 2. 覆盖率满足阈值
 coverage run -m pytest tests/
 coverage report
 
-# 3. Mutation score meets threshold
+# 3. 变异分数满足阈值
 mutmut run
 mutmut results
 ```
 
-### 4.2 Read All Output
+### 4.2 读取所有输出
 
-- Check exit codes for all commands
-- Count pass/fail/skip for tests
-- Read coverage percentages
-- Read mutation score
+- 检查所有命令的退出码
+- 统计测试的通过/失败/跳过数量
+- 读取覆盖率百分比
+- 读取变异分数
 
-### 4.3 Mark Feature Complete
+### 4.3 标记特性完成
 
-ONLY after ALL gates pass:
-1. Update feature status in `feature-list.json`: `"status": "passing"`
-2. Record evidence in `task-progress.md`
-3. Report results with evidence
+只有在所有门禁都通过后：
+1. 在 `feature-list.json` 中更新特性状态：`"status": "passing"`
+2. 在 `task-progress.md` 中记录证据
+3. 报告带证据的结果
 
-If ANY gate fails → STOP. Do NOT mark as passing. Fix the issue first.
+如果任何门禁失败 → 停止。不要标记为通过。先修复问题。
 
-## Red Flag Words
+## 红旗词汇
 
-If you catch yourself using any of these, STOP and re-verify:
+如果你发现自己使用了以下任何一个，停止并重新验证：
 
-| Red Flag | Correct Action |
+| 红旗 | 正确行动 |
 |----------|----------------|
-| "should pass" | Run the tests NOW |
-| "probably works" | Execute and verify NOW |
-| "coverage looks fine" | Run coverage tool NOW |
-| "mutation score should be OK" | Run mutation tests NOW |
-| "I've verified" (no output shown) | Show the actual output |
+| "应该通过" | 立即运行测试 |
+| "大概能用" | 立即执行并验证 |
+| "覆盖率看起来还行" | 立即运行覆盖率工具 |
+| "变异分数应该没问题" | 立即运行变异测试 |
+| "已验证"（没有显示输出） | 显示实际输出 |
 
-## Checklist
+## 检查清单
 
-Before marking quality gates complete:
+在标记质量门禁完成之前：
 
-- [ ] Gate 0: Real tests exist and pass (or exemption declared)
-- [ ] Gate 1: Line coverage >= threshold
-- [ ] Gate 1: Branch coverage >= threshold
-- [ ] Gate 2: Mutation score >= threshold
-- [ ] Gate 2: Surviving mutants analyzed and addressed
-- [ ] Gate 3: Full verification run in THIS session
-- [ ] Gate 3: All commands executed with output captured
-- [ ] Feature marked `"status": "passing"` in `feature-list.json`
+- [ ] 门禁0：真实测试存在并通过（或已声明豁免）
+- [ ] 门禁1：行覆盖率 >= 阈值
+- [ ] 门禁1：分支覆盖率 >= 阈值
+- [ ] 门禁2：变异分数 >= 阈值
+- [ ] 门禁2：存活的变异体已分析并处理
+- [ ] 门禁3：在当前会话中运行完整验证
+- [ ] 门禁3：所有命令都已执行并捕获输出
+- [ ] 特性在 `feature-list.json` 中标记为 `"status": "passing"`
 
-## Integration
+## 集成
 
-**Called by:** `vibeflow-build-work` (Step 4 — Quality gates)
-**Requires:**
-- Feature ID and `verification_steps`
-- `quality_gates` thresholds from `feature-list.json`
-- `tech_stack` tool names from `feature-list.json`
-- All tests passing (from vibeflow-tdd)
-**Produces:** Fresh verification evidence (test output, coverage %, mutation score)
-**Chains to:** `vibeflow-feature-st` (if enabled in work-config)
+**被调用者：** `vibeflow-build-work`（步骤4——质量门禁）
+**需要：**
+- 特性 ID 和 `verification_steps`
+- 来自 `feature-list.json` 的 `quality_gates` 阈值
+- 来自 `feature-list.json` 的 `tech_stack` 工具名称
+- 所有测试通过（来自 vibeflow-tdd）
+**产出：** 新鲜的验证证据（测试输出、覆盖率%、变异分数）
+**链接到：** `vibeflow-feature-st`（如果在 work-config 中启用）

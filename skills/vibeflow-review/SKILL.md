@@ -3,240 +3,240 @@ name: vibeflow-review
 description: Use after build completion for whole-change review across the branch or diff.
 ---
 
-# Whole-Change Review for VibeFlow
+# VibeFlow 全局变更审查
 
-Run a full review of all completed features before shipping. Cross-feature analysis for structural issues, hidden regressions, and completeness gaps.
+在发布前对所有已完成的功能进行全面审查。跨功能分析结构问题、隐藏回归和完整性缺口。
 
-**Announce at start:** "I'm using the vibeflow-review skill to run the whole-change review."
+**开始时宣布：** "我正在使用 vibeflow-review skill 进行全局变更审查。"
 
-## Purpose
+## 目的
 
-After all features pass their individual reviews, verify the complete change set is shippable:
-- Structural issues across the codebase
-- Hidden regressions from feature interactions
-- Missing tests at the integration level
-- Completeness gaps in the deliverable
+在所有功能通过各自审查后，验证完整的变更集是否可以发布：
+- 代码库的结构问题
+- 功能交互带来的隐藏回归
+- 集成层面缺失的测试
+- 交付物中的完整性缺口
 
-## When to Run
+## 何时运行
 
-- After ALL features pass individual spec reviews
-- After system testing completes (if enabled)
-- Before shipping
-- Invoked by `vibeflow` router (between build and ship stages)
+- 所有功能通过各自的规格审查后
+- 系统测试完成后（如果已启用）
+- 发布前
+- 由 `vibeflow` 路由器调用（构建和发布阶段之间）
 
-## Step 1: Load Review Context
+## 步骤 1: 加载审查上下文
 
-### 1.1 Read Feature List
+### 1.1 读取功能列表
 
-From `feature-list.json`:
-- All features with `"status": "passing"`
-- All feature IDs, titles, categories
-- Feature dependencies
+从 `feature-list.json`:
+- 所有 `"status": "passing"` 的功能
+- 所有功能 ID、标题、类别
+- 功能依赖关系
 
-### 1.2 Read Task Progress
+### 1.2 读取任务进度
 
-From `task-progress.md`:
-- Session log of completed work
-- Any issues recorded during build
-- Open questions or known limitations
+从 `task-progress.md`:
+- 已完成工作的会话日志
+- 构建期间记录的任何问题
+- 开放性问题或已知限制
 
-### 1.3 Read All Spec Docs
+### 1.3 读取所有规格文档
 
-From `docs/plans/`:
-- All SRS sections
-- All design sections
-- All plan documents
+从 `docs/plans/`:
+- 所有 SRS 部分
+- 所有设计部分
+- 所有计划文档
 
-### 1.4 Get Git Diff
+### 1.4 获取 Git 差异
 
 ```bash
 git diff main...HEAD --stat
 git diff main...HEAD
 ```
 
-This gives the full change set since the base branch.
+这将获取自基础分支以来的完整变更集。
 
-## Step 2: Structural Review
+## 步骤 2: 结构审查
 
-### 2.1 Architecture Integrity
+### 2.1 架构完整性
 
-Review the complete change set:
-- [ ] New modules/classes follow architecture
-- [ ] Cross-feature dependencies are managed
-- [ ] No circular dependencies introduced
-- [ ] API contracts between modules maintained
+审查完整变更集：
+- [ ] 新模块/类遵循架构
+- [ ] 跨功能依赖关系已管理
+- [ ] 没有引入循环依赖
+- [ ] 模块间的 API 契约已维护
 
-### 2.2 Code Organization
+### 2.2 代码组织
 
-- [ ] Files organized by convention
-- [ ] No oversized files requiring splitting
-- [ ] No duplicate code across features
-- [ ] Configuration properly externalized
+- [ ] 文件按约定组织
+- [ ] 没有需要拆分的大型文件
+- [ ] 跨功能没有重复代码
+- [ ] 配置已正确外部化
 
-### 2.3 Dependency Management
+### 2.3 依赖管理
 
-- [ ] New dependencies justified
-- [ ] Dependency versions locked
-- [ ] No vulnerable dependencies
-- [ ] Dependency licenses acceptable
+- [ ] 新依赖关系已论证
+- [ ] 依赖版本已锁定
+- [ ] 没有有漏洞的依赖
+- [ ] 依赖许可证可接受
 
-## Step 3: Regression Analysis
+## 步骤 3: 回归分析
 
-### 3.1 Feature Interaction
+### 3.1 功能交互
 
-For each pair of features that may interact:
-- [ ] Features work correctly together
-- [ ] No resource conflicts
-- [ ] No data corruption between features
-- [ ] API endpoints don't conflict
+对于每一对可能交互的功能：
+- [ ] 功能在一起正常工作
+- [ ] 没有资源冲突
+- [ ] 功能间没有数据损坏
+- [ ] API 端点不冲突
 
-### 3.2 Integration Points
+### 3.2 集成点
 
-- [ ] All integration points tested
-- [ ] Error handling at boundaries works
-- [ ] Data flows correctly between features
-- [ ] No data loss at integration points
+- [ ] 所有集成点已测试
+- [ ] 边界处的错误处理正常工作
+- [ ] 功能间数据流正确
+- [ ] 集成点没有数据丢失
 
-### 3.3 Side Effects
+### 3.3 副作用
 
-- [ ] No unintended side effects from changes
-- [ ] Global state changes are intentional
-- [ ] Configuration changes are backward compatible
-- [ ] No breaking changes to existing APIs
+- [ ] 变更没有意外的副作用
+- [ ] 全局状态变更是有意的
+- [ ] 配置变更向后兼容
+- [ ] 对现有 API 没有破坏性变更
 
-## Step 4: Test Coverage Review
+## 步骤 4: 测试覆盖率审查
 
-### 4.1 Unit Test Coverage
+### 4.1 单元测试覆盖率
 
-From all test results:
-- [ ] Core logic has adequate unit tests
-- [ ] Edge cases covered
-- [ ] Error paths covered
+从所有测试结果：
+- [ ] 核心逻辑有足够的单元测试
+- [ ] 边缘情况已覆盖
+- [ ] 错误路径已覆盖
 
-### 4.2 Integration Test Coverage
+### 4.2 集成测试覆盖率
 
-- [ ] Cross-feature interactions tested
-- [ ] End-to-end scenarios covered
-- [ ] Integration points exercised
+- [ ] 跨功能交互已测试
+- [ ] 端到端场景已覆盖
+- [ ] 集成点已执行
 
-### 4.3 System Test Coverage
+### 4.3 系统测试覆盖率
 
-If system testing was run:
-- [ ] All system test cases passed
-- [ ] NFRs verified
-- [ ] Performance acceptable
+如果运行了系统测试：
+- [ ] 所有系统测试用例通过
+- [ ] NFR 已验证
+- [ ] 性能可接受
 
-## Step 5: Documentation Review
+## 步骤 5: 文档审查
 
-### 5.1 Code Documentation
+### 5.1 代码文档
 
-- [ ] Public APIs documented
-- [ ] Complex logic explained
-- [ ] No missing documentation for new public interfaces
+- [ ] 公共 API 已文档化
+- [ ] 复杂逻辑已解释
+- [ ] 新公共接口没有缺失的文档
 
-### 5.2 User Documentation
+### 5.2 用户文档
 
-- [ ] User-facing changes documented
-- [ ] API changes documented (if applicable)
-- [ ] Breaking changes documented
+- [ ] 用户面向的变更已文档化
+- [ ] API 变更已文档化（如果适用）
+- [ ] 破坏性变更已文档化
 
-### 5.3 Release Notes
+### 5.3 发布说明
 
-- [ ] All new features listed
-- [ ] Bug fixes documented
-- [ ] Breaking changes highlighted
-- [ ] Migration steps provided (if needed)
+- [ ] 所有新功能已列出
+- [ ] 错误修复已文档化
+- [ ] 破坏性变更已突出显示
+- [ ] 提供了迁移步骤（如果需要）
 
-## Step 6: Security Review
+## 步骤 6: 安全审查
 
-### 6.1 Authentication & Authorization
+### 6.1 认证与授权
 
-- [ ] New endpoints secured
-- [ ] Permissions correctly enforced
-- [ ] No privilege escalation
+- [ ] 新端点已保护
+- [ ] 权限正确执行
+- [ ] 没有权限提升
 
-### 6.2 Input Validation
+### 6.2 输入验证
 
-- [ ] All user input validated
-- [ ] Injection attacks prevented
-- [ ] Sensitive data sanitized from logs
+- [ ] 所有用户输入已验证
+- [ ] 防止注入攻击
+- [ ] 日志中已清理敏感数据
 
-### 6.3 Data Handling
+### 6.3 数据处理
 
-- [ ] Sensitive data encrypted
-- [ ] PII handled correctly
-- [ ] Data retention policies followed
+- [ ] 敏感数据已加密
+- [ ] PII 处理正确
+- [ ] 遵循数据保留策略
 
-## Step 7: Compile Review Findings
+## 步骤 7: 编译审查结果
 
-### 7.1 Issue List
+### 7.1 问题列表
 
-Document each finding:
+记录每个发现：
 ```
-## Finding: [Title]
-**Severity:** Critical | Important | Minor
-**Category:** Structure | Regression | Coverage | Docs | Security
-**Description:** What was found
-**Evidence:** Where/how detected
-**Impact:** What could go wrong
-**Fix:** Recommended fix
+## 发现: [标题]
+**严重性:** Critical | Important | Minor
+**类别:** Structure | Regression | Coverage | Docs | Security
+**描述:** 发现了什么
+**证据:** 在哪里/如何检测到
+**影响:** 可能出什么错
+**修复:** 建议的修复
 ```
 
-### 7.2 Severity Classification
+### 7.2 严重性分类
 
-| Severity | Action | Blocks Ship? |
-|----------|--------|-------------|
-| Critical | Fix immediately | Yes |
-| Important | Fix before ship | Yes |
-| Minor | Fix in next release | No |
+| 严重性 | 操作 | 阻塞发布? |
+|--------|------|-----------|
+| Critical | 立即修复 | Yes |
+| Important | 发布前修复 | Yes |
+| Minor | 下一版本修复 | No |
 
-### 7.3 Review Verdict
+### 7.3 审查结论
 
-**APPROVED** — Ready to ship
-**CONDITIONAL** — Ship with known issues (documented)
-**BLOCKED** — Must fix before ship
+**APPROVED** — 可以发布
+**CONDITIONAL** — 带已知问题发布（已文档化）
+**BLOCKED** — 发布前必须修复
 
-## Step 8: Address Findings
+## 步骤 8: 处理发现
 
-### 8.1 Fix Critical Issues
+### 8.1 修复关键问题
 
-For each critical finding:
-1. Fix in this session
-2. Re-run relevant tests
-3. Verify fix
-4. Document resolution
+对于每个关键发现：
+1. 在本次会话中修复
+2. 重新运行相关测试
+3. 验证修复
+4. 记录解决方案
 
-### 8.2 Document Important Issues
+### 8.2 记录重要问题
 
-For each important finding:
-1. Document as known limitation
-2. Add to release notes if customer-facing
-3. Add to backlog for next iteration
+对于每个重要发现：
+1. 记录为已知限制
+2. 如果面向客户则添加到发布说明
+3. 添加到下一迭代的待办事项
 
-### 8.3 Update Task Progress
+### 8.3 更新任务进度
 
-Record findings and resolutions in `task-progress.md`.
+在 `task-progress.md` 中记录发现和解决方案。
 
-## Checklist
+## 检查清单
 
-Before marking whole-change review complete:
+在标记全局变更审查完成之前：
 
-- [ ] All features reviewed for structural issues
-- [ ] Feature interactions verified
-- [ ] Integration tests adequate
-- [ ] Documentation complete
-- [ ] Security review passed
-- [ ] No critical issues remain
-- [ ] Review verdict: APPROVED or CONDITIONAL
+- [ ] 所有功能已审查结构问题
+- [ ] 功能交互已验证
+- [ ] 集成测试足够
+- [ ] 文档完整
+- [ ] 安全审查通过
+- [ ] 没有关键问题遗留
+- [ ] 审查结论: APPROVED 或 CONDITIONAL
 
-## Integration
+## 集成
 
-**Called by:** `vibeflow` router (after build complete, before ship)
-**Requires:**
-- `feature-list.json` (all features passing)
-- `task-progress.md` (session log)
-- All spec docs from `docs/plans/`
-- Git diff from base branch
-- System test results (if applicable)
-**Produces:** Review verdict with findings
-**Chains to:** `vibeflow-ship` (if approved)
+**调用者:** `vibeflow` 路由器（构建完成后，发布前）
+**需要:**
+- `feature-list.json`（所有功能通过）
+- `task-progress.md`（会话日志）
+- `docs/plans/` 中的所有规格文档
+- 来自基础分支的 Git 差异
+- 系统测试结果（如果适用）
+**产出:** 带发现的审查结论
+**链接到:** `vibeflow-ship`（如果批准）

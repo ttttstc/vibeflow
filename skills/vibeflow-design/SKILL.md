@@ -3,140 +3,140 @@ name: vibeflow-design
 description: Use when VibeFlow needs a technical design document before initialization.
 ---
 
-# Technical Design for VibeFlow
+# VibeFlow 技术设计
 
-Produce the technical design document in `docs/plans/*-design.md`.
+在 `docs/plans/*-design.md` 中生成技术设计文档。
 
-**Announce at start:** "I'm using the vibeflow-design skill to author the technical design."
+**开始时宣布：**"我正在使用 vibeflow-design skill 来编写技术设计文档。"
 
-## Purpose
+## 目的
 
-Create a complete technical design based on:
-- Approved requirements specification (SRS)
-- Plan review scope tier
-- Technical constraints and decisions
+基于以下内容创建完整的技术设计：
+- 批准的需求规格说明书（SRS）
+- Plan 审查范围层级
+- 技术约束和决策
 
-## Prerequisites
+## 前置条件
 
-Before running this skill:
-- Requirements stage complete (SRS exists at `docs/plans/*-srs.md`)
-- Plan review approved
+运行此 skill 前：
+- 需求阶段完成（SRS 存在于 `docs/plans/*-srs.md`）
+- Plan 审查已批准
 
-## Step 1: Load Input Context
+## 第一步：加载输入上下文
 
-### 1.1 Read Requirements Document
+### 1.1 读取需求文档
 
-From `docs/plans/*-srs.md`:
-- All functional requirements (FR-xxx)
-- All non-functional requirements (NFR-xxx)
-- All interface requirements (IFR-xxx)
-- Acceptance criteria
+从 `docs/plans/*-srs.md` 获取：
+- 所有功能需求（FR-xxx）
+- 所有非功能需求（NFR-xxx）
+- 所有接口需求（IFR-xxx）
+- 验收标准
 
-### 1.2 Read Plan Review
+### 1.2 读取 Plan 审查
 
-From `.vibeflow/plan-review.md` or `docs/plans/YYYY-MM-DD-plan-review.md`:
-- Scope tier
-- Risk assessment
-- Modifications
+从 `.vibeflow/plan-review.md` 或 `docs/plans/YYYY-MM-DD-plan-review.md` 获取：
+- 范围层级
+- 风险评估
+- 修改内容
 
-### 1.3 Read Workflow Config
+### 1.3 读取工作流配置
 
-From `.vibeflow/workflow.yaml`:
-- Template selected
-- Stage sequence
-- Enabled features
+从 `.vibeflow/workflow.yaml` 获取：
+- 选择的模板
+- 阶段顺序
+- 启用的功能
 
-## Step 2: Define Architecture
+## 第二步：定义架构
 
-### 2.1 Architecture Overview
+### 2.1 架构概述
 
 ```markdown
-## 1. Architecture Overview
+## 1. 架构概述
 
-### High-Level Architecture
-[Architecture diagram or description]
+### 高层架构
+[架构图或描述]
 
-### Design Principles
-- [Principle 1]
-- [Principle 2]
+### 设计原则
+- [原则1]
+- [原则2]
 ```
 
-### 2.2 Technology Stack
+### 2.2 技术栈
 
-Based on template tier and requirements:
+根据模板层级和需求：
 
-**For Web Standard:**
+**对于 Web Standard：**
 ```markdown
-## 1.x Technology Stack
+## 1.x 技术栈
 
-| Component | Technology | Version | Purpose |
-|-----------|------------|---------|---------|
-| Frontend | React/Vue/Svelte | x.y | UI framework |
-| Backend | Node/Python/Go | x.y | API server |
-| Database | PostgreSQL/MongoDB | x.y | Data store |
+| 组件 | 技术 | 版本 | 用途 |
+|------|------|------|------|
+| 前端 | React/Vue/Svelte | x.y | UI 框架 |
+| 后端 | Node/Python/Go | x.y | API 服务器 |
+| 数据库 | PostgreSQL/MongoDB | x.y | 数据存储 |
 | ... | ... | ... | ... |
 ```
 
-**For API Standard:**
+**对于 API Standard：**
 ```markdown
-## 1.x Technology Stack
+## 1.x 技术栈
 
-| Component | Technology | Version | Purpose |
-|-----------|------------|---------|---------|
+| 组件 | 技术 | 版本 | 用途 |
+|------|------|------|------|
 | API | Node/Python/Go | x.y | REST API |
-| Database | PostgreSQL/MongoDB | x.y | Data store |
-| Cache | Redis/Memcached | x.y | Caching |
+| 数据库 | PostgreSQL/MongoDB | x.y | 数据存储 |
+| 缓存 | Redis/Memcached | x.y | 缓存 |
 ```
 
-**For Enterprise:**
-- More detailed technology decisions
-- Integration middleware
-- Enterprise messaging
-- Security infrastructure
+**对于 Enterprise：**
+- 更详细的技术决策
+- 集成中间件
+- 企业消息传递
+- 安全基础设施
 
-### 2.3 Component Architecture
+### 2.3 组件架构
 
-For each major component:
+对于每个主要组件：
 ```markdown
-## 1.x [Component Name]
+## 1.x [组件名称]
 
-**Responsibility**: [What this component does]
-**Dependencies**: [What it depends on]
-**Public API**: [Key interfaces]
+**职责**： [此组件的作用]
+**依赖**： [它依赖什么]
+**公共 API**： [关键接口]
 ```
 
-## Step 3: Design Data Model
+## 第三步：设计数据模型
 
-### 3.1 Entity Relationship
+### 3.1 实体关系
 
 ```markdown
-## 2. Data Model
+## 2. 数据模型
 
-### Entity Relationship Diagram
-[ER diagram or description]
+### 实体关系图
+[ER 图或描述]
 
-### Core Entities
+### 核心实体
 ```
 
-### 3.2 Entity Definitions
+### 3.2 实体定义
 
-For each entity:
+对于每个实体：
 ```markdown
-### [Entity Name]
+### [实体名称]
 
-| Field | Type | Constraints | Description |
-|-------|------|-------------|-------------|
-| id | UUID | PK | Primary key |
-| name | string | NOT NULL | Entity name |
+| 字段 | 类型 | 约束 | 描述 |
+|------|------|------|------|
+| id | UUID | PK | 主键 |
+| name | string | NOT NULL | 实体名称 |
 | ... | ... | ... | ... |
 ```
 
-### 3.3 Database Schema (if applicable)
+### 3.3 数据库 Schema（如适用）
 
 ```markdown
-## 2.x Database Schema
+## 2.x 数据库 Schema
 
-### [Table Name]
+### [表名称]
 ```sql
 CREATE TABLE [table_name] (
   ...
@@ -144,65 +144,65 @@ CREATE TABLE [table_name] (
 ```
 ```
 
-## Step 4: Design API
+## 第四步：设计 API
 
-### 4.1 API Overview
+### 4.1 API 概述
 
 ```markdown
-## 3. API Design
+## 3. API 设计
 
-### API Style
+### API 风格
 REST | GraphQL | gRPC
 
-### Base URL
+### 基础 URL
 `/api/v1`
 ```
 
-### 4.2 Endpoint Definitions
+### 4.2 端点定义
 
-For each endpoint:
+对于每个端点：
 ```markdown
 ### [METHOD] /api/v1/[resource]
 
-**Description**: [What this endpoint does]
+**描述**： [此端点的作用]
 
-**Request**:
+**请求**：
 ```json
 {
   "field": "type — description"
 }
 ```
 
-**Response** (200):
+**响应** (200)：
 ```json
 {
   "field": "type — description"
 }
 ```
 
-**Error Responses**:
+**错误响应**：
 - 400: Bad Request
 - 401: Unauthorized
 - 404: Not Found
 ```
 
-### 4.3 Authentication (if applicable)
+### 4.3 认证（如适用）
 
 ```markdown
-## 3.x Authentication
+## 3.x 认证
 
-**Method**: JWT | OAuth | API Key
+**方法**：JWT | OAuth | API Key
 
-**Flow**:
-[Authentication flow description]
+**流程**：
+[认证流程描述]
 ```
 
-## Step 5: Design Module Structure
+## 第五步：设计模块结构
 
-### 5.1 Directory Structure
+### 5.1 目录结构
 
 ```markdown
-## 4. Module Structure
+## 4. 模块结构
 
 ```
 project/
@@ -219,227 +219,227 @@ project/
 ```
 ```
 
-### 5.2 Module Responsibilities
+### 5.2 模块职责
 
-For each module:
+对于每个模块：
 ```markdown
-## 4.x [Module Name]
+## 4.x [模块名称]
 
-**Location**: `src/[module]/`
-**Responsibility**: [What this module does]
-**Public API**:
-- `functionName(params): returnType` — [description]
+**位置**：`src/[module]/`
+**职责**： [此模块的作用]
+**公共 API**：
+- `functionName(params): returnType` — [描述]
 
-**Dependencies**:
-- [Other modules this depends on]
+**依赖**：
+- [此模块依赖的其他模块]
 ```
 
-## Step 6: Design Security
+## 第六步：设计安全性
 
-### 6.1 Authentication & Authorization
-
-```markdown
-## 5. Security Design
-
-### Authentication
-[How users authenticate]
-
-### Authorization
-[How permissions are enforced]
-
-### Data Protection
-[How sensitive data is protected]
-```
-
-### 6.2 Security Controls
+### 6.1 认证与授权
 
 ```markdown
-### Input Validation
-[How input is validated]
+## 5. 安全设计
 
-### Output Encoding
-[How output is encoded]
+### 认证
+[用户如何认证]
 
-### Audit Logging
-[What is logged]
+### 授权
+[权限如何强制执行]
+
+### 数据保护
+[敏感数据如何保护]
 ```
 
-## Step 7: Design Testing Strategy
-
-### 7.1 Test Types
+### 6.2 安全控制
 
 ```markdown
-## 6. Testing Strategy
+### 输入验证
+[如何验证输入]
 
-### Unit Tests
-**Framework**: [Jest/Pytest/JUnit]
-**Coverage target**: [X%]
+### 输出编码
+[如何编码输出]
 
-### Integration Tests
-**Scope**: [What is tested]
-**Environment**: [How environment is set up]
-
-### End-to-End Tests
-**Framework**: [Playwright/Cypress]
-**Scope**: [What is tested]
+### 审计日志
+[记录什么]
 ```
 
-### 7.2 Quality Gates
+## 第七步：设计测试策略
+
+### 7.1 测试类型
 
 ```markdown
-### Quality Gates
+## 6. 测试策略
 
-| Gate | Threshold |
-|------|-----------|
-| Line coverage | 80% |
-| Branch coverage | 70% |
-| Mutation score | 70% |
+### 单元测试
+**框架**：[Jest/Pytest/JUnit]
+**覆盖率目标**：[X%]
+
+### 集成测试
+**范围**： [测试什么]
+**环境**： [如何设置环境]
+
+### 端到端测试
+**框架**：[Playwright/Cypress]
+**范围**： [测试什么]
 ```
 
-## Step 8: Design Deployment
-
-### 8.1 Deployment Architecture
+### 7.2 质量门禁
 
 ```markdown
-## 7. Deployment Design
+### 质量门禁
 
-### Infrastructure
-[Deployment infrastructure description]
-
-### Configuration
-[Environment configuration]
+| 门禁 | 阈值 |
+|------|------|
+| 行覆盖率 | 80% |
+| 分支覆盖率 | 70% |
+| 变异分数 | 70% |
 ```
 
-### 8.2 Environment Configuration
+## 第八步：设计部署
+
+### 8.1 部署架构
 
 ```markdown
-### [Environment Name]
-**URL**: [URL]
-**Purpose**: [Purpose]
-**Configuration**: [Key config values]
+## 7. 部署设计
+
+### 基础设施
+[部署基础设施描述]
+
+### 配置
+[环境配置]
 ```
 
-## Step 9: Document Design Decisions
-
-### 9.1 Key Decisions
+### 8.2 环境配置
 
 ```markdown
-## 8. Design Decisions
-
-### DEC-xxx: [Title]
-**Date**: YYYY-MM-DD
-**Status**: Accepted
-
-**Context**:
-[Problem or decision required]
-
-**Decision**:
-[What was decided]
-
-**Consequences**:
-[What this affects]
+### [环境名称]
+**URL**：[URL]
+**用途**：[用途]
+**配置**：[关键配置值]
 ```
 
-## Step 10: Create Feature Designs
+## 第九步：记录设计决策
 
-### 10.1 Feature Overview
-
-For each FR requirement:
-```markdown
-## 9.x FR-xxx: [Feature Name]
-
-### Overview
-[What this feature does]
-
-### Class Diagram
-[UML class diagram if applicable]
-
-### Sequence Diagram
-[Sequence diagram for key interactions]
-
-### Data Flow
-[Data flow description]
-```
-
-### 10.2 Interface Contract
-
-For each feature interface:
-```markdown
-### Interface Contract
-
-| Method | Parameters | Return | Description |
-|--------|------------|--------|-------------|
-| methodName | Type | Type | Description |
-```
-
-### 10.3 Edge Cases
+### 9.1 关键决策
 
 ```markdown
-### Edge Cases
-- [Edge case 1]
-- [Edge case 2]
+## 8. 设计决策
+
+### DEC-xxx: [标题]
+**日期**：YYYY-MM-DD
+**状态**：已接受
+
+**上下文**：
+[需要解决的问题或决策]
+
+**决策**：
+[决定了什么]
+
+**后果**：
+[这影响什么]
 ```
 
-## Step 11: Review and Finalize
+## 第十步：创建功能设计
 
-### 11.1 Self-Review Checklist
+### 10.1 功能概述
 
-- [ ] Architecture supports all requirements
-- [ ] Technology stack appropriate
-- [ ] Data model complete
-- [ ] API design covers all interfaces
-- [ ] Security requirements addressed
-- [ ] Testing strategy defined
-- [ ] Deployment architecture defined
-- [ ] Design decisions documented
+对于每个 FR 需求：
+```markdown
+## 9.x FR-xxx: [功能名称]
 
-### 11.2 Alignment Check
+### 概述
+[此功能的作用]
 
-- [ ] All FRs have corresponding design
-- [ ] All NFRs addressed
-- [ ] All interfaces designed
-- [ ] No conflicting decisions
+### 类图
+[适用时的 UML 类图]
 
-### 11.3 Save Document
+### 时序图
+[关键交互的时序图]
 
-File: `docs/plans/YYYY-MM-DD-<topic>-design.md`
+### 数据流
+[数据流描述]
+```
+
+### 10.2 接口契约
+
+对于每个功能接口：
+```markdown
+### 接口契约
+
+| 方法 | 参数 | 返回 | 描述 |
+|------|------|------|------|
+| methodName | Type | Type | 描述 |
+```
+
+### 10.3 边界情况
+
+```markdown
+### 边界情况
+- [边界情况1]
+- [边界情况2]
+```
+
+## 第十一步：审查并定稿
+
+### 11.1 自我审查清单
+
+- [ ] 架构支持所有需求
+- [ ] 技术栈选择合适
+- [ ] 数据模型完整
+- [ ] API 设计覆盖所有接口
+- [ ] 安全需求已解决
+- [ ] 测试策略已定义
+- [ ] 部署架构已定义
+- [ ] 设计决策已记录
+
+### 11.2 一致性检查
+
+- [ ] 所有 FR 都有相应的设计
+- [ ] 所有 NFR 都已处理
+- [ ] 所有接口都已设计
+- [ ] 无冲突决策
+
+### 11.3 保存文档
+
+文件：`docs/plans/YYYY-MM-DD-<topic>-design.md`
 
 ```bash
 git add docs/plans/YYYY-MM-DD-<topic>-design.md
 git commit -m "docs: add technical design for [project name]"
 ```
 
-## Checklist
+## 检查清单
 
-Before marking design complete:
+在标记设计完成前：
 
-- [ ] Architecture overview complete
-- [ ] Technology stack defined
-- [ ] Data model designed
-- [ ] API endpoints designed
-- [ ] Module structure defined
-- [ ] Security designed
-- [ ] Testing strategy defined
-- [ ] Deployment architecture defined
-- [ ] Design decisions documented
-- [ ] All FRs have feature designs
-- [ ] Self-review passed
-- [ ] Document saved to `docs/plans/*-design.md`
-- [ ] Document committed to git
+- [ ] 架构概述已完成
+- [ ] 技术栈已定义
+- [ ] 数据模型已设计
+- [ ] API 端点已设计
+- [ ] 模块结构已定义
+- [ ] 安全已设计
+- [ ] 测试策略已定义
+- [ ] 部署架构已定义
+- [ ] 设计决策已记录
+- [ ] 所有 FR 都有功能设计
+- [ ] 自我审查已通过
+- [ ] 文档已保存至 `docs/plans/*-design.md`
+- [ ] 文档已提交至 git
 
-## Outputs
+## 输出
 
-| Output | Location | Format |
-|--------|----------|--------|
-| Design Document | `docs/plans/YYYY-MM-DD-<topic>-design.md` | Markdown |
+| 输出 | 位置 | 格式 |
+|------|------|------|
+| 设计文档 | `docs/plans/YYYY-MM-DD-<topic>-design.md` | Markdown |
 
-## Integration
+## 集成
 
-**Called by:** `vibeflow` router (after requirements approved)
-**Requires:**
-- SRS at `docs/plans/*-srs.md`
-- Plan review at `.vibeflow/plan-review.md`
-- Workflow config at `.vibeflow/workflow.yaml`
-**Produces:**
-- Design document at `docs/plans/YYYY-MM-DD-<topic>-design.md`
-**Chains to:** `vibeflow-build-init` (after design approved)
+**调用者：** `vibeflow` 路由（在需求批准后）
+**需要：**
+- SRS 位于 `docs/plans/*-srs.md`
+- Plan 审查位于 `.vibeflow/plan-review.md`
+- 工作流配置位于 `.vibeflow/workflow.yaml`
+**产生：**
+- 设计文档位于 `docs/plans/YYYY-MM-DD-<topic>-design.md`
+**链至：** `vibeflow-build-init`（设计批准后）

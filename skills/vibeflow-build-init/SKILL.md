@@ -3,59 +3,59 @@ name: vibeflow-build-init
 description: Use when design exists but feature-list.json has not been initialized.
 ---
 
-# Build Initialization for VibeFlow
+# VibeFlow 构建初始化
 
-Initialize implementation artifacts for the build stage. Run once after requirements and design are approved.
+初始化构建阶段的实现工件。在需求和设计批准后运行一次。
 
-**Announce at start:** "I'm using the vibeflow-build-init skill to scaffold the build stage."
+**开始时宣布：**"我正在使用 vibeflow-build-init skill 来搭建构建阶段。"
 
-## Purpose
+## 目的
 
-Create all persistent artifacts needed for the VibeFlow build stage:
-- Feature inventory with status tracking
-- Work configuration
-- Progress tracking
+创建 VibeFlow 构建阶段所需的所有持久化工件：
+- 带状态跟踪的功能清单
+- 工作配置
+- 进度跟踪
 
-## Prerequisites
+## 前置条件
 
-Before running this skill:
-- Requirements document exists at `docs/plans/*-srs.md`
-- Design document exists at `docs/plans/*-design.md`
-- Think output exists at `.vibeflow/think-output.md`
-- Workflow config exists at `.vibeflow/workflow.yaml`
+运行此 skill 前：
+- 需求文档存在于 `docs/plans/*-srs.md`
+- 设计文档存在于 `docs/plans/*-design.md`
+- Think 输出存在于 `.vibeflow/think-output.md`
+- 工作流配置存在于 `.vibeflow/workflow.yaml`
 
-## Step 1: Read Input Documents
+## 第一步：读取输入文档
 
-### 1.1 Read Requirements (SRS)
+### 1.1 读取需求文档（SRS）
 
-Read `docs/plans/*-srs.md`:
-- Functional requirements (FR-xxx)
-- Non-functional requirements (NFR-xxx)
-- Constraints (CON-xxx)
-- Assumptions (ASM-xxx)
-- Acceptance criteria
-- Interface requirements
+读取 `docs/plans/*-srs.md`：
+- 功能需求（FR-xxx）
+- 非功能需求（NFR-xxx）
+- 约束条件（CON-xxx）
+- 假设条件（ASM-xxx）
+- 验收标准
+- 接口需求
 
-### 1.2 Read Design Document
+### 1.2 读取设计文档
 
-Read `docs/plans/*-design.md`:
-- Tech stack
-- Architecture
-- Data model
-- API design
-- Testing strategy
-- Task decomposition
+读取 `docs/plans/*-design.md`：
+- 技术栈
+- 架构
+- 数据模型
+- API 设计
+- 测试策略
+- 任务分解
 
-### 1.3 Read Workflow Config
+### 1.3 读取工作流配置
 
-Read `.vibeflow/workflow.yaml`:
-- Selected template (prototype, web-standard, api-standard, enterprise)
-- Stage sequence
-- Enabled features
+读取 `.vibeflow/workflow.yaml`：
+- 选择的模板（prototype、web-standard、api-standard、enterprise）
+- 阶段顺序
+- 启用的功能
 
-## Step 2: Create Work Config
+## 第二步：创建工作配置
 
-### 2.1 Create `.vibeflow/work-config.json`
+### 2.1 创建 `.vibeflow/work-config.json`
 
 ```json
 {
@@ -76,114 +76,114 @@ Read `.vibeflow/workflow.yaml`:
 }
 ```
 
-Adjust thresholds based on:
-- Project template (prototype may have lower thresholds)
-- Tech stack capabilities
-- Team preferences
+根据以下内容调整阈值：
+- 项目模板（原型可能有更低的阈值）
+- 技术栈能力
+- 团队偏好
 
-### 2.2 Save Work Config
+### 2.2 保存工作配置
 
-Write to `.vibeflow/work-config.json`.
+写入 `.vibeflow/work-config.json`。
 
-## Step 3: Create Feature List
+## 第三步：创建功能清单
 
-### 3.1 Decompose Requirements
+### 3.1 分解需求
 
-From the SRS and design documents, decompose into features:
+从 SRS 和设计文档分解出功能：
 
-**For each FR-xxx:**
-1. Create one or more features with:
-   - `id`: sequential integer
-   - `category`: "core", "backend", "frontend", "infrastructure", "non-functional"
-   - `title`: concise feature name
-   - `description`: what it does
-   - `priority`: "high", "medium", "low"
-   - `status`: always `"failing"` at init
-   - `verification_steps[]`: acceptance criteria derived from SRS
-   - `dependencies[]`: feature IDs that must complete first
+**对于每个 FR-xxx：**
+1. 创建一个或多个功能，包含：
+   - `id`：顺序整数
+   - `category`："core"、"backend"、"frontend"、"infrastructure"、"non-functional"
+   - `title`：简洁的功能名称
+   - `description`：功能作用
+   - `priority`："high"、"medium"、"low"
+   - `status`：初始化时始终为 `"failing"`
+   - `verification_steps[]`：从 SRS 派生的验收标准
+   - `dependencies[]`：必须先完成的 feature ID
 
-### 3.2 Feature Schema
+### 3.2 功能 Schema
 
 ```json
 {
   "id": 1,
   "category": "core",
-  "title": "Feature title",
-  "description": "What it does",
+  "title": "功能标题",
+  "description": "功能作用",
   "priority": "high|medium|low",
   "status": "failing",
   "verification_steps": [
-    "Given [context], when [action], then [result]"
+    "Given [上下文]，when [操作]，then [结果]"
   ],
   "dependencies": []
 }
 ```
 
-### 3.3 Handle UI Features
+### 3.3 处理 UI 功能
 
-For features with UI components (`"ui": true`):
-- Set `"ui": true`
-- Add `"ui_entry": "/optional-path"` if applicable
-- Ensure dependencies include backend API features
-- Reference UCD document for style requirements
+对于有 UI 组件的功能（`"ui": true`）：
+- 设置 `"ui": true`
+- 如果适用，添加 `"ui_entry": "/可选路径"`
+- 确保依赖包含后端 API 功能
+- 引用 UCD 文档的样式要求
 
-### 3.4 Handle Non-Functional Requirements
+### 3.4 处理非功能需求
 
-For NFR-xxx items:
-- Create features with `category: "non-functional"`
-- Include measurable `verification_steps` (e.g., "response time < 200ms")
-- Quality gates (tdd, quality) may not apply — set accordingly in work-config
+对于 NFR-xxx 项目：
+- 使用 `category: "non-functional"` 创建功能
+- 包含可测量的 `verification_steps`（例如，"响应时间 < 200ms"）
+- 质量门禁（tdd、quality）可能不适用——在工作配置中相应设置
 
-### 3.5 Dependency Ordering
+### 3.5 依赖排序
 
-Order features in the array respecting dependencies:
-1. Infrastructure/core features first
-2. Backend features before frontend features
-3. Dependent features after their dependencies
+在数组中按依赖关系排序功能：
+1. 基础设施/core 功能优先
+2. 后端功能先于前端功能
+3. 依赖的功能在其依赖之后
 
-## Step 4: Create Task Progress
+## 第四步：创建任务进度
 
-### 4.1 Create `task-progress.md`
+### 4.1 创建 `task-progress.md`
 
 ```markdown
-# Task Progress
+# 任务进度
 
-## Current State
+## 当前状态
 
-- **Progress**: 0/N features passing
-- **Last completed**: None
-- **Next feature**: #1 [feature title]
+- **进度**：0/N 个功能通过
+- **最后完成**：无
+- **下一个功能**：#1 [功能标题]
 
 ---
 
-## Session Log
+## 会话日志
 
-### Session 0 (Init)
-- Date: YYYY-MM-DD
-- Action: Build initialization
-- Features initialized: N
+### 会话 0（初始化）
+- 日期：YYYY-MM-DD
+- 操作：构建初始化
+- 已初始化的功能：N
 ```
 
-## Step 5: Validate
+## 第五步：验证
 
-### 5.1 Validate Feature List
+### 5.1 验证功能清单
 
-Verify feature-list.json is valid JSON:
-- All required fields present
-- No circular dependencies
-- All dependency IDs reference existing features
+验证 feature-list.json 是有效的 JSON：
+- 所有必填字段存在
+- 无循环依赖
+- 所有依赖 ID 引用现有功能
 
-### 5.2 Check Document Paths
+### 5.2 检查文档路径
 
-Verify referenced documents exist:
+验证引用的文档存在：
 - `docs/plans/*-srs.md`
 - `docs/plans/*-design.md`
 
-## Step 6: Initial Commit
+## 第六步：初始提交
 
 ### 6.1 Git Add
 
-Stage all new files:
+暂存所有新文件：
 - `.vibeflow/work-config.json`
 - `feature-list.json`
 - `task-progress.md`
@@ -198,35 +198,35 @@ feat: initialize build stage artifacts
 - Add task-progress.md for session tracking
 ```
 
-## Checklist
+## 检查清单
 
-Before marking initialization complete:
+在标记初始化完成前：
 
-- [ ] Work config created at `.vibeflow/work-config.json`
-- [ ] Feature list created at `feature-list.json`
-- [ ] Task progress created at `task-progress.md`
-- [ ] All features have valid `verification_steps`
-- [ ] Dependencies form a DAG (no cycles)
-- [ ] UI features marked with `"ui": true`
-- [ ] NFR features marked with `category: "non-functional"`
-- [ ] Initial git commit created
-- [ ] Build stage ready for `vibeflow-build-work`
+- [ ] 工作配置已创建于 `.vibeflow/work-config.json`
+- [ ] 功能清单已创建于 `feature-list.json`
+- [ ] 任务进度已创建于 `task-progress.md`
+- [ ] 所有功能都有有效的 `verification_steps`
+- [ ] 依赖形成 DAG（无循环）
+- [ ] UI 功能标有 `"ui": true`
+- [ ] NFR 功能标有 `category: "non-functional"`
+- [ ] 已创建初始 git 提交
+- [ ] 构建阶段已准备好进入 `vibeflow-build-work`
 
-## Outputs
+## 输出
 
-| File | Purpose |
-|------|---------|
-| `.vibeflow/work-config.json` | Build stage configuration and quality thresholds |
-| `feature-list.json` | Structured task inventory with status |
-| `task-progress.md` | Session-by-session progress log |
+| 文件 | 用途 |
+|------|------|
+| `.vibeflow/work-config.json` | 构建阶段配置和质量阈值 |
+| `feature-list.json` | 带状态的结构化任务清单 |
+| `task-progress.md` | 按会话的进度日志 |
 
-## Integration
+## 集成
 
-**Called by:** `vibeflow` router (when requirements and design exist, but feature-list.json does not)
-**Requires:**
-- Requirements doc at `docs/plans/*-srs.md`
-- Design doc at `docs/plans/*-design.md`
-- Think output at `.vibeflow/think-output.md`
-- Workflow config at `.vibeflow/workflow.yaml`
-**Produces:** `work-config.json`, `feature-list.json`, `task-progress.md`
-**Chains to:** `vibeflow-build-work` (first feature cycle)
+**调用者：** `vibeflow` 路由（当需求和设计存在，但 feature-list.json 不存在时）
+**需要：**
+- 需求文档位于 `docs/plans/*-srs.md`
+- 设计文档位于 `docs/plans/*-design.md`
+- Think 输出位于 `.vibeflow/think-output.md`
+- 工作流配置位于 `.vibeflow/workflow.yaml`
+**产生：** `work-config.json`、`feature-list.json`、`task-progress.md`
+**链至：** `vibeflow-build-work`（第一个功能周期）

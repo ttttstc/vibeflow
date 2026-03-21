@@ -3,262 +3,262 @@ name: vibeflow-reflect
 description: Use after shipping to create the retrospective and next-iteration input.
 ---
 
-# Reflect Stage for VibeFlow
+# VibeFlow 回顾阶段
 
-Close the loop after delivery. Create retrospective and next-iteration input.
+交付后闭环。创建回顾和下一迭代输入。
 
-**Announce at start:** "I'm using the vibeflow-reflect skill to run the retrospective."
+**开始时宣布：** "我正在使用 vibeflow-reflect skill 运行回顾。"
 
-## Purpose
+## 目的
 
-After shipping, capture learnings:
-- What worked well
-- What failed
-- What should change next iteration
-- Concrete improvements for next cycle
+发布后捕获学习：
+- 什么工作得好
+- 什么失败了
+- 下一迭代应该改变什么
+- 下一周期的具体改进
 
-## Prerequisites
+## 先决条件
 
-Before running this skill:
-- Release shipped (vibeflow-ship complete)
-- All features complete
-- Task progress available
+运行此 skill 之前：
+- 发布已完成（vibeflow-ship 完成）
+- 所有功能完成
+- 任务进度可用
 
-## Step 1: Gather Session Data
+## 步骤 1: 收集会话数据
 
-### 1.1 Read Task Progress
+### 1.1 读取任务进度
 
-From `task-progress.md`:
-- Session log entries
-- Features completed
-- Issues encountered
-- Time estimates vs actual
+从 `task-progress.md`:
+- 会话日志条目
+- 已完成的功能
+- 遇到的问题
+- 时间估算 vs 实际
 
-### 1.2 Read Feature List
+### 1.2 读取功能列表
 
-From `feature-list.json`:
-- All features with final status
-- Features that took longer than expected
-- Features with scope changes
+从 `feature-list.json`:
+- 所有具有最终状态的功能
+- 花费比预期长的功能
+- 范围变更的功能
 
-### 1.3 Review Previous Retro
+### 1.3 审查之前的回顾
 
-If previous retro exists at `.vibeflow/retro-YYYY-MM-DD.md`:
-- Note action items from previous retro
-- Check if they were implemented
-- Carry forward incomplete items
+如果之前的回顾存在于 `.vibeflow/retro-YYYY-MM-DD.md`:
+- 记录之前回顾中的行动项
+- 检查它们是否已实施
+- 结转未完成的项目
 
-### 1.4 Review Release Notes
+### 1.4 审查发布说明
 
-From `RELEASE_NOTES.md`:
-- What was delivered
-- Known limitations
-- Breaking changes
+从 `RELEASE_NOTES.md`:
+- 交付了什么
+- 已知限制
+- 破坏性变更
 
-## Step 2: Analyze What Worked
+## 步骤 2: 分析什么工作得好
 
-### 2.1 Identify Wins
+### 2.1 识别成功
 
-For each positive pattern:
-- What happened
-- Why it worked
-- How to replicate
+对于每个正面模式：
+- 发生了什么
+- 为什么它有效
+- 如何复制
 
-Categories to consider:
-- **Process**: Planning, review, testing
-- **Architecture**: Design decisions that worked
-- **Team**: Collaboration, communication
-- **Tools**: Automation, scripts, skills
+要考虑的类别：
+- **流程**: 计划、审查、测试
+- **架构**: 起作用的设计决策
+- **团队**: 协作、沟通
+- **工具**: 自动化、脚本、skill
 
-### 2.2 Document Wins
-
-```
-### What Worked
-
-#### Process
-- [Win 1]: Description of what worked well
-
-#### Architecture
-- [Win 1]: Description
-
-#### Team
-- [Win 1]: Description
-
-#### Tools
-- [Win 1]: Description
-```
-
-## Step 3: Analyze What Failed
-
-### 3.1 Identify Failures
-
-For each issue or failure:
-- What happened
-- Root cause
-- Impact
-
-Categories to consider:
-- **Process**: Planning gaps, review failures
-- **Architecture**: Design decisions that caused problems
-- **Team**: Communication issues, skill gaps
-- **Tools**: Missing automation, broken processes
-
-### 3.2 Document Failures
+### 2.2 记录成功
 
 ```
-### What Failed
+### 什么工作得好
 
-#### Process
-- [Failure 1]: Description of what went wrong
-  - Root cause: Why it happened
-  - Impact: What was the effect
+#### 流程
+- [成功 1]: 描述什么工作得好
 
-#### Architecture
-- [Failure 1]: Description
-  - Root cause: ...
-  - Impact: ...
+#### 架构
+- [成功 1]: 描述
 
-#### Team
-- [Failure 1]: Description
-  - Root cause: ...
-  - Impact: ...
+#### 团队
+- [成功 1]: 描述
 
-#### Tools
-- [Failure 1]: Description
-  - Root cause: ...
-  - Impact: ...
+#### 工具
+- [成功 1]: 描述
 ```
 
-## Step 4: Identify Action Items
+## 步骤 3: 分析什么失败了
 
-### 4.1 Process Improvements
+### 3.1 识别失败
 
-For each improvement identified:
+对于每个问题或失败：
+- 发生了什么
+- 根本原因
+- 影响
+
+要考虑的类别：
+- **流程**: 计划差距、审查失败
+- **架构**: 导致问题的设计决策
+- **团队**: 沟通问题、技能差距
+- **工具**: 缺失的自动化、破碎的流程
+
+### 3.2 记录失败
+
 ```
-#### Action: [Short title]
-**Owner**: Who will own this
-**What**: Specific change to make
-**When**: Before next iteration starts
-**Success criteria**: How to know it's done
+### 什么失败了
+
+#### 流程
+- [失败 1]: 描述什么出了问题
+  - 根本原因: 为什么发生
+  - 影响: 什么效果
+
+#### 架构
+- [失败 1]: 描述
+  - 根本原因: ...
+  - 影响: ...
+
+#### 团队
+- [失败 1]: 描述
+  - 根本原因: ...
+  - 影响: ...
+
+#### 工具
+- [失败 1]: 描述
+  - 根本原因: ...
+  - 影响: ...
 ```
 
-### 4.2 Architecture Improvements
+## 步骤 4: 识别行动项
 
-For architectural issues:
-```
-#### Action: [Short title]
-**Owner**: Who will own this
-**What**: Specific refactor or design change
-**When**: In next iteration
-**Success criteria**: How to verify
-```
+### 4.1 流程改进
 
-### 4.3 Tool Improvements
-
-For tool/process gaps:
+对于每个识别的改进：
 ```
-#### Action: [Short title]
-**Owner**: Who will own this
-**What**: New automation or process to create
-**When**: Before next iteration starts
-**Success criteria**: How to verify
+#### 行动: [简短标题]
+**负责人**: 谁来负责
+**什么**: 要做的具体变更
+**何时**: 下一次迭代开始前
+**成功标准**: 如何知道它完成了
 ```
 
-## Step 5: Create Retro Document
+### 4.2 架构改进
 
-### 5.1 Create Retro File
+对于架构问题：
+```
+#### 行动: [简短标题]
+**负责人**: 谁来负责
+**什么**: 具体的重构或设计变更
+**何时**: 在下一次迭代中
+**成功标准**: 如何验证
+```
 
-File: `.vibeflow/retro-YYYY-MM-DD.md`
+### 4.3 工具改进
+
+对于工具/流程差距：
+```
+#### 行动: [简短标题]
+**负责人**: 谁来负责
+**什么**: 要创建的新自动化或流程
+**何时**: 下一次迭代开始前
+**成功标准**: 如何验证
+```
+
+## 步骤 5: 创建回顾文档
+
+### 5.1 创建回顾文件
+
+文件: `.vibeflow/retro-YYYY-MM-DD.md`
 
 ```markdown
-# Retrospective — YYYY-MM-DD
+# 回顾 — YYYY-MM-DD
 
-## Summary
-- **Features delivered**: N
-- **Total time**: X days
-- **Key wins**: 1-2 sentence summary
-- **Key failures**: 1-2 sentence summary
-
----
-
-## What Worked
-
-### Process
-- [Win 1]
-- [Win 2]
-
-### Architecture
-- [Win 1]
-- [Win 2]
-
-### Team
-- [Win 1]
-- [Win 2]
-
-### Tools
-- [Win 1]
-- [Win 2]
+## 摘要
+- **交付的功能**: N
+- **总时间**: X 天
+- **关键成功**: 1-2 句话总结
+- **关键失败**: 1-2 句话总结
 
 ---
 
-## What Failed
+## 什么工作得好
 
-### Process
-- [Failure 1]
-- [Failure 2]
+### 流程
+- [成功 1]
+- [成功 2]
 
-### Architecture
-- [Failure 1]
-- [Failure 2]
+### 架构
+- [成功 1]
+- [成功 2]
 
-### Team
-- [Failure 1]
-- [Failure 2]
+### 团队
+- [成功 1]
+- [成功 2]
 
-### Tools
-- [Failure 1]
-- [Failure 2]
+### 工具
+- [成功 1]
+- [成功 2]
 
 ---
 
-## Action Items
+## 什么失败了
 
-| # | Action | Owner | When | Done |
+### 流程
+- [失败 1]
+- [失败 2]
+
+### 架构
+- [失败 1]
+- [失败 2]
+
+### 团队
+- [失败 1]
+- [失败 2]
+
+### 工具
+- [失败 1]
+- [失败 2]
+
+---
+
+## 行动项
+
+| # | 行动 | 负责人 | 何时 | 完成 |
 |---|--------|-------|------|------|
-| 1 | Action description | Name | Before next | [ ] |
-| 2 | Action description | Name | Next cycle | [ ] |
+| 1 | 行动描述 | 姓名 | 下次之前 | [ ] |
+| 2 | 行动描述 | 姓名 | 下个周期 | [ ] |
 
 ---
 
-## Next Iteration Input
+## 下一迭代输入
 
-### Carry-over
-- [Item from previous retro completed]
-- [Item from previous retro not completed — reason]
+### 结转
+- [之前回顾完成的项目]
+- [之前回顾未完成的项目 — 原因]
 
-### New Considerations
-- [New insight from this cycle]
+### 新考虑
+- [来自本周期的新见解]
 
-### Scope建议
-- [Recommendations for next iteration scope]
+### 范围建议
+- [下一迭代范围的建议]
 ```
 
-### 5.2 Save Retro Document
+### 5.2 保存回顾文档
 
-Write to `.vibeflow/retro-YYYY-MM-DD.md`.
+写入 `.vibeflow/retro-YYYY-MM-DD.md`。
 
-## Step 6: Create Increment Request (if needed)
+## 步骤 6: 创建增量请求（如果需要）
 
-### 6.1 Identify Follow-up Work
+### 6.1 识别后续工作
 
-From failures and action items:
-- Refactoring needed
-- Technical debt to address
-- Features deferred
+从失败和行动项：
+- 需要的重构
+- 要解决的技术债务
+- 推迟的功能
 
-### 6.2 Create Increment Request
+### 6.2 创建增量请求
 
-File: `.vibeflow/increment-request.json`
+文件: `.vibeflow/increment-request.json`
 
 ```json
 {
@@ -266,65 +266,65 @@ File: `.vibeflow/increment-request.json`
   "source_retro": "retro-YYYY-MM-DD.md",
   "follow_up_work": [
     {
-      "title": "Description of work",
+      "title": "工作描述",
       "category": "refactor|debt|deferred_feature",
       "priority": "high|medium|low",
-      "reason": "Why this is needed",
-      "estimated_impact": "What improvement"
+      "reason": "为什么需要这个",
+      "estimated_impact": "什么改进"
     }
   ],
   "process_improvements": [
     {
-      "title": "Description",
-      "action": "Specific change",
-      "owner": "Who",
-      "when": "When"
+      "title": "描述",
+      "action": "具体变更",
+      "owner": "谁",
+      "when": "何时"
     }
   ]
 }
 ```
 
-### 6.3 Save Increment Request
+### 6.3 保存增量请求
 
-Write to `.vibeflow/increment-request.json`.
+写入 `.vibeflow/increment-request.json`。
 
-## Step 7: Update Task Progress
+## 步骤 7: 更新任务进度
 
-In `task-progress.md`:
-- Mark retrospective complete
-- Link to retro document
-- Link to increment request (if created)
+在 `task-progress.md` 中：
+- 标记回顾完成
+- 链接到回顾文档
+- 链接到增量请求（如果创建）
 
-## Checklist
+## 检查清单
 
-Before marking reflect complete:
+在标记回顾完成之前：
 
-- [ ] All session data gathered
-- [ ] Wins identified and documented
-- [ ] Failures identified and documented
-- [ ] Root causes analyzed
-- [ ] Action items created with owners
-- [ ] Retro document saved
-- [ ] Increment request created (if needed)
-- [ ] Task progress updated
-- [ ] Next iteration informed
+- [ ] 所有会话数据已收集
+- [ ] 成功已识别并记录
+- [ ] 失败已识别并记录
+- [ ] 根本原因已分析
+- [ ] 行动项已创建并指定负责人
+- [ ] 回顾文档已保存
+- [ ] 增量请求已创建（如果需要）
+- [ ] 任务进度已更新
+- [ ] 下一迭代已通知
 
-## Outputs
+## 输出
 
-| File | Purpose |
+| 文件 | 目的 |
 |------|---------|
-| `.vibeflow/retro-YYYY-MM-DD.md` | Retrospective document |
-| `.vibeflow/increment-request.json` | Next iteration input (if needed) |
+| `.vibeflow/retro-YYYY-MM-DD.md` | 回顾文档 |
+| `.vibeflow/increment-request.json` | 下一迭代输入（如果需要） |
 
-## Integration
+## 集成
 
-**Called by:** `vibeflow` router (after ship complete)
-**Requires:**
-- `task-progress.md` (session log)
-- `feature-list.json` (completed features)
-- Previous retro (if exists)
+**调用者:** `vibeflow` 路由器（发布完成后）
+**需要:**
+- `task-progress.md`（会话日志）
+- `feature-list.json`（已完成的功能）
+- 之前的回顾（如果存在）
 - `RELEASE_NOTES.md`
-**Produces:**
-- Retro document at `.vibeflow/retro-YYYY-MM-DD.md`
-- Increment request at `.vibeflow/increment-request.json` (if needed)
-**Chains to:** Next VibeFlow cycle (Think stage)
+**产出:**
+- `.vibeflow/retro-YYYY-MM-DD.md` 中的回顾文档
+- `.vibeflow/increment-request.json` 中的增量请求（如果需要）
+**链接到:** 下一个 VibeFlow 周期（思考阶段）
