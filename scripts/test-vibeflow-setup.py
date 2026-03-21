@@ -40,10 +40,14 @@ def main():
 
     repo_root = Path(__file__).resolve().parent.parent
     phase_module = load_module(repo_root / 'scripts' / 'get-vibeflow-phase.py')
-    phase_info = phase_module.detect_phase(Path(args.project_root).resolve())
     project_root = Path(args.project_root).resolve()
-    skills_dir = project_root / 'skills'
 
+    # Skills exist in the framework repo, not target projects
+    skills_dir = repo_root / 'skills'
+    workflow_path = project_root / '.vibeflow' / 'workflow.yaml'
+    work_config_path = project_root / '.vibeflow' / 'work-config.json'
+
+    # Check skills (framework-level verification)
     skill_results = []
     missing_count = 0
     for name in SKILL_NAMES:
@@ -52,23 +56,36 @@ def main():
             missing_count += 1
         skill_results.append(result)
 
-    all_ok = missing_count == 0
+    workflow_ok = workflow_path.exists()
+    work_config_ok = work_config_path.exists()
+
+    # setup_ok requires: all skills present + workflow + work_config
+    all_ok = missing_count == 0 and workflow_ok and work_config_ok
+
+    phase_info = phase_module.detect_phase(project_root)
     report = {
         'setup_ok': all_ok,
         'phase': phase_info['phase'],
-        'workflow': (project_root / '.vibeflow' / 'workflow.yaml').exists(),
-        'work_config': (project_root / '.vibeflow' / 'work-config.json').exists(),
+        'workflow': workflow_ok,
+        'work_config': work_config_ok,
         'skills': skill_results,
         'missing_count': missing_count,
     }
     if args.as_json:
         print(json.dumps(report, indent=2))
     else:
-        if all_ok:
-            print(f"{phase_info['phase']} (all {len(SKILL_NAMES)} skills verified)")
+        missing_skills = [r['skill'] for r in skill_results if r['status'] != 'ok']
+        warnings = []
+        if missing_count > 0:
+            warnings.append(f"{missing_count} skills missing")
+        if not workflow_ok:
+            warnings.append('workflow.yaml missing')
+        if not work_config_ok:
+            warnings.append('work-config.json missing')
+        if warnings:
+            print(f"{phase_info['phase']} (WARNING: {', '.join(warnings)})")
         else:
-            missing = [r['skill'] for r in skill_results if r['status'] != 'ok']
-            print(f"{phase_info['phase']} (WARNING: {missing_count} skills missing: {', '.join(missing)})")
+            print(f"{phase_info['phase']} (all checks passed)")
 
 
 if __name__ == '__main__':
