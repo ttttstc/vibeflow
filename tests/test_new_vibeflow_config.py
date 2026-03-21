@@ -22,13 +22,14 @@ class TestNewVibeflowConfig:
             'template: "prototype"\ndate: TEMPLATE_DATE'
         )
 
-        import argparse
-        parser = argparse.ArgumentParser()
-        parser.add_argument('--template', default='prototype')
-        parser.add_argument('--project-root', default=str(tmp_path))
-        parser.add_argument('--template-root', default=str(tmp_path / 'templates'))
-        args = parser.parse_args([])
-        _new_vibeflow_config.main(args)
+        # Override sys.argv to simulate CLI invocation
+        monkeypatch.setattr(sys, 'argv', [
+            'new-vibeflow-config.py',
+            '--template', 'prototype',
+            '--project-root', str(tmp_path),
+            '--template-root', str(tmp_path / 'templates')
+        ])
+        _new_vibeflow_config.main()
 
         workflow = tmp_path / '.vibeflow' / 'workflow.yaml'
         assert workflow.exists()
@@ -43,13 +44,13 @@ class TestNewVibeflowConfig:
             'template: "web-standard"\ndate: TEMPLATE_DATE'
         )
 
-        import argparse
-        parser = argparse.ArgumentParser()
-        parser.add_argument('--template', default='web-standard')
-        parser.add_argument('--project-root', default=str(tmp_path))
-        parser.add_argument('--template-root', default=str(tmp_path / 'templates'))
-        args = parser.parse_args([])
-        _new_vibeflow_config.main(args)
+        monkeypatch.setattr(sys, 'argv', [
+            'new-vibeflow-config.py',
+            '--template', 'web-standard',
+            '--project-root', str(tmp_path),
+            '--template-root', str(tmp_path / 'templates')
+        ])
+        _new_vibeflow_config.main()
 
         workflow = tmp_path / '.vibeflow' / 'workflow.yaml'
         assert workflow.exists()
@@ -59,28 +60,28 @@ class TestNewVibeflowConfig:
         monkeypatch.chdir(tmp_path)
         (tmp_path / 'templates').mkdir()
 
-        import argparse
-        parser = argparse.ArgumentParser()
-        parser.add_argument('--template', default='nonexistent')
-        parser.add_argument('--project-root', default=str(tmp_path))
-        parser.add_argument('--template-root', default=str(tmp_path / 'templates'))
-        args = parser.parse_args([])
+        monkeypatch.setattr(sys, 'argv', [
+            'new-vibeflow-config.py',
+            '--template', 'nonexistent',
+            '--project-root', str(tmp_path),
+            '--template-root', str(tmp_path / 'templates')
+        ])
 
         with pytest.raises(SystemExit):
-            _new_vibeflow_config.main(args)
+            _new_vibeflow_config.main()
 
     def test_date_replaced(self, tmp_path, monkeypatch):
         monkeypatch.chdir(tmp_path)
         (tmp_path / 'templates').mkdir()
         (tmp_path / 'templates' / 'prototype.yaml').write_text('date: TEMPLATE_DATE')
 
-        import argparse
-        parser = argparse.ArgumentParser()
-        parser.add_argument('--template', default='prototype')
-        parser.add_argument('--project-root', default=str(tmp_path))
-        parser.add_argument('--template-root', default=str(tmp_path / 'templates'))
-        args = parser.parse_args([])
-        _new_vibeflow_config.main(args)
+        monkeypatch.setattr(sys, 'argv', [
+            'new-vibeflow-config.py',
+            '--template', 'prototype',
+            '--project-root', str(tmp_path),
+            '--template-root', str(tmp_path / 'templates')
+        ])
+        _new_vibeflow_config.main()
 
         workflow = tmp_path / '.vibeflow' / 'workflow.yaml'
         assert date.today().isoformat() in workflow.read_text()
