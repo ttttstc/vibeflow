@@ -27,16 +27,19 @@ $router_content
 $status_hint
 </EXTREMELY_IMPORTANT>"
 
-payload=$(python -c "
-import sys, json
+export SESSION_CONTEXT="$session_context"
+payload=$(python - <<'PY'
+import os, json
+sc = os.getenv('SESSION_CONTEXT', '')
 payload = {
-    'additional_context': '''$session_context''',
-    'hookSpecificOutput': {
-        'hookEventName': 'SessionStart',
-        'additionalContext': '''$session_context'''
+    "additional_context": sc,
+    "hookSpecificOutput": {
+        "hookEventName": "SessionStart",
+        "additionalContext": sc
     }
 }
 print(json.dumps(payload, indent=2, ensure_ascii=False))
-" 2>/dev/null || echo '{"additional_context":"Error generating context","hookSpecificOutput":{"hookEventName":"SessionStart"}}')
+PY
+)
 
 echo "$payload"
