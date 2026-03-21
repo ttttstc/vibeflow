@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start.ps1\"",
+            "command": "case \"$(uname -s)\" in *MINGW*|MSYS*|CYGWIN*|Windows*) powershell -ExecutionPolicy Bypass -File \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start.ps1\" ;; *) bash \"${CLAUDE_PLUGIN_ROOT}/hooks/session-start.sh\" ;; esac",
             "timeout": 10000,
             "async": false
           }

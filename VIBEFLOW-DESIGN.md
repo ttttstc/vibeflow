@@ -78,6 +78,7 @@ Detected phases:
 - `increment`
 - `think`
 - `template-selection`
+- `plan-review`
 - `requirements`
 - `ucd`
 - `design`
