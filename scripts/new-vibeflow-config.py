@@ -25,7 +25,11 @@ def main():
 
     workflow_dir = project_root / '.vibeflow'
     workflow_dir.mkdir(parents=True, exist_ok=True)
-    # Use same extension as the source template
+    # Remove any existing workflow file to avoid stale-config conflicts
+    for ext in ('.yaml', '.yml'):
+        stale = workflow_dir / f'workflow{ext}'
+        if stale.exists():
+            stale.unlink()
     workflow_path = workflow_dir / f'workflow{template_path.suffix}'
     content = template_path.read_text(encoding='utf-8').replace('TEMPLATE_DATE', date.today().isoformat())
     workflow_path.write_text(content, encoding='utf-8')
