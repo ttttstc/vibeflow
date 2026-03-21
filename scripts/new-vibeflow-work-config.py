@@ -40,7 +40,7 @@ def main():
             'mutation_score': read_gate(content, 'mutation_score', 80),
         },
         'test': {
-            'system': 'st:\n    skill:' in content and 'st:\n    skill:' in content and 'required: true' in content,
+            'system': re.search(r'st:[\s\S]*?required:\s+true', content) is not None,
             'qa': re.search(r'qa:[\s\S]*?required:\s+true', content) is not None,
         },
         'reflect': {

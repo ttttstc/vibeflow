@@ -1,74 +1,73 @@
 ---
 name: vibeflow-think
-description: Use for the Think phase in VibeFlow projects to define the problem, boundaries, opportunity scan, and choose a workflow template.
+description: 在VibeFlow项目中用于Think阶段，定义问题、边界、机会扫描和选择工作流程模板。
 ---
 
-## Goal
+## 目标
 
-Produce the Phase 1 MVP artifacts:
+产生阶段1 MVP产物：
 
 - `.vibeflow/think-output.md`
-- `.vibeflow/workflow.yaml` after template confirmation
+- 模板确认后的`.vibeflow/workflow.yaml`
 
-## Reuse First
+## 首先重用
 
-Before questioning or writing:
+在提问或写作之前：
 
-1. Read `VIBEFLOW-DESIGN.md`
-2. Reuse the existing product-discovery foundation already available in the workspace
+1. 阅读`VIBEFLOW-DESIGN.md`
+2. 重用工作空间中已有的产品发现基础
 
-Use that foundation for questioning style and problem-reframing mindset.
-Do not duplicate its broader setup behavior here.
+使用该基础来指导提问风格和问题重构思维。不要在此处复制其更广泛的设置行为。
 
-## Required Inputs
+## 必需输入
 
-Gather enough context from:
+从以下来源收集足够的上下文：
 
-- the user's request
+- 用户的请求
 - `VIBEFLOW-DESIGN.md`
-- existing root docs in the repo
+- 仓库中现有的根文档
 
-## Think Flow
+## Think流程
 
-### 1. Problem framing
+### 1. 问题框定
 
-Drive the conversation toward:
+推动对话朝向：
 
-- the actual problem being solved
-- who the user is
-- what is explicitly out of scope
-- the smallest useful first version
+- 要解决的实际问题
+- 用户是谁
+- 明确不在范围内的内容
+- 最小有用的第一个版本
 
-### 2. Complexity and risk scan
+### 2. 复杂度和风险扫描
 
-State:
+陈述：
 
-- project type
-- expected scale
-- major risks
+- 项目类型
+- 预期规模
+- 主要风险
 
-### 3. Opportunity scan
+### 3. 机会扫描
 
-Produce:
+产生：
 
-- a 10x version
-- the minimum viable version
-- one fast value-add that fits in roughly 30 minutes
+- 一个10倍版本
+- 最小可行版本
+- 一个大约30分钟能完成的快速增值
 
-### 4. Template recommendation
+### 4. 模板推荐
 
-Choose one static template from `templates/`:
+从`templates/`中选择一个静态模板：
 
-| Template | Use when |
-|---|---|
-| `prototype` | fast validation, reduced gates, speed over rigor |
-| `web-standard` | UI-heavy product or general full-stack app |
-| `api-standard` | backend or integration-first system without UI-heavy work |
-| `enterprise` | strict review, auditability, and higher quality thresholds |
+| 模板 | 使用场景 |
+|------|----------|
+| `prototype` | 快速验证、减少关卡、速度优于严格性 |
+| `web-standard` | UI密集型产品或通用全栈应用 |
+| `api-standard` | 后端或集成优先系统，不需要大量UI工作 |
+| `enterprise` | 严格审查、可审计性和更高的质量阈值 |
 
-### 5. Write think output
+### 5. 编写think输出
 
-Write `.vibeflow/think-output.md` using exactly this structure:
+使用完全相同的结构编写`.vibeflow/think-output.md`：
 
 ```markdown
 # Think Output
@@ -104,19 +103,18 @@ Write `.vibeflow/think-output.md` using exactly this structure:
 Reason: [...]
 ```
 
-### 6. Confirm and create workflow
+### 6. 确认并创建工作流程
 
-After writing `think-output.md`:
+编写`think-output.md`后：
 
-- ask for template confirmation if the user has not already made the choice explicit
-- create `.vibeflow/`
-- copy `templates/<template>.yaml` to `.vibeflow/workflow.yaml`
-- set `created_at` to the current date
+- 如果用户尚未明确选择，请请求模板确认
+- 创建`.vibeflow/`
+- 将`templates/<template>.yaml`复制到`.vibeflow/workflow.yaml`
+- 将`created_at`设置为当前日期
 
-## Hard Rules
+## 硬规则
 
-- Do not create new workflow schemas dynamically.
-- Do not invent new templates.
-- Keep this skill thin and orchestration-focused.
-- If the repo direction clearly conflicts with the currently recommended template, explain the conflict before writing `workflow.yaml`.
-
+- 不要动态创建新的工作流程模式。
+- 不要发明新的模板。
+- 保持此技能薄而聚焦于编排。
+- 如果仓库方向与当前推荐的模板明显冲突，在编写`workflow.yaml`之前解释冲突。

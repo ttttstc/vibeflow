@@ -3,22 +3,390 @@ name: vibeflow-requirements
 description: Use when VibeFlow needs an approved requirements specification in docs/plans.
 ---
 
-## Purpose
+# VibeFlow 需求规格说明书
 
-Produce the project requirements document in `docs/plans/*-srs.md`.
+在 `docs/plans/*-srs.md` 中生成项目需求文档（SRS）。
 
-## Inputs
+**开始时宣布：**"我正在使用 vibeflow-requirements skill 来编写需求规格说明书。"
 
-- `VIBEFLOW-DESIGN.md`
-- `.vibeflow/think-output.md`
-- `.vibeflow/workflow.yaml`
+## 目的
 
-## Outputs
+基于以下内容创建完整的需求规格说明书：
+- Think 阶段输出
+- Plan 审查决策
+- 工作流模板需求
 
-- `docs/plans/YYYY-MM-DD-<topic>-srs.md`
+## 前置条件
 
-## Rules
+运行此 skill 前：
+- Think 阶段完成（`.vibeflow/think-output.md` 存在）
+- Plan 审查已批准
+- 范围层级已确定
 
-- do not start design implementation before the requirements document exists
-- capture scope, exclusions, interfaces, assumptions, and acceptance criteria
-- keep naming vendor-neutral inside project documents
+## 第一步：加载输入上下文
+
+### 1.1 读取 Think 输出
+
+从 `.vibeflow/think-output.md` 获取：
+- 问题陈述
+- 提出的解决方案
+- 成功标准
+- 用户故事（如有）
+
+### 1.2 读取 Plan 审查
+
+从 `.vibeflow/plan-review.md` 或 `docs/plans/YYYY-MM-DD-plan-review.md` 获取：
+- 范围层级
+- 风险评估
+- 需要的修改
+- 范围调整
+
+### 1.3 读取工作流配置
+
+从 `.vibeflow/workflow.yaml` 获取：
+- 选择的模板
+- 阶段顺序
+- 质量要求
+
+## 第二步：定义文档结构
+
+### 2.1 SRS 模板结构
+
+根据模板层级：
+
+**Prototype（原型）：**
+```
+1. 引言
+   1.1 目的
+   1.2 范围
+   1.3 定义
+2. 总体描述
+   2.1 用户画像
+   2.2 假设条件
+3. 功能需求
+   3.1 FR-xxx: [功能]
+4. 验收标准
+```
+
+**Web Standard / API Standard（Web标准/API标准）：**
+```
+1. 引言
+   1.1 目的
+   1.2 范围
+   1.3 定义
+   1.4 参考文献
+2. 总体描述
+   2.1 用户画像
+   2.2 假设条件
+   2.3 约束条件
+3. 功能需求
+   3.1 FR-xxx: [功能]
+4. 非功能需求
+   4.1 NFR-xxx: [需求]
+5. 接口需求
+   5.1 IFR-xxx: [接口]
+6. 验收标准
+```
+
+**Enterprise（企业级）：**
+```
+1. 引言
+   1.1 目的
+   1.2 范围
+   1.3 定义
+   1.4 参考文献
+2. 总体描述
+   2.1 用户画像
+   2.2 假设条件
+   2.3 约束条件
+   2.4 依赖关系
+3. 功能需求
+   3.1 FR-xxx: [功能]
+4. 非功能需求
+   4.1 NFR-xxx: [需求]
+5. 接口需求
+   5.1 IFR-xxx: [接口]
+6. 数据需求
+   6.1 DR-xxx: [数据]
+7. 验收标准
+8. 术语表
+```
+
+## 第三步：编写引言部分
+
+### 3.1 目的
+
+定义此文档存在的原因：
+```markdown
+## 1.1 目的
+
+本软件需求规格说明书（SRS）描述了[项目名称]的功能需求和非功能需求。本文档规定系统必须做什么，以及它必须运行的约束条件。
+```
+
+### 3.2 范围
+
+定义项目包含/排除的内容：
+```markdown
+## 1.2 范围
+
+**在范围内：**
+- [包含的内容]
+
+**在范围外：**
+- [明确排除的内容]
+```
+
+### 3.3 定义
+
+定义关键术语：
+```markdown
+## 1.3 定义
+
+| 术语 | 定义 |
+|------|------|
+| 术语1 | 定义 |
+| 术语2 | 定义 |
+```
+
+### 3.4 参考文献（如适用）
+
+列出参考文档：
+```markdown
+## 1.4 参考文献
+
+- [参考文献1]
+- [参考文献2]
+```
+
+## 第四步：编写总体描述
+
+### 4.1 用户画像
+
+定义目标用户：
+```markdown
+## 2.1 用户画像
+
+### 画像1：[姓名]
+**角色**： [他们的职责]
+**目标**： [他们想实现什么]
+**痛点**： [他们面临的挑战]
+
+### 画像2：[姓名]
+...
+```
+
+### 4.2 假设条件
+
+记录假设条件：
+```markdown
+## 2.2 假设条件
+
+- ASM-xxx: [假设描述]
+- ASM-xxx: [假设描述]
+```
+
+### 4.3 约束条件（如适用）
+
+记录约束条件：
+```markdown
+## 2.3 约束条件
+
+- CON-xxx: [约束描述]
+- CON-xxx: [约束描述]
+```
+
+## 第五步：编写功能需求
+
+### 5.1 识别功能
+
+基于 Think 输出和 plan 审查：
+1. 列出所有功能
+2. 按模块/领域分组
+3. 设定优先级（高/中/低）
+
+### 5.2 记录每个需求
+
+对于每个功能（FR-xxx）：
+
+```markdown
+## 3.x FR-xxx: [功能名称]
+
+**优先级**：高 | 中 | 低
+**模块**：[模块名称]
+
+### 描述
+[此功能的作用]
+
+### 用户故事
+作为 [用户类型]，我想要 [操作]，以便 [收益]。
+
+### Given/When/Then 验收标准
+**Given** [前置条件]
+**When** [操作]
+**Then** [预期结果]
+
+**Given** [前置条件]
+**When** [操作]
+**Then** [预期结果]
+```
+
+### 5.3 验证完整性
+
+- [ ] 所有用户需求已解决
+- [ ] Think 输出中的所有功能已捕获
+- [ ] 验收标准具体且可测试
+- [ ] 已设定优先级
+
+## 第六步：编写非功能需求
+
+### 6.1 性能
+
+```markdown
+## 4.x NFR-xxx: 性能
+
+**指标**： [测量什么]
+**目标**： [数值目标]
+**测量方法**： [如何验证]
+```
+
+### 6.2 安全性
+
+```markdown
+## 4.x NFR-xxx: 安全性
+
+**需求**： [需要什么]
+**验证方法**： [如何验证]
+```
+
+### 6.3 可靠性
+
+```markdown
+## 4.x NFR-xxx: 可靠性
+
+**需求**： [需要什么]
+**验证方法**： [如何验证]
+```
+
+### 6.4 可扩展性
+
+```markdown
+## 4.x NFR-xxx: 可扩展性
+
+**需求**： [需要什么]
+**验证方法**： [如何验证]
+```
+
+## 第七步：编写接口需求（如适用）
+
+### 7.1 用户界面
+
+```markdown
+## 5.x IFR-xxx: [接口名称]
+
+**类型**：Web | CLI | API | Mobile
+**入口点**： [URL/路径]
+**描述**： [此接口提供什么]
+```
+
+### 7.2 外部接口
+
+```markdown
+## 5.x IFR-xxx: [外部服务]
+
+**类型**：REST | GraphQL | gRPC | Webhook
+**端点**： [URL]
+**描述**： [交换什么]
+```
+
+### 7.3 内部接口
+
+```markdown
+## 5.x IFR-xxx: [内部API]
+
+**模块**： [模块名称]
+**接口**： [方法/端点]
+**描述**： [提供什么]
+```
+
+## 第八步：编写验收标准
+
+### 8.1 总体验收标准
+
+```markdown
+## 6. 验收标准
+
+当满足以下条件时，系统视为完成：
+
+1. [ ] 所有功能需求已验证
+2. [ ] 所有 NFR 指标已满足
+3. [ ] 所有接口已运行
+4. [ ] 文档已完成
+```
+
+### 8.2 完成定义
+
+```markdown
+## 6.x [功能领域]
+
+**完成条件**：
+- [ ] [标准1]
+- [ ] [标准2]
+```
+
+## 第九步：审查并定稿
+
+### 9.1 自我审查清单
+
+- [ ] 所有 Think 输出需求已捕获
+- [ ] 所有 plan 审查修改已处理
+- [ ] 需求完整且一致
+- [ ] 验收标准可测试
+- [ ] 无冲突需求
+- [ ] 范围边界清晰
+
+### 9.2 同行审查（如有）
+
+如有其他审查者可用：
+- 提交审查
+- 处理反馈
+- 定稿文档
+
+### 9.3 保存文档
+
+文件：`docs/plans/YYYY-MM-DD-<topic>-srs.md`
+
+```bash
+git add docs/plans/YYYY-MM-DD-<topic>-srs.md
+git commit -m "docs: add SRS for [project name]"
+```
+
+## 检查清单
+
+在标记需求完成前：
+
+- [ ] 引言部分已完成
+- [ ] 总体描述部分已完成
+- [ ] 所有功能需求已记录
+- [ ] 所有 NFR 已记录
+- [ ] 所有接口已记录（如适用）
+- [ ] 已定义验收标准
+- [ ] 自我审查已通过
+- [ ] 文档已保存至 `docs/plans/*-srs.md`
+- [ ] 文档已提交至 git
+
+## 输出
+
+| 输出 | 位置 | 格式 |
+|------|------|------|
+| SRS 文档 | `docs/plans/YYYY-MM-DD-<topic>-srs.md` | Markdown |
+
+## 集成
+
+**调用者：** `vibeflow` 路由（在 plan 审查批准后）
+**需要：**
+- Think 输出位于 `.vibeflow/think-output.md`
+- Plan 审查位于 `.vibeflow/plan-review.md`
+- 工作流配置位于 `.vibeflow/workflow.yaml`
+**产生：**
+- SRS 文档位于 `docs/plans/YYYY-MM-DD-<topic>-srs.md`
+**链至：** `vibeflow-design`（SRS 批准后）
