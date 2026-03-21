@@ -11,6 +11,15 @@ def latest_matching_file(base: Path, pattern: str):
     return matches[0] if matches else None
 
 
+def resolve_yaml(directory: Path, stem: str) -> Path:
+    """Return the first existing path among <stem>.yaml and <stem>.yml."""
+    for ext in ('.yaml', '.yml'):
+        p = directory / f'{stem}{ext}'
+        if p.exists():
+            return p
+    return directory / f'{stem}.yaml'  # default fallback
+
+
 def workflow_text(path: Path) -> str:
     return path.read_text(encoding='utf-8') if path.exists() else ''
 
@@ -35,7 +44,7 @@ def all_features_passing(feature_list_path: Path) -> bool:
 def detect_phase(project_root: Path, verbose: bool = False) -> dict:
     state_root = project_root / '.vibeflow'
     think_path = state_root / 'think-output.md'
-    workflow_path = state_root / 'workflow.yaml'
+    workflow_path = resolve_yaml(state_root, 'workflow')
     work_config_path = state_root / 'work-config.json'
     qa_report_path = state_root / 'qa-report.md'
     plan_review_path = state_root / 'plan-review.md'
@@ -77,7 +86,7 @@ def detect_phase(project_root: Path, verbose: bool = False) -> dict:
     elif not think_path.exists():
         phase, reason = 'think', '.vibeflow/think-output.md is missing.'
     elif not workflow_path.exists():
-        phase, reason = 'template-selection', '.vibeflow/workflow.yaml is missing.'
+        phase, reason = 'template-selection', '.vibeflow/workflow.yaml (or .yml) is missing.'
     elif not plan_review_path.exists():
         phase, reason = 'plan-review', '.vibeflow/plan-review.md is missing.'
     elif latest_srs is None:

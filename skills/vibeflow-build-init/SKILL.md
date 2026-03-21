@@ -1,232 +1,179 @@
 ---
 name: vibeflow-build-init
-description: Use when design exists but feature-list.json has not been initialized.
+description: "设计文档存在但 feature-list.json 尚未创建时使用 — 搭建项目工件并将需求分解为功能清单"
 ---
 
-# VibeFlow 构建初始化
+# 初始化 VibeFlow 项目
 
-初始化构建阶段的实现工件。在需求和设计批准后运行一次。
+在 SRS 和设计均审批通过后运行一次。搭建所有持久化工件，将需求分解为可验证的功能，准备项目进入迭代构建。
 
-**开始时宣布：**"我正在使用 vibeflow-build-init skill 来搭建构建阶段。"
+**启动宣告：** "正在使用 vibeflow-build-init 初始化项目。"
 
-## 目的
+## 输入文档
 
-创建 VibeFlow 构建阶段所需的所有持久化工件：
-- 带状态跟踪的功能清单
-- 工作配置
-- 进度跟踪
+| 文档 | 位置 | 提供 |
+|------|------|------|
+| **SRS** | `docs/plans/*-srs.md` | FR-xxx、NFR-xxx、CON-xxx、ASM-xxx、IFR-xxx、术语表、用户画像、验收标准 |
+| **设计** | `docs/plans/*-design.md` | 技术栈、架构、数据模型、API 设计、测试策略 |
+| **工作流** | `.vibeflow/workflow.yaml` | 模板配置、质量门禁阈值 |
 
-## 前置条件
+## 检查清单
 
-运行此 skill 前：
-- 需求文档存在于 `docs/plans/*-srs.md`
-- 设计文档存在于 `docs/plans/*-design.md`
-- Think 输出存在于 `.vibeflow/think-output.md`
-- 工作流配置存在于 `.vibeflow/workflow.yaml`
+按顺序完成以下步骤：
 
-## 第一步：读取输入文档
+### 1. 读取审批文档
+- SRS：`docs/plans/*-srs.md` — 需求、约束、假设、NFR
+- 设计：`docs/plans/*-design.md` — 技术栈、架构决策
+- 工作流：`.vibeflow/workflow.yaml` — 质量阈值和启用的步骤
 
-### 1.1 读取需求文档（SRS）
+### 2. 搭建项目骨架
+基于设计文档的架构创建目录结构、配置文件、依赖清单。
 
-读取 `docs/plans/*-srs.md`：
-- 功能需求（FR-xxx）
-- 非功能需求（NFR-xxx）
-- 约束条件（CON-xxx）
-- 假设条件（ASM-xxx）
-- 验收标准
-- 接口需求
-
-### 1.2 读取设计文档
-
-读取 `docs/plans/*-design.md`：
-- 技术栈
-- 架构
-- 数据模型
-- API 设计
-- 测试策略
-- 任务分解
-
-### 1.3 读取工作流配置
-
-读取 `.vibeflow/workflow.yaml`：
-- 选择的模板（prototype、web-standard、api-standard、enterprise）
-- 阶段顺序
-- 启用的功能
-
-## 第二步：创建工作配置
-
-### 2.1 创建 `.vibeflow/work-config.json`
+### 3. 生成 feature-list.json
+创建 `feature-list.json`，根结构：
 
 ```json
 {
-  "build": {
-    "tdd": true,
-    "quality": true,
-    "feature_st": true,
-    "spec_review": true
+  "project": "项目名",
+  "created": "YYYY-MM-DD",
+  "tech_stack": {
+    "language": "python|java|typescript|c|cpp",
+    "test_framework": "pytest|junit|vitest|gtest|...",
+    "coverage_tool": "pytest-cov|jacoco|c8|gcov|...",
+    "mutation_tool": "mutmut|pitest|stryker|mull|..."
   },
-  "quality": {
-    "tdd": true,
-    "quality_gates": {
-      "line_coverage_min": 80,
-      "branch_coverage_min": 70,
-      "mutation_score_min": 70
-    }
-  }
+  "quality_gates": {
+    "line_coverage_min": 90,
+    "branch_coverage_min": 80,
+    "mutation_score_min": 80
+  },
+  "constraints": ["硬限制 — 每项一个字符串"],
+  "assumptions": ["隐含信念 — 每项一个字符串"],
+  "required_configs": [],
+  "features": []
 }
 ```
 
-根据以下内容调整阈值：
-- 项目模板（原型可能有更低的阈值）
-- 技术栈能力
-- 团队偏好
+**quality_gates 阈值**应从 `.vibeflow/workflow.yaml` 中读取，而非硬编码默认值。
 
-### 2.2 保存工作配置
+### 4. 填充 SRS 字段
+从 SRS 文档中：
+- `constraints[]` — 复制 CON-xxx 项
+- `assumptions[]` — 复制 ASM-xxx 项
+- NFR-xxx -> 创建 `category: "non-functional"` 的功能条目，带可度量的 `verification_steps`
 
-写入 `.vibeflow/work-config.json`。
+### 5. 分解需求为功能
+从 SRS 文档和设计文档的**开发计划**（任务分解章节），填充 `features[]`：
 
-## 第三步：创建功能清单
+- 每个 FR-xxx -> 一个或多个功能条目，含 `id`、`category`、`title`、`description`、`priority`、`status`（始终为 `"failing"`）、`verification_steps`、`dependencies`
+- `verification_steps` 应追溯到 SRS 验收标准（Given/When/Then）
+- UI 功能：设置 `"ui": true`，可选 `"ui_entry": "/路径"`
 
-### 3.1 分解需求
-
-从 SRS 和设计文档分解出功能：
-
-**对于每个 FR-xxx：**
-1. 创建一个或多个功能，包含：
-   - `id`：顺序整数
-   - `category`："core"、"backend"、"frontend"、"infrastructure"、"non-functional"
-   - `title`：简洁的功能名称
-   - `description`：功能作用
-   - `priority`："high"、"medium"、"low"
-   - `status`：初始化时始终为 `"failing"`
-   - `verification_steps[]`：从 SRS 派生的验收标准
-   - `dependencies[]`：必须先完成的 feature ID
-
-### 3.2 功能 Schema
-
+每个功能条目：
 ```json
 {
   "id": 1,
   "category": "core",
   "title": "功能标题",
-  "description": "功能作用",
+  "description": "做什么",
   "priority": "high|medium|low",
   "status": "failing",
-  "verification_steps": [
-    "Given [上下文]，when [操作]，then [结果]"
-  ],
-  "dependencies": []
+  "verification_steps": ["步骤 1", "步骤 2"],
+  "dependencies": [],
+  "ui": false,
+  "ui_entry": "/可选路径"
 }
 ```
 
-### 3.3 处理 UI 功能
+**验证步骤质量规则**：
+- 每步**必须**是带 Given/When/Then 结构的行为场景，不是简单断言
+- 差：`"登录页正常显示"` -> 无动作，无断言
+- 好：`"导航到 /login -> 预期：邮箱输入框、密码输入框、'登录'按钮；填入有效凭证 -> 点击登录 -> 预期：跳转到 /dashboard，头部显示用户名"`
+- UI 功能的每个 `[devtools]` 步骤**必须**描述多步交互链
 
-对于有 UI 组件的功能（`"ui": true`）：
-- 设置 `"ui": true`
-- 如果适用，添加 `"ui_entry": "/可选路径"`
-- 确保依赖包含后端 API 功能
-- 引用 UCD 文档的样式要求
+**前后端配对排序规则**：前端功能（`"ui": true`）**必须**在 `dependencies[]` 中列出其后端 API 依赖。且 `features[]` 数组中在每个后端功能之后紧跟其对应的前端功能。
 
-### 3.4 处理非功能需求
+**优先级排序**：遵循设计文档的任务分解表 — P0/P1/P2/P3 映射为 high/high/medium/low
 
-对于 NFR-xxx 项目：
-- 使用 `category: "non-functional"` 创建功能
-- 包含可测量的 `verification_steps`（例如，"响应时间 < 200ms"）
-- 质量门禁（tdd、quality）可能不适用——在工作配置中相应设置
+目标：10-200+ 个功能；每个独立可验证，可在一个会话中完成。
 
-### 3.5 依赖排序
+### 6. 填充 required_configs
+从 SRS（IFR-xxx 接口需求）和设计文档：
+- API 密钥、服务 URL -> type `env`
+- 配置文件、证书 -> type `file`
+- 通过 `required_by` 链接到功能；提供 `check_hint` 含设置说明
 
-在数组中按依赖关系排序功能：
-1. 基础设施/core 功能优先
-2. 后端功能先于前端功能
-3. 依赖的功能在其依赖之后
+### 7. 生成 .env.example
+从 `required_configs` 生成：
+```
+# <名称> — <描述>
+# 提示：<check_hint>
+# 功能依赖：<required_by ids>
+<KEY>=
+```
+将 `.env` 加入 `.gitignore`。
 
-## 第四步：创建任务进度
+### 8. 生成 vibeflow-guide.md
+创建项目专属的构建会话指南，放在项目根目录：
 
-### 4.1 创建 `task-progress.md`
+必须包含的章节：
+- **环境命令** — 环境激活、测试执行、覆盖率、变异测试的具体命令
+- **构建流程** — Orient -> Bootstrap -> Config Gate -> TDD -> Quality -> Feature ST -> Review -> Persist
+- **服务命令**（仅当项目有服务进程时）— 引用 env-guide.md
+- **关键规则** — 一次一个功能、严格步骤顺序、不跳过子步骤
 
-```markdown
-# 任务进度
+### 9. 生成 env-guide.md（如项目有服务进程）
+在项目根目录创建服务生命周期指南：
 
-## 当前状态
+- 服务表格（名称、端口、启动命令、停止命令、健康检查 URL）
+- 启动所有服务（含日志输出捕获、PID 提取）
+- 验证服务运行
+- 停止所有服务（按 PID 或按端口）
+- 验证服务已停止
+- 重启协议（4 步：Kill -> 验证死亡 -> 启动 -> 验证存活）
 
-- **进度**：0/N 个功能通过
-- **最后完成**：无
-- **下一个功能**：#1 [功能标题]
+### 10. 生成初始化脚本
+创建 `init.sh`（Unix/macOS）和 `init.ps1`（Windows）：
+- 环境创建与激活
+- 依赖安装
+- 工具版本验证
+- 必须幂等（重复运行安全）
+- 克隆后立即可执行
 
----
+### 11. 生成辅助文件
+- `task-progress.md` — 含 `## Current State` 头部（0/N 功能通过）
+- `RELEASE_NOTES.md` — Keep a Changelog 格式
 
-## 会话日志
+### 12. 验证
+运行初始化脚本，验证环境搭建无错误。验证测试命令可执行（此时全部失败是预期的）。
 
-### 会话 0（初始化）
-- 日期：YYYY-MM-DD
-- 操作：构建初始化
-- 已初始化的功能：N
+### 13. Git 提交
+初始提交，包含所有搭建的工件。
+
+### 14. 生成 .vibeflow/work-config.json
+如尚不存在，运行：
+```bash
+python scripts/new-vibeflow-work-config.py --project-root .
 ```
 
-## 第五步：验证
+### 15. 进入构建
+进入 `vibeflow-build-work` 开始第一个功能。
 
-### 5.1 验证功能清单
-
-验证 feature-list.json 是有效的 JSON：
-- 所有必填字段存在
-- 无循环依赖
-- 所有依赖 ID 引用现有功能
-
-### 5.2 检查文档路径
-
-验证引用的文档存在：
-- `docs/plans/*-srs.md`
-- `docs/plans/*-design.md`
-
-## 第六步：初始提交
-
-### 6.1 Git Add
-
-暂存所有新文件：
-- `.vibeflow/work-config.json`
-- `feature-list.json`
-- `task-progress.md`
-
-### 6.2 Git Commit
-
-```
-feat: initialize build stage artifacts
-
-- Add work-config.json with quality thresholds
-- Add feature-list.json with N features
-- Add task-progress.md for session tracking
-```
-
-## 检查清单
-
-在标记初始化完成前：
-
-- [ ] 工作配置已创建于 `.vibeflow/work-config.json`
-- [ ] 功能清单已创建于 `feature-list.json`
-- [ ] 任务进度已创建于 `task-progress.md`
-- [ ] 所有功能都有有效的 `verification_steps`
-- [ ] 依赖形成 DAG（无循环）
-- [ ] UI 功能标有 `"ui": true`
-- [ ] NFR 功能标有 `category: "non-functional"`
-- [ ] 已创建初始 git 提交
-- [ ] 构建阶段已准备好进入 `vibeflow-build-work`
-
-## 输出
+## 生成的持久化工件
 
 | 文件 | 用途 |
 |------|------|
-| `.vibeflow/work-config.json` | 构建阶段配置和质量阈值 |
 | `feature-list.json` | 带状态的结构化任务清单 |
-| `task-progress.md` | 按会话的进度日志 |
+| `task-progress.md` | 逐会话进度日志 |
+| `RELEASE_NOTES.md` | 活跃的发布说明 |
+| `vibeflow-guide.md` | 项目专属构建指南 |
+| `env-guide.md` | 服务生命周期命令（如适用） |
+| `init.sh` / `init.ps1` | 环境引导脚本 |
+| `.env.example` | 必需环境配置模板 |
 
 ## 集成
 
-**调用者：** `vibeflow` 路由（当需求和设计存在，但 feature-list.json 不存在时）
-**需要：**
-- 需求文档位于 `docs/plans/*-srs.md`
-- 设计文档位于 `docs/plans/*-design.md`
-- Think 输出位于 `.vibeflow/think-output.md`
-- 工作流配置位于 `.vibeflow/workflow.yaml`
-**产生：** `work-config.json`、`feature-list.json`、`task-progress.md`
-**链至：** `vibeflow-build-work`（第一个功能周期）
+**调用者：** vibeflow-router 或 vibeflow-design（步骤 6）
+**读取：** `docs/plans/*-srs.md` + `docs/plans/*-design.md` + `.vibeflow/workflow.yaml`
+**链接到：** vibeflow-build-work（初始化完成后）
+**产出：** feature-list.json + 上述所有工件

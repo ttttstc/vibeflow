@@ -1,250 +1,136 @@
 ---
 name: vibeflow-plan-review
-description: 在Plan期间用于在规范编写之前运行执行范围审查。
+description: "Plan 阶段使用 — 在需求和设计编写前运行执行层面的范围审查"
 ---
 
-# VibeFlow计划审查
+# 执行范围审查
 
-在需求和设计继续编写之前，执行VibeFlow计划审查。
+在 Think 阶段完成后、需求编写前，以创始人/CEO 视角审查问题定义和范围决策。确保在投入详细规格前方向正确。
 
-**开始时宣布：** "我正在使用vibeflow-plan-review skill来运行计划审查。"
-
-## 目的
-
-在编写需求和设计之前，验证：
-- 问题框定是正确的
-- 范围层级是适当的
-- 主要风险已识别
-- 推荐的路径是合理的
-
-##何时运行
-
-- Think阶段之后（vibeflow-think）
-- Requirements阶段之前（vibeflow-requirements）
-- 由`vibeflow`路由器调用
+**启动宣告：** "正在使用 vibeflow-plan-review 运行范围审查。"
 
 ## 输入
 
-- `VIBEFLOW-DESIGN.md`（如果存在）
-- `.vibeflow/think-output.md` — Think阶段输出
-- `.vibeflow/workflow.yaml` — 选择的模板配置（如果存在）
+- `.vibeflow/think-output.md` — 问题陈述、边界、用户画像、复杂度评估、机会扫描
+- `.vibeflow/workflow.yaml` — 所选模板和配置
+- `VIBEFLOW-DESIGN.md` — 框架契约（如在 vibeflow 仓库内）
 
-## 步骤1：加载审查上下文
+## 审查模式
 
-### 1.1 阅读Think输出
+从 `.vibeflow/workflow.yaml` 读取 `plan_review.mode`：
 
-从`.vibeflow/think-output.md`：
-- 问题陈述
-- 提出的解决方案
-- 成功标准
-- 初始范围评估
+| 模式 | 行为 | 典型模板 |
+|------|------|---------|
+| `reduced` | 快速检查，仅标记明显问题 | prototype |
+| `hold` | 标准审查，质疑假设后推荐继续或调整 | web-standard, api-standard |
+| `expansion` | 深度审查，主动探索扩大范围的机会 | enterprise |
 
-### 1.2 阅读工作流程配置
+## 检查清单
 
-从`.vibeflow/workflow.yaml`：
-- 选择的模板
-- 阶段序列
-- 启用的功能
+### 1. 重新理解问题
 
-### 1.3 阅读设计文档（如果存在）
+不要假设 think-output.md 的问题定义是最优的：
 
-从`VIBEFLOW-DESIGN.md`或`docs/plans/*-design.md`：
-- 先前的设计工作
-- 架构决策
+- 问题是否抓住了**根因**而非症状？
+- 是否有更深层的问题值得解决？
+- 用户真正需要的是什么 vs 他们说想要的是什么？
 
-## 步骤2：挑战问题框定
+### 2. 质疑范围
 
-### 2.1 问题验证
+| 检查 | 问题 |
+|------|------|
+| **范围过大** | 是否包含了 MVP 不需要的功能？哪些可以推迟？ |
+| **范围过小** | 是否遗漏了对用户体验至关重要的功能？ |
+| **假设风险** | think-output.md 中的假设哪些最可能是错的？ |
+| **技术可行性** | 选定方案的最大技术风险是什么？ |
 
-审查问题陈述：
-- [ ] 问题已清晰陈述
-- [ ] 问题实际上是根本原因
-- [ ] 问题值得解决
-- [ ] 问题范围适当
+### 3. 10 星产品思考
 
-### 2.2 解决方案验证
+以 think-output.md 的"10x 版本"为起点：
 
-审查提出的解决方案：
-- [ ] 解决方案解决根本原因
-- [ ] 解决方案在技术上是可行的
-- [ ] 解决方案具有成本效益
-- [ ] 已考虑替代解决方案
+- 如果没有任何约束，这个产品的完美版本是什么样的？
+- 从完美版本中，哪些元素可以用最小成本纳入当前范围？
+- 有没有一个改变能让产品价值翻倍？
 
-### 2.3 成功标准验证
+### 4. 风险评估
 
-审查成功标准：
-- [ ] 标准是可衡量的
-- [ ] 标准是可实现的
-- [ ] 标准验证问题已解决
-- [ ] 标准没有遗漏重要结果
+识别并排序风险：
 
-## 步骤3：范围层级审查
+| 风险 | 可能性 | 影响 | 缓解 |
+|------|--------|------|------|
+| [技术风险] | 高/中/低 | 高/中/低 | [策略] |
+| [市场风险] | ... | ... | ... |
+| [执行风险] | ... | ... | ... |
 
-### 3.1 评估范围层级
+### 5. 范围决策
 
-根据问题和解决方案，推荐范围层级：
+产出三选一的决策：
 
-| 层级 | 特点 | 何时使用 |
-|------|------|----------|
-| **Prototype** | 快速验证、最少功能 | 探索性、学习 |
-| **Web Standard** | 完整Web应用、无复杂集成 | 标准Web产品 |
-| **API Standard** | 后端API、可能有多个客户端 | API优先产品 |
-| **Enterprise** | 复杂集成、高可靠性 | 任务关键型 |
+#### 扩展（Expand）
+当发现当前范围遗漏了高价值、低成本的功能时。明确列出建议添加的内容和理由。
 
-### 3.2 确认层级适当性
+#### 保持（Hold）
+当前范围合理。可能有小调整建议但不改变核心方向。
 
-- [ ] 模板与范围复杂度匹配
-- [ ] 工作流程步骤适合层级
-- [ ] 质量关卡适合层级
+#### 缩减（Reduce）
+当范围过大或风险过高时。明确列出建议推迟的内容和理由。
 
-### 3.3 记录层级决策
+### 6. 生成审查记录
+
+保存到 `.vibeflow/plan-review.md`：
 
 ```markdown
-## Scope Tier Recommendation
+# Plan Review
 
-**Recommended tier**: [Tier name]
-**Rationale**: Why this tier is appropriate
-**Alternative considered**: [Tier name] — why not chosen
+**日期**：YYYY-MM-DD
+**审查模式**：[reduced/hold/expansion]
+
+## 问题重新审视
+[对问题定义的质疑和确认]
+
+## 范围审查
+[对当前范围的分析]
+
+## 10 星思考
+[理想产品的关键洞察]
+
+## 风险评估
+[排序的风险表]
+
+## 决策
+**范围决策**：[Expand / Hold / Reduce]
+**理由**：[简要说明]
+**调整建议**：
+- [具体建议 1]
+- [具体建议 2]
+
+## 是否继续到需求
+[是 / 否 — 需要先解决什么]
 ```
 
-## 步骤4：风险评估
+### 7. 用户确认
 
-### 4.1 产品风险
+通过 `AskUserQuestion` 展示审查结论，获取用户确认：
+- 范围决策是否接受
+- 调整建议是否采纳
+- 是否继续进入需求阶段
 
-| 风险 | 可能性 | 影响 | 缓解策略 |
-|------|--------|------|----------|
-| Risk 1 | High/Medium/Low | High/Medium/Low | Mitigation strategy |
+### 8. 过渡
 
-### 4.2 技术风险
+用户确认后进入 `vibeflow-requirements`。
 
-| 风险 | 可能性 | 影响 | 缓解策略 |
-|------|--------|------|----------|
-| Risk 1 | High/Medium/Low | High/Medium/Low | Mitigation strategy |
+## 红线
 
-### 4.3 交付风险
-
-| 风险 | 可能性 | 影响 | 缓解策略 |
-|------|--------|------|----------|
-| Risk 1 | High/Medium/Low | High/Medium/Low | Mitigation strategy |
-
-## 步骤5：审查建议
-
-### 5.1 继续进行需求
-
-**推荐** — 问题框定正确，风险可管理
-
-**有条件** — 带修改继续：
-- [ ] Modification 1
-- [ ] Modification 2
-
-**不推荐** — 重大问题：
-- [ ] Issue 1
-- [ ] Issue 2
-
-### 5.2 范围调整
-
-如果需要范围调整：
-```
-## Scope Adjustments
-
-**Expand**:
-- [Item to add to scope]
-
-**Reduce**:
-- [Item to remove from scope]
-
-**Defer**:
-- [Item to defer to later iteration]
-```
-
-## 步骤6：记录审查
-
-### 6.1 创建审查笔记
-
-保存到`.vibeflow/plan-review.md`或`docs/plans/YYYY-MM-DD-plan-review.md`：
-
-```markdown
-# Plan Review — YYYY-MM-DD
-
-## Summary
-- **Review date**: YYYY-MM-DD
-- **Think output**: `.vibeflow/think-output.md`
-- **Workflow**: [template] — [stage sequence]
-
-## Problem Framing
-[Assessment of problem statement]
-
-## Solution Validation
-[Assessment of proposed solution]
-
-## Scope Tier
-**Recommended**: [Tier]
-**Rationale**: [Why appropriate]
-
-## Risk Assessment
-
-### Product Risks
-[Risks table]
-
-### Technical Risks
-[Risks table]
-
-### Delivery Risks
-[Risks table]
-
-## Recommendations
-
-**Decision**: Proceed | Conditional | Not Recommended
-
-### Modifications (if conditional)
-- [Modification 1]
-- [Modification 2]
-
-### Scope Adjustments (if any)
-[Expand/Reduce/Defer items]
-
-## Next Steps
-- [ ] Proceed to Requirements (vibeflow-requirements)
-- [ ] Address modifications before proceeding
-```
-
-### 6.2 保存审查笔记
-
-将审查笔记写入适当位置。
-
-## 检查表
-
-完成计划审查之前：
-
-- [ ] 问题框定已验证
-- [ ] 解决方案方法已验证
-- [ ] 成功标准已验证
-- [ ] 范围层级已推荐
-- [ ] 产品风险已识别
-- [ ] 技术风险已识别
-- [ ] 交付风险已识别
-- [ ] 建议已记录
-- [ ] 审查笔记已保存
-- [ ] 决定：继续 / 有条件 / 不推荐
-
-## 预期输出
-
-| 输出 | 位置 | 目的 |
-|------|------|------|
-| Scope decision | Review notes | Expand / Hold / Reduce |
-| Review notes | `.vibeflow/plan-review.md` or `docs/plans/` | 决定文档 |
-| Risk assessment | Review notes | 风险意识 |
-| Recommendation | Review notes | Go/No-go指导 |
+| 合理化借口 | 正确响应 |
+|---|---|
+| "Think 阶段已经想清楚了" | Think 是快速框架，Plan Review 是深度审查 |
+| "用户很着急，跳过审查" | 方向错误比速度慢更浪费时间 |
+| "范围很清楚不需要质疑" | 最危险的假设是你不知道自己在假设的那些 |
+| "这只是个简单工具" | 简单工具也可能解决错误的问题 |
 
 ## 集成
 
-**由以下调用：** `vibeflow`路由器（Think之后，Requirements之前）
-**需要：**
-- Think输出在`.vibeflow/think-output.md`
-- 工作流程配置在`.vibeflow/workflow.yaml`（如果存在）
-- 设计文档（如果存在）
-**产生：**
-- 带范围决定的审查笔记
-- 风险评估
-- Go/No-go建议
-**链接到：** `vibeflow-requirements`（如果批准）
+**调用者：** vibeflow-router（plan-review 阶段）
+**依赖：** `.vibeflow/think-output.md`、`.vibeflow/workflow.yaml`
+**产出：** `.vibeflow/plan-review.md`
+**链接到：** vibeflow-requirements

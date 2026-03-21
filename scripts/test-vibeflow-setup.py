@@ -66,10 +66,15 @@ def main():
     report = {
         'setup_ok': all_ok,
         'phase': phase_info['phase'],
-        'workflow': workflow_ok,
-        'work_config': work_config_ok,
-        'skills': skill_results,
-        'missing_count': missing_count,
+        'workflow': (project_root / '.vibeflow' / 'workflow.yaml').exists() or (project_root / '.vibeflow' / 'workflow.yml').exists(),
+        'work_config': (project_root / '.vibeflow' / 'work-config.json').exists(),
+        'skills': [
+            'vibeflow', 'vibeflow-router', 'vibeflow-think', 'vibeflow-plan-review',
+            'vibeflow-requirements', 'vibeflow-ucd', 'vibeflow-design', 'vibeflow-build-init',
+            'vibeflow-build-work', 'vibeflow-tdd', 'vibeflow-quality', 'vibeflow-feature-st',
+            'vibeflow-spec-review', 'vibeflow-review', 'vibeflow-test-system', 'vibeflow-test-qa',
+            'vibeflow-ship', 'vibeflow-reflect'
+        ],
     }
     if args.as_json:
         print(json.dumps(report, indent=2))
