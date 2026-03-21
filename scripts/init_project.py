@@ -276,12 +276,12 @@ def main():
 
     # Resolve plugin root.
     # When this script runs from its original install location
-    # (skills/long-task-init/scripts/), three levels up is the plugin root.
+    # (skills/vibeflow-build-init/scripts/), three levels up is the plugin root.
     # When the hook copies this script to a target project's scripts/ directory,
-    # it also writes a `.long-task-plugin-root` hint file alongside it so the
+    # it also writes a `.vibeflow-plugin-root` hint file alongside it so the
     # copied script can locate the plugin's scripts/ directory correctly.
     _THIS_DIR = os.path.dirname(os.path.abspath(__file__))
-    _hint_file = os.path.join(_THIS_DIR, '.long-task-plugin-root')
+    _hint_file = os.path.join(_THIS_DIR, '.vibeflow-plugin-root')
     if os.path.isfile(_hint_file):
         with open(_hint_file, encoding='utf-8') as _hf:
             _hint = _hf.read().strip()
@@ -301,12 +301,14 @@ def main():
 
     helper_scripts = [
         "validate_features.py",
+        "check_configs.py",
         "check_devtools.py",
         "validate_guide.py",
         "get_tool_commands.py",
         "validate_st_cases.py",
         "validate_increment_request.py",
         "check_st_readiness.py",
+        "new-vibeflow-work-config.py",
     ]
     for script_name in helper_scripts:
         src = os.path.join(plugin_scripts_dir, script_name)

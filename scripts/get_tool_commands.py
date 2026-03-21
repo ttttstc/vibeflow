@@ -234,7 +234,7 @@ def format_text(cmds: dict) -> str:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Output exact tool commands for a long-task project"
+        description="Output exact tool commands for a vibeflow project"
     )
     parser.add_argument("feature_list", help="Path to feature-list.json")
     parser.add_argument("--json", action="store_true",

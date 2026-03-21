@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Check system testing readiness for a long-task project.
+Check system testing readiness for a vibeflow project.
 
 Verifies:
 - feature-list.json exists and all features are "passing"
