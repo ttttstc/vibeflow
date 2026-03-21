@@ -25,7 +25,7 @@ def main():
     project_root = Path(args.project_root).resolve()
     report = {
         'phase': phase_info['phase'],
-        'workflow': (project_root / '.vibeflow' / 'workflow.yaml').exists(),
+        'workflow': (project_root / '.vibeflow' / 'workflow.yaml').exists() or (project_root / '.vibeflow' / 'workflow.yml').exists(),
         'work_config': (project_root / '.vibeflow' / 'work-config.json').exists(),
         'skills': [
             'vibeflow', 'vibeflow-router', 'vibeflow-think', 'vibeflow-plan-review',

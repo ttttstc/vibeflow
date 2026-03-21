@@ -1,15 +1,103 @@
 ---
 name: vibeflow-review
-description: Use after build completion for whole-change review across the branch or diff.
+description: "所有活跃功能通过后使用 — 在最终测试和发布前运行全变更审查"
 ---
 
-## Purpose
+# 全局变更审查
 
-Run a full review after active features are passing and before final testing and shipping.
+在所有活跃功能通过后、系统测试前运行。审查整个交付物的结构完整性、一致性和质量。
 
-## Focus
+**启动宣告：** "正在使用 vibeflow-review 运行全局变更审查。"
 
-- structural issues
-- hidden regressions
-- missing tests
-- completeness gaps
+## 运行时机
+
+- 所有活跃功能（非废弃）在 feature-list.json 中状态为 "passing"
+- 在 vibeflow-test-system 之前
+- 此阶段关注跨功能问题，而非单个功能（那是 vibeflow-spec-review 的工作）
+
+## 检查清单
+
+### 1. 准备
+- 读取 `feature-list.json` — 确认所有活跃功能为 passing
+- 读取 `task-progress.md` — 会话历史
+- 读取设计文档 — 架构和全局约束
+- 运行 `git diff main...HEAD`（或对应基线分支）获取完整变更
+
+### 2. 结构审查
+
+| # | 检查项 | 描述 |
+|---|--------|------|
+| R1 | **架构一致性** | 所有模块遵循设计文档定义的层次和边界 |
+| R2 | **依赖一致性** | 实际使用的依赖版本与设计文档依赖表匹配 |
+| R3 | **API 契约一致性** | 实际 API 端点、参数、响应与设计文档 API 章节匹配 |
+| R4 | **数据模型一致性** | 实际数据结构与设计文档 ER 图匹配 |
+| R5 | **无孤立代码** | 没有未被任何功能引用的死代码模块 |
+
+### 3. 回归检查
+
+| # | 检查项 | 描述 |
+|---|--------|------|
+| G1 | **全套测试通过** | 运行完整测试套件，零失败 |
+| G2 | **覆盖率未下降** | 全项目覆盖率 >= feature-list.json 中 quality_gates 阈值 |
+| G3 | **无新警告** | 编译/lint 无新增警告或弃用通知 |
+| G4 | **无安全漏洞** | 依赖安全审计通过（npm audit / pip-audit 等） |
+
+### 4. 完整性检查
+
+| # | 检查项 | 描述 |
+|---|--------|------|
+| C1 | **RELEASE_NOTES.md 完整** | 每个通过的功能都有对应变更记录 |
+| C2 | **task-progress.md 一致** | Current State 与 feature-list.json 功能计数一致 |
+| C3 | **文档同步** | README / 使用说明反映当前功能集 |
+| C4 | **示例覆盖** | examples/ 目录覆盖关键功能用法 |
+
+### 5. 生成审查报告
+
+保存到 `.vibeflow/review-report.md`：
+
+```markdown
+# 全局变更审查报告
+
+**日期**：YYYY-MM-DD
+**功能总数**：X 活跃 / Y 废弃
+**审查范围**：git diff main...HEAD
+
+## 结构审查
+| 检查 | 结果 | 备注 |
+|------|------|------|
+| R1-R5 | PASS/FAIL | ... |
+
+## 回归检查
+| 检查 | 结果 | 备注 |
+|------|------|------|
+| G1-G4 | PASS/FAIL | ... |
+
+## 完整性检查
+| 检查 | 结果 | 备注 |
+|------|------|------|
+| C1-C4 | PASS/FAIL | ... |
+
+## 发现的问题
+| # | 严重度 | 描述 | 建议 |
+|---|--------|------|------|
+
+## 裁定
+[PASS — 可进入系统测试 / FAIL — 需修复]
+```
+
+### 6. 处理发现
+
+- **严重/重要问题**：修复后重新运行受影响检查
+- **次要问题**：记录，可推迟到下一迭代
+- 最多 3 轮修复-重审循环，然后升级到用户
+
+### 7. 过渡
+
+审查通过后进入 `vibeflow-test-system`。
+
+## 集成
+
+**调用者：** vibeflow-router 或 vibeflow-build-work（步骤 13 当无失败功能时）
+**依赖：** 所有活跃功能 passing
+**产出：** `.vibeflow/review-report.md`
+**链接到：** vibeflow-test-system

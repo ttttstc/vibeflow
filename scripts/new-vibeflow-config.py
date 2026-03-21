@@ -14,13 +14,19 @@ def main():
     repo_root = Path(__file__).resolve().parent.parent
     project_root = Path(args.project_root).resolve()
     template_root = Path(args.template_root).resolve() if args.template_root else repo_root / 'templates'
-    template_path = template_root / f'{args.template}.yaml'
-    if not template_path.exists():
-        raise SystemExit(f'Template not found: {template_path}')
+    template_path = None
+    for ext in ('.yaml', '.yml'):
+        candidate = template_root / f'{args.template}{ext}'
+        if candidate.exists():
+            template_path = candidate
+            break
+    if template_path is None:
+        raise SystemExit(f'Template not found: {template_root / args.template}.yaml (or .yml)')
 
     workflow_dir = project_root / '.vibeflow'
     workflow_dir.mkdir(parents=True, exist_ok=True)
-    workflow_path = workflow_dir / 'workflow.yaml'
+    # Use same extension as the source template
+    workflow_path = workflow_dir / f'workflow{template_path.suffix}'
     content = template_path.read_text(encoding='utf-8').replace('TEMPLATE_DATE', date.today().isoformat())
     workflow_path.write_text(content, encoding='utf-8')
     print(workflow_path)

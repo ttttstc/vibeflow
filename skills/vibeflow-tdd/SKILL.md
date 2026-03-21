@@ -1,10 +1,139 @@
 ---
 name: vibeflow-tdd
-description: Use as the red-green-refactor step within the VibeFlow build stage.
+description: "VibeFlow 构建阶段的 Red-Green-Refactor 步骤 — 强制测试先行开发"
 ---
 
-Run test-first development for the current feature.
+# 测试驱动开发
 
-- start from a failing test
-- implement the minimum passing change
-- refactor without breaking green
+先写测试。看它失败。写最少代码通过。重构。
+
+**违反规则的字面意思就是违反规则的精神。**
+
+## 铁律
+
+```
+没有失败测试就没有实现代码
+```
+
+先写了代码再写测试？删掉。重来。没有例外。
+- 不要保留作"参考"
+- 不要在写测试时"借鉴"
+- 不要看它
+- 删除就是删除
+
+## Red-Green-Refactor 循环
+
+```
+TDD Red：编写失败测试 -> TDD Green：最小实现 -> TDD Refactor：清理
+```
+
+## 步骤 1：TDD Red — 编写失败测试
+
+为功能规格中的**所有** verification_steps 编写测试。测试**必须**失败（功能尚未实现）。
+
+### 规格输入
+
+测试由两个主要来源驱动：
+- **`verification_steps`**（主要 — 每步成为一个或多个测试）
+- **SRS 需求章节**（`{srs_section}`）— 完整 FR-xxx 含 Given/When/Then 验收标准、边界条件和错误路径
+
+### 测试场景规则（硬性要求）
+
+**规则 1：类别覆盖** — 测试必须覆盖所有适用类别：
+
+| 类别 | 测试什么 | 示例 |
+|------|---------|------|
+| **正常路径** | 正常操作，有效输入 | 有效登录返回 token |
+| **错误处理** | 已知故障，无效输入 | 无效密码返回 401 |
+| **边界/极端** | 限制，空值，最大值，零值 | 空字符串；最长密码 |
+| **安全** | 注入，授权 | 用户名中的 SQL 注入 |
+
+不适用的类别需明确注释说明。
+
+**规则 2：负面测试比例 >= 40%**
+
+```
+negative_test_count / total_test_count >= 0.40
+```
+
+"负面"测试 = 期望异常、错误、失败状态、边界/极端输入、未授权访问或畸形数据。
+
+**规则 3：断言质量 — 低价值 <= 20%**
+
+```
+low_value_count / total_assertion_count <= 0.20
+```
+
+低价值断言模式（避免）：
+- `assert x is not None` 不检查内容
+- `assert isinstance(x, SomeType)` 不检查行为
+- `assert len(x) > 0` 不验证元素
+- `assert "key" in dict` 不检查值
+- 仅 truthiness 的断言
+- 仅导入测试
+
+**规则 4："错误实现"挑战**
+
+对每个测试问："什么错误实现会被这个测试捕获？"
+
+设想 2-3 个合理的错误实现：
+- 返回硬编码值而非计算
+- 交换两个字段
+- 偏移一位错误
+- 跳过验证步骤
+- 返回过期/缓存数据
+
+测试会对每个**失败**吗？如果多数不会 -> 重写。
+
+**规则 5：UI 专属测试规则**（当 `"ui": true` 时）
+
+- 首个 UI 测试前验证应用可达
+- 每个 `[devtools]` 步骤必须使用 EXPECT/REJECT 格式
+- 通过 `evaluate_script()` 执行自动错误检测
+- `list_console_messages(types=["error"])` 必须返回 0 错误
+
+### 测试编写后
+
+运行测试套件。**所有测试必须失败。** 如有测试通过 -> 它不测试任何有用的东西，重写它。
+
+## 步骤 2：TDD Green — 最小实现
+
+写**仅够**让测试通过的代码。
+
+**规则：**
+- 从测试出发全新实现 — 不引用在铁律中被"删除"的预存代码
+- 一次一个测试：先让最简单的失败测试通过，然后下一个
+- 不过早优化或额外功能
+
+**启动输出要求** — 实现服务器进程或后台服务的功能：
+实现**必须**在启动时记录：
+- 绑定端口：如 `Starting server on port 8080`
+- PID：如 `PID: 12345`
+- 就绪信号：如 `Server ready`
+
+**env-guide.md 同步规则** — 实现或修改服务后：
+1. 比较实际启动命令和端口与 env-guide.md
+2. 如有差异：更新 env-guide.md
+3. 在同一次 git 提交中包含 env-guide.md 变更
+
+## 步骤 3：TDD Refactor
+
+保持测试绿色的同时清理：
+- 提取重复，改善命名，简化
+- **每次改动后运行测试**
+- 此步骤不添加新功能
+
+## 测试反模式（前 5 名）
+
+1. **测试 mock 行为** — 验证真实代码，不是 mock 配置
+2. **测试实现细节** — 测试行为/输出，不是内部结构
+3. **不会失败的测试** — 每个断言必须可证伪
+4. **刷覆盖率** — 无断言的测试执行代码但不验证正确性
+5. **低价值断言** — `assertNotNull` / `isinstance` / `len>0` 不检查实际值。最多 20%。
+
+## 集成
+
+**调用者：** vibeflow-build-work（步骤 5-7）
+**依赖：** 计划文件存在（来自 Work 步骤 4）
+**产出：** 通过的测试 + 实现代码
+**链接到：** vibeflow-quality（通过 Work 步骤 8）

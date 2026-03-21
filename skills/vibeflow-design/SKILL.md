@@ -1,24 +1,143 @@
 ---
 name: vibeflow-design
-description: Use when VibeFlow needs a technical design document before initialization.
+description: "SRS 存在但无设计文档时使用 — 以审批通过的 SRS 为输入产出架构/设计文档，回答 HOW"
 ---
 
-## Purpose
+# 设计文档生成
 
-Produce the technical design document in `docs/plans/*-design.md`.
+以审批通过的 SRS 为输入。提出实现方案，逐节获得设计审批，产出回答 HOW 的设计文档 — 而 SRS 回答 WHAT。
 
-## Inputs
+<HARD-GATE>
+在你展示设计文档并获得用户批准之前，不得调用任何实现技能、编写任何代码、搭建任何项目。此规则适用于每个项目。
+</HARD-GATE>
 
-- latest SRS in `docs/plans/`
-- latest UCD when UI exists
-- `.vibeflow/workflow.yaml`
+## 反模式："SRS 足够详细可以直接编码了"
 
-## Outputs
+SRS 描述系统**做什么**。设计文档描述**怎么做**。即使需求很清晰，实现方案（架构、数据模型、技术栈选择）也需要显式决策和用户审批。
 
-- `docs/plans/YYYY-MM-DD-<topic>-design.md`
+## 检查清单
 
-## Rules
+按顺序完成以下步骤：
 
-- define architecture, dependencies, risks, and task decomposition
-- make the design specific enough for initialization and build work
-- keep the document aligned with the selected workflow template
+1. **读取审批通过的 SRS 和 UCD** — 从 `docs/plans/`
+2. **探索技术上下文** — 现有代码、框架、部署环境
+3. **提出 2-3 个方案** — 带权衡和推荐
+4. **逐节设计审批** — 架构、数据模型、API、UI、测试、部署
+5. **编写设计文档** — 保存到 `docs/plans/YYYY-MM-DD-<topic>-design.md` 并提交
+6. **过渡到初始化** — 进入 `vibeflow-build-init`
+
+**终止状态是进入 vibeflow-build-init。**
+
+## 步骤 1：读取 SRS & UCD 并提取设计输入
+
+1. 读取 `docs/plans/*-srs.md`
+2. 读取 `docs/plans/*-ucd.md`（如存在 — 仅 UI 项目）
+3. 提取关键设计驱动因素：
+   - **功能范围** — FR 数量、优先级分布、依赖链
+   - **NFR 阈值** — 影响架构的性能目标、可靠性、可扩展性
+   - **约束** — 限制技术/方案选择的硬限制
+   - **接口需求** — 外部系统、协议、数据格式
+   - **用户画像** — 影响 API/UI 设计决策的技术水平
+   - **UCD 风格 Token**（如 UCD 存在）— 颜色、排版、间距、组件目录 -> 指导前端架构和 UI/UX 章节
+4. 列出必须在设计前解决的 SRS **开放问题**
+
+## 步骤 2：探索技术上下文
+
+1. 探索项目将要构建的现有代码/仓库
+2. 识别 SRS 中未提及的技术约束（如单体仓库结构、CI/CD 管线、现有库）
+3. 检查设计文档模板
+
+## 步骤 3：提出方案
+
+展示 **2-3 个实现方案**并带有明确权衡：
+
+```markdown
+## 方案 A：[名称]
+**原理**：[1-2 句]
+**优点**：[要点列表]
+**缺点**：[要点列表]
+**最适用于**：[条件]
+**NFR 影响**：[该方案如何影响 SRS NFR 阈值]
+**第三方依赖**：[关键库/框架及版本]
+
+## 推荐：方案 [X]
+**理由**：[为何最适合 SRS 约束和 NFR]
+```
+
+每个方案必须对照 SRS 约束和 NFR 阈值评估。无法满足"Must" NFR 的方案被淘汰。
+
+## 步骤 4：逐节审批
+
+非简单项目逐节展示并获得审批：
+
+1. **架构** — 系统组件、逻辑视图、技术栈决策
+   - 必须包含 **逻辑视图**（Mermaid `graph`）显示层/包/模块及依赖方向
+   - 必须包含 **组件图**（Mermaid `graph`）显示运行时组件和交互
+   - 必须论证技术栈选择与 SRS 约束的关系
+2. **关键功能设计** — 每个关键功能或功能组一章
+   - 每章**必须**至少包含：
+     - **类图**（Mermaid `classDiagram`）
+     - **一个行为图**：序列图（`sequenceDiagram`）或流程图（`flowchart`）
+   - 所有图表**必须**使用 **Mermaid** 格式
+3. **数据模型** — 模式、关系、存储策略
+   - 必须使用 Mermaid ER 图（`erDiagram`）
+4. **API / 接口设计** — 端点、契约、协议
+5. **UI/UX 方案**（如适用）— 布局策略、交互模式
+   - 如 UCD 存在：必须引用 UCD 风格 Token 和组件目录
+6. **第三方依赖** — 所有库/框架带**精确版本号**
+   - 验证依赖间互相兼容
+   - 验证与目标运行时版本兼容
+   - 记录每个依赖的许可证类型
+7. **测试策略** — 测试类型、覆盖率目标、工具
+8. **部署/基础设施**（如适用）— 托管、CI/CD、环境
+9. **开发计划** — 里程碑、任务分解、优先级排序
+   - 必须定义有明确退出标准的里程碑
+   - 必须将功能分解为优先级任务（P0-P3）
+   - 必须展示依赖链（Mermaid `graph`）标识关键路径
+   - 必须包含风险评估和缓解策略
+   - **前后端配对排序**：当项目同时有后端和前端功能时，按后端 A -> 前端 A -> 后端 B -> 前端 B 排序
+
+**简单项目**（< 5 个功能）：合并所有章节为单次审批步骤，但仍需包含必要图表和依赖版本。
+
+## 步骤 5：编写设计文档
+
+保存到 `docs/plans/YYYY-MM-DD-<topic>-design.md`。
+
+## 步骤 6：过渡到初始化
+
+设计文档保存并提交后：
+
+1. 总结初始化需要的关键输入：
+   - **来自 SRS**：约束、假设、NFR、用户画像、术语表、功能需求 -> 功能清单
+   - **来自设计**：技术栈、架构决策 -> `tech_stack`、项目骨架
+2. 进入 `vibeflow-build-init` 搭建项目
+
+## 图表要求
+
+所有架构和设计视图**必须**使用 **Mermaid** 语法。
+
+| 章节 | 图表类型 | Mermaid 语法 | 必需？ |
+|------|---------|-------------|--------|
+| 架构逻辑视图 | 分层包图 | `graph TB` | 始终 |
+| 架构组件 | 组件交互 | `graph LR` | 始终 |
+| 关键功能 — 结构 | 类图 | `classDiagram` | 每个功能 |
+| 关键功能 — 行为 | 序列图/流程图 | `sequenceDiagram`/`flowchart` | 每个功能（至少一个） |
+| 数据模型 | ER 图 | `erDiagram` | 如有持久化 |
+| 依赖图 | 依赖树 | `graph LR` | 如 > 3 个第三方依赖 |
+| 开发计划 | 关键路径 | `graph LR` | 始终 |
+
+## 红线
+
+| 合理化借口 | 正确响应 |
+|---|---|
+| "SRS 已暗示了架构" | SRS 描述 WHAT，不是 HOW。展示选项。 |
+| "只有一种方式构建" | 至少展示 2 个方案。即使显而易见的选择也需说明权衡。 |
+| "用户似乎不耐烦，跳过设计" | 简要说明价值，然后高效执行 |
+| "边做边设计" | 前期设计比中途纠正便宜 |
+
+## 集成
+
+**调用者：** vibeflow-router 或 vibeflow-ucd（步骤 8）
+**依赖：** `docs/plans/*-srs.md`；可选 `docs/plans/*-ucd.md`
+**链接到：** vibeflow-build-init（设计审批后）
+**产出：** `docs/plans/YYYY-MM-DD-<topic>-design.md`

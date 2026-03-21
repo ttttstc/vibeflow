@@ -20,9 +20,14 @@ def main():
     args = parser.parse_args()
 
     project_root = Path(args.project_root).resolve()
-    workflow_path = project_root / '.vibeflow' / 'workflow.yaml'
-    if not workflow_path.exists():
-        raise SystemExit(f'Workflow file not found: {workflow_path}')
+    workflow_path = None
+    for ext in ('.yaml', '.yml'):
+        candidate = project_root / '.vibeflow' / f'workflow{ext}'
+        if candidate.exists():
+            workflow_path = candidate
+            break
+    if workflow_path is None:
+        raise SystemExit(f'Workflow file not found: {project_root / ".vibeflow" / "workflow.yaml"} (or .yml)')
 
     content = workflow_path.read_text(encoding='utf-8')
     template_match = re.search(r'template:\s*"([^"]+)"', content)
