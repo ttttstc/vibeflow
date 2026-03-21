@@ -27,16 +27,24 @@ $router_content
 $status_hint
 </EXTREMELY_IMPORTANT>"
 
+# Escape string for JSON using Python — avoids bash string-interpolation injection
+# Use a temp file to pass session_context to Python — avoids any quote escaping issues
+# caused by triple-quote sequences in SKILL.md content.
+_tmpfile=$(mktemp)
+echo "$session_context" > "$_tmpfile"
 payload=$(python -c "
 import sys, json
+with open(sys.argv[1], 'r', encoding='utf-8') as f:
+    ctx = f.read()
 payload = {
-    'additional_context': '''$session_context''',
+    'additional_context': ctx,
     'hookSpecificOutput': {
         'hookEventName': 'SessionStart',
-        'additionalContext': '''$session_context'''
+        'additionalContext': ctx
     }
 }
 print(json.dumps(payload, indent=2, ensure_ascii=False))
-" 2>/dev/null || echo '{"additional_context":"Error generating context","hookSpecificOutput":{"hookEventName":"SessionStart"}}')
+" "$_tmpfile" 2>/dev/null || echo '{"additional_context":"Error generating context","hookSpecificOutput":{"hookEventName":"SessionStart"}}')
+rm -f "$_tmpfile"
 
 echo "$payload"
