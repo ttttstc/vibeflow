@@ -85,6 +85,7 @@ Detected phases:
 - `build-init`
 - `build-config`
 - `build-work`
+- `review`
 - `test-system`
 - `test-qa`
 - `ship`

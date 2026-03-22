@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:github.com)",
+      "Bash(gh repo:*)",
+      "Bash(gh api:*)",
+      "Bash(git clone:*)",
+      "Bash(./setup)",
+      "Bash(bunx playwright:*)",
+      "Bash(ln -snf ~/.claude/skills/gstack/codex ~/.claude/skills/codex)",
+      "Bash(gh pr:*)",
+      "Bash(for s:*)",
+      "Bash(do echo:*)",
+      "Read(//d/AI/workspace/vibeflow/skills/$s/**)",
+      "Bash(done)",
+      "Bash(git checkout:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(find D:/AI/workspace/vibeflow -name *test*.py)",
+      "Bash(python -m pytest tests/ -v --tb=short)",
+      "Bash(python -c \":*)",
+      "Bash(python -m pytest tests/test_detect_phase.py -v --tb=short)",
+      "Bash(chmod +x D:/AI/workspace/vibeflow/hooks/session-start.sh)",
+      "Bash(bash D:/AI/workspace/vibeflow/hooks/session-start.sh)",
+      "Bash(python scripts/test-vibeflow-setup.py --project-root . --json)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(''''setup_ok:'''', d[''''setup_ok'''']\\); print\\(''''missing_count:'''', d[''''missing_count'''']\\)\")",
+      "Bash(python -m pytest tests/ -v --tb=no)",
+      "Bash(python:*)",
+      "Bash(git fetch:*)",
+      "Bash(git merge:*)"
+    ]
+  }
+}
