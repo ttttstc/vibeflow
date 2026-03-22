@@ -8,23 +8,30 @@
 
 ## 快速开始
 
-```bash
-# 1. 将 vibeflow 作为 skill 安装到 Claude Code
-#    （将 skills/ 目录放到你的项目或全局 skill 路径下）
+### 前置条件
 
-# 2. 在目标项目中启动 Think 阶段
+克隆完整的 VibeFlow 仓库。Skills、scripts、templates 和 hooks 协同工作，不支持部分拷贝。
+
+```bash
+git clone https://github.com/ttttstc/vibeflow.git
+```
+
+### 使用
+
+```bash
+# 1. 在目标项目中启动 Think 阶段
 #    AI 会自动写 .vibeflow/think-output.md 并推荐模板
 
-# 3. 生成工作流配置
+# 2. 生成工作流配置
 python scripts/new-vibeflow-config.py --template api-standard --project-root <你的项目>
 
-# 4. 生成构建配置（控制哪些步骤启用、质量阈值）
+# 3. 生成构建配置（控制哪些步骤启用、质量阈值）
 python scripts/new-vibeflow-work-config.py --project-root <你的项目>
 
-# 5. 检测当前阶段（session hook 会自动调用）
+# 4. 检测当前阶段（session hook 会自动调用）
 python scripts/get-vibeflow-phase.py --project-root <你的项目> --json
 
-# 6. 开始工作 — AI 会根据阶段自动路由到正确的 skill
+# 5. 开始工作 — AI 会根据阶段自动路由到正确的 skill
 ```
 
 ---

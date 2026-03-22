@@ -8,23 +8,30 @@ English | [中文](README.zh-CN.md)
 
 ## Quick Start
 
-```bash
-# 1. Install vibeflow as a skill for Claude Code
-#    (place the skills/ directory in your project or global skill path)
+### Prerequisites
 
-# 2. Start the Think phase in your target project
+Clone the full VibeFlow repository. Skills, scripts, templates, and hooks all work together — a partial copy won't work.
+
+```bash
+git clone https://github.com/ttttstc/vibeflow.git
+```
+
+### Usage
+
+```bash
+# 1. Start the Think phase in your target project
 #    AI will write .vibeflow/think-output.md and recommend a template
 
-# 3. Generate workflow config
+# 2. Generate workflow config
 python scripts/new-vibeflow-config.py --template api-standard --project-root <your-project>
 
-# 4. Generate build config (controls which steps are enabled, quality thresholds)
+# 3. Generate build config (controls which steps are enabled, quality thresholds)
 python scripts/new-vibeflow-work-config.py --project-root <your-project>
 
-# 5. Detect current phase (session hook calls this automatically)
+# 4. Detect current phase (session hook calls this automatically)
 python scripts/get-vibeflow-phase.py --project-root <your-project> --json
 
-# 6. Start working — AI routes to the correct skill based on phase
+# 5. Start working — AI routes to the correct skill based on phase
 ```
 
 ---
