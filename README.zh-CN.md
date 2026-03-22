@@ -358,7 +358,19 @@ Session hook 的职责：
 
 ```text
 vibeflow/
-├── skills/                          # 18 个工作流 skill
+├── .claude-plugin/                  # 插件清单
+│   └── plugin.json
+├── commands/                        # 用户斜杠命令 (/vibeflow:*)
+│   ├── work.md
+│   ├── status.md
+│   ├── requirements.md
+│   ├── design.md
+│   ├── init.md
+│   ├── ucd.md
+│   ├── st.md
+│   └── increment.md
+├── skills/                          # 19 个工作流 skill
+│   ├── using-vibeflow/              # 引导路由器（会话入口）
 │   ├── vibeflow/                    # 框架入口
 │   ├── vibeflow-router/             # 会话路由器
 │   ├── vibeflow-think/              # Think 阶段
@@ -411,12 +423,27 @@ vibeflow/
 
 ---
 
+## 用户命令
+
+安装后可通过 `/` 命令直接调起工作流：
+
+| 命令 | 用途 |
+|---|---|
+| `/vibeflow:work` | 启动功能开发循环（TDD 管线） |
+| `/vibeflow:status` | 查看项目进度和当前阶段 |
+| `/vibeflow:requirements` | 启动需求规格编写 |
+| `/vibeflow:design` | 启动技术设计编写 |
+| `/vibeflow:init` | 初始化构建产物 |
+| `/vibeflow:ucd` | 启动界面设计文档编写 |
+| `/vibeflow:st` | 启动系统测试 |
+| `/vibeflow:increment` | 启动增量需求开发 |
+
 ## 路线图
 
 - [ ] 移植 9 个验证脚本（init_project、validate_features、check_st_readiness 等）
 - [ ] 添加 3 个文档模板（SRS/Design/ST-Case）
 - [ ] 拆分 router SKILL.md（877 行 → ~200 行核心 + references/）
-- [ ] 添加用户快捷命令（commands/）
+- [x] ~~添加用户快捷命令（commands/）~~
 - [ ] 添加 skill 参考文档（references/）
 - [ ] 框架核心脚本单元测试
 - [ ] CLAUDE.md 跨会话上下文注入

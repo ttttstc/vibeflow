@@ -359,7 +359,19 @@ Session hook responsibilities:
 
 ```text
 vibeflow/
-├── skills/                          # 18 workflow skills
+├── .claude-plugin/                  # Plugin manifest
+│   └── plugin.json
+├── commands/                        # User slash commands (/vibeflow:*)
+│   ├── work.md
+│   ├── status.md
+│   ├── requirements.md
+│   ├── design.md
+│   ├── init.md
+│   ├── ucd.md
+│   ├── st.md
+│   └── increment.md
+├── skills/                          # 19 workflow skills
+│   ├── using-vibeflow/              # Bootstrap router (session entry)
 │   ├── vibeflow/                    # Framework entry
 │   ├── vibeflow-router/             # Session router
 │   ├── vibeflow-think/              # Think phase
@@ -412,12 +424,27 @@ vibeflow/
 
 ---
 
+## User Commands
+
+After installation, invoke workflows directly via `/` commands:
+
+| Command | Purpose |
+|---|---|
+| `/vibeflow:work` | Start a feature development cycle (TDD pipeline) |
+| `/vibeflow:status` | Show project progress and current phase |
+| `/vibeflow:requirements` | Start requirements specification writing |
+| `/vibeflow:design` | Start technical design writing |
+| `/vibeflow:init` | Initialize build artifacts |
+| `/vibeflow:ucd` | Start UI component design document |
+| `/vibeflow:st` | Start system testing |
+| `/vibeflow:increment` | Start incremental requirements development |
+
 ## Roadmap
 
 - [ ] Port 9 validation scripts (init_project, validate_features, check_st_readiness, etc.)
 - [ ] Add 3 document templates (SRS/Design/ST-Case)
 - [ ] Split router SKILL.md (877 lines → ~200 line core + references/)
-- [ ] Add user shortcut commands (commands/)
+- [x] ~~Add user shortcut commands (commands/)~~
 - [ ] Add skill reference docs (references/)
 - [ ] Unit tests for framework core scripts
 - [ ] CLAUDE.md cross-session context injection

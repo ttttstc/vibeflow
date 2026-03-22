@@ -1,36 +1,41 @@
 $ErrorActionPreference = 'Stop'
 
 $pluginRoot = Split-Path -Parent $PSScriptRoot
-$routerPath = Join-Path $pluginRoot 'skills\vibeflow-router\SKILL.md'
-
-if (Test-Path $routerPath) {
-    $routerContent = Get-Content $routerPath -Raw
-} else {
-    $routerContent = 'Error reading vibeflow-router skill.'
-}
-
 $phaseScript = Join-Path $pluginRoot 'scripts\get-vibeflow-phase.py'
+
+# Detect current phase
 $phaseInfo = if (Test-Path $phaseScript) {
-    python $phaseScript --project-root $pluginRoot --json | ConvertFrom-Json
+    python $phaseScript --project-root . --json 2>$null | ConvertFrom-Json
 } else {
-    [pscustomobject]@{ phase = 'think'; reason = 'Phase script missing.' }
+    [pscustomobject]@{ phase = 'think'; reason = 'Phase detection unavailable.' }
 }
 
-$statusHint = "`n`nDetected phase: $($phaseInfo.phase). Reason: $($phaseInfo.reason)"
+$phase = $phaseInfo.phase
+$reason = $phaseInfo.reason
 
+# Check for key project files
+$hasFeatureList = Test-Path 'feature-list.json'
+$hasSrs = (Get-ChildItem 'docs/plans/*-srs.md' -ErrorAction SilentlyContinue).Count -gt 0
+$hasDesign = (Get-ChildItem 'docs/plans/*-design.md' -ErrorAction SilentlyContinue).Count -gt 0
+
+# Build lightweight context (no SKILL.md injection — use Skill tool instead)
 $sessionContext = @"
 <EXTREMELY_IMPORTANT>
-You are in a vibeflow project.
+You are in a VibeFlow project.
 
-Use the router skill below before any phase work:
+**Current phase: $phase**
+Reason: $reason
 
-$routerContent
-$statusHint
+Project state: feature-list=$hasFeatureList, srs=$hasSrs, design=$hasDesign
+
+**You MUST use the Skill tool to invoke vibeflow:using-vibeflow before any response or action.**
+This skill contains the full phase routing table. Do NOT read skill files directly - use the Skill tool.
+
+Available commands: /vibeflow:work, /vibeflow:status, /vibeflow:requirements, /vibeflow:design, /vibeflow:init, /vibeflow:ucd, /vibeflow:st, /vibeflow:increment
 </EXTREMELY_IMPORTANT>
 "@
 
 $payload = @{
-    additional_context = $sessionContext
     hookSpecificOutput = @{
         hookEventName = 'SessionStart'
         additionalContext = $sessionContext

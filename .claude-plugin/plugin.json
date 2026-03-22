@@ -1,0 +1,12 @@
+{
+  "name": "vibeflow",
+  "description": "Structured seven-stage software delivery framework for Claude Code — Think, Plan, Build, Review, Test, Ship, Reflect",
+  "version": "1.0.0",
+  "author": {
+    "name": "ttttstc"
+  },
+  "homepage": "https://github.com/ttttstc/vibeflow",
+  "repository": "https://github.com/ttttstc/vibeflow",
+  "license": "MIT",
+  "keywords": ["workflow", "tdd", "quality-gates", "skills", "seven-stage", "software-delivery"]
+}

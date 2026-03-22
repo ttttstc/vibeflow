@@ -65,13 +65,9 @@
 
 ## P2 — Important
 
-### TODO-10: 修复 session-start.sh 的 JSON 注入安全问题
+### ~~TODO-10: 修复 session-start.sh 的 JSON 注入安全问题~~ ✓ 已完成
 
-**问题：** `hooks/session-start.sh` 把整个 SKILL.md 内容通过 bash 变量插值嵌入 JSON 输出，但没有转义双引号、反斜杠、换行等特殊字符。SKILL.md 包含大量 JSON 示例和代码块，导致生成的 JSON payload 损坏，会话上下文注入静默失败。long-task 用 `escape_for_json()` bash 函数解决此问题。
-
-**修复：** 添加 JSON 转义函数，或改用 Python 生成 JSON payload（更可靠）。
-
-**工作量：** S | **优先级：** P2 | **依赖：** 无
+重写了两个 session hook（ps1 + sh），不再嵌入整个 SKILL.md 内容。改为注入轻量上下文（当前阶段 + 项目状态 + Skill 工具调用指令），JSON 由 Python 生成。根本性消除了注入风险，同时将 hook 注入的 token 从 ~35K 降到 ~500。
 
 ---
 
@@ -137,13 +133,9 @@
 
 ## P3 — Nice to Have
 
-### TODO-12: 添加用户命令（commands/）
+### ~~TODO-12: 添加用户命令（commands/）~~ ✓ 已完成
 
-**问题：** long-task 有 8 个用户快捷命令（/long-task:requirements、/long-task:work、/long-task:status 等），让用户可以直接键入命令进入特定阶段。vibeflow 没有任何 commands/，用户必须记住"调用 vibeflow-router"来开始。
-
-**目标：** 添加 `commands/` 目录，包含 /vibeflow:status、/vibeflow:work、/vibeflow:init 等快捷命令。
-
-**工作量：** S | **优先级：** P3 | **依赖：** TODO-8
+已添加 8 个命令：/vibeflow:work、/vibeflow:status、/vibeflow:requirements、/vibeflow:design、/vibeflow:init、/vibeflow:ucd、/vibeflow:st、/vibeflow:increment。同时添加了 `.claude-plugin/plugin.json` 插件清单和 `using-vibeflow` 路由 skill。
 
 ---
 

@@ -5,38 +5,45 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PLUGIN_ROOT="$(dirname "$SCRIPT_DIR")"
-ROUTER_PATH="$PLUGIN_ROOT/skills/vibeflow-router/SKILL.md"
 PHASE_SCRIPT="$PLUGIN_ROOT/scripts/get-vibeflow-phase.py"
 
-router_content=$(cat "$ROUTER_PATH" 2>/dev/null || echo "Error reading vibeflow-router skill.")
+# Detect current phase
+phase_json=$(python "$PHASE_SCRIPT" --project-root . --json 2>/dev/null || echo '{"phase":"think","reason":"Phase detection unavailable."}')
 
-phase_info=$(python "$PHASE_SCRIPT" --project-root "$PLUGIN_ROOT" --json 2>/dev/null || echo '{"phase":"think","reason":"Phase script missing."}')
+phase=$(echo "$phase_json" | python -c "import sys,json; print(json.load(sys.stdin).get('phase','unknown'))" 2>/dev/null || echo "unknown")
+reason=$(echo "$phase_json" | python -c "import sys,json; print(json.load(sys.stdin).get('reason',''))" 2>/dev/null || echo "")
 
-phase=$(echo "$phase_info" | python -c "import sys,json; print(json.load(sys.stdin).get('phase','unknown'))" 2>/dev/null || echo "unknown")
-reason=$(echo "$phase_info" | python -c "import sys,json; print(json.load(sys.stdin).get('reason',''))" 2>/dev/null || echo "")
+# Check for key project files
+has_feature_list="false"
+has_srs="false"
+has_design="false"
+[ -f "feature-list.json" ] && has_feature_list="true"
+ls docs/plans/*-srs.md >/dev/null 2>&1 && has_srs="true"
+ls docs/plans/*-design.md >/dev/null 2>&1 && has_design="true"
 
-status_hint="
-Detected phase: $phase. Reason: $reason"
+# Build lightweight context (no SKILL.md injection — use Skill tool instead)
+python -c "
+import json, sys
 
-session_context="<EXTREMELY_IMPORTANT>
-You are in a vibeflow project.
+context = '''<EXTREMELY_IMPORTANT>
+You are in a VibeFlow project.
 
-Use the router skill below before any phase work:
+**Current phase: ${phase}**
+Reason: ${reason}
 
-$router_content
-$status_hint
-</EXTREMELY_IMPORTANT>"
+Project state: feature-list=${has_feature_list}, srs=${has_srs}, design=${has_design}
 
-payload=$(python -c "
-import sys, json
+**You MUST use the Skill tool to invoke vibeflow:using-vibeflow before any response or action.**
+This skill contains the full phase routing table. Do NOT read skill files directly — use the Skill tool.
+
+Available commands: /vibeflow:work, /vibeflow:status, /vibeflow:requirements, /vibeflow:design, /vibeflow:init, /vibeflow:ucd, /vibeflow:st, /vibeflow:increment
+</EXTREMELY_IMPORTANT>'''
+
 payload = {
-    'additional_context': '''$session_context''',
     'hookSpecificOutput': {
         'hookEventName': 'SessionStart',
-        'additionalContext': '''$session_context'''
+        'additionalContext': context
     }
 }
-print(json.dumps(payload, indent=2, ensure_ascii=False))
-" 2>/dev/null || echo '{"additional_context":"Error generating context","hookSpecificOutput":{"hookEventName":"SessionStart"}}')
-
-echo "$payload"
+print(json.dumps(payload, ensure_ascii=False))
+" 2>/dev/null || echo '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"VibeFlow session hook failed."}}'
