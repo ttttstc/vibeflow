@@ -29,6 +29,7 @@ VibeFlow是一个严谨的软件开发框架，强调在构建之前思考、在
 - **质量关卡**：功能不通过自动化和人工检查就无法推进
 - **可追溯性**：每个决策都有文档记录，每个功能都在`feature-list.json`中跟踪
 - **迭代改进**：反思阶段确保每次迭代都从前一次中学习
+- **并行执行**：通过 Agent 工具在关键环节并行执行互不依赖的子任务，缩短交付周期
 
 ---
 
@@ -175,8 +176,10 @@ cat feature-list.json
 - `vibeflow-build-work` - 编排功能流程
 - `vibeflow-tdd` - 红-绿-重构循环
 - `vibeflow-quality` - 覆盖率和变异测试关卡
-- `vibeflow-feature-st` - 功能验收测试
-- `vibeflow-spec-review` - 每个功能的合规性审查
+- `vibeflow-feature-st` - 功能验收测试（与 spec-review **并行**）
+- `vibeflow-spec-review` - 每个功能的合规性审查（与 feature-st **并行**）
+
+**并行执行**：Quality Gates 通过后，Feature-ST 和 Spec-Review 通过 Agent 工具并行执行。
 
 **退出标准**：`feature-list.json`中的所有功能标记为完成并通过。
 
@@ -191,6 +194,8 @@ cat feature-list.json
 **使用的技能**：
 - `vibeflow-review`
 
+**并行执行**：结构审查、回归检查、完整性检查通过 Agent 工具三路并行执行。
+
 **退出标准**：生成的审查报告没有阻塞性问题。
 
 ---
@@ -204,6 +209,8 @@ cat feature-list.json
 **使用的技能**：
 - `vibeflow-test-system` - 集成和系统测试
 - `vibeflow-test-qa` - 面向浏览器的QA验证
+
+**并行执行**：回归测试通过后，集成测试、E2E 场景、NFR 验证、探索性测试通过 Agent 工具四路并行执行。
 
 **退出标准**：所有系统测试通过，QA报告生成没有阻塞性问题。
 
