@@ -183,7 +183,7 @@ class TestDetectPhase:
     def test_ship_missing(self, tmp_path):
         (tmp_path / '.vibeflow').mkdir()
         (tmp_path / '.vibeflow' / 'think-output.md').write_text('think')
-        (tmp_path / '.vibeflow' / 'workflow.yaml').write_text('template: "prototype"')
+        (tmp_path / '.vibeflow' / 'workflow.yaml').write_text('template: "prototype"\nship:\n  required: true')
         (tmp_path / '.vibeflow' / 'plan.md').write_text('plan complete')
         (tmp_path / '.vibeflow' / 'work-config.json').write_text('{}')
         (tmp_path / '.vibeflow' / 'review-report.md').write_text('review')
@@ -201,7 +201,7 @@ class TestDetectPhase:
     def test_reflect_missing(self, tmp_path):
         (tmp_path / '.vibeflow').mkdir()
         (tmp_path / '.vibeflow' / 'think-output.md').write_text('think')
-        (tmp_path / '.vibeflow' / 'workflow.yaml').write_text('template: "prototype"')
+        (tmp_path / '.vibeflow' / 'workflow.yaml').write_text('template: "prototype"\nship:\n  required: true\nreflect:\n  required: true')
         (tmp_path / '.vibeflow' / 'plan.md').write_text('plan complete')
         (tmp_path / '.vibeflow' / 'work-config.json').write_text('{}')
         (tmp_path / '.vibeflow' / 'review-report.md').write_text('review')
