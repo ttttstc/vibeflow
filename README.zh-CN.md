@@ -64,6 +64,18 @@ python scripts/get-vibeflow-phase.py --project-root <你的项目> --json
 
 Build 阶段一次只处理一个功能，每个功能必须走完完整的 TDD → Quality → Feature-ST → Spec-Review 流程才算完成。杜绝"先全部写完再一起测试"的反模式。
 
+### 6. Subagent 并行执行
+
+在互不依赖的子任务之间，通过 Claude Code 的 Agent 工具创建 subagent 并行执行，缩短交付周期：
+
+| 环节 | 并行策略 | 加速比 |
+|---|---|---|
+| Build: Quality 后 | Feature-ST + Spec-Review 双路并行 | ~2x |
+| Review | 结构审查 + 回归检查 + 完整性检查 三路并行 | ~3x |
+| Test-System | 集成 + E2E + NFR + 探索性 四路并行 | ~4x |
+
+所有并行执行都有回退机制：如 Agent 工具不可用，自动降级为顺序执行。
+
 ---
 
 ## 七阶段架构
@@ -100,12 +112,12 @@ Think → Plan → Build → Review → Test → Ship → Reflect
 **目标**：逐功能实现，每个功能通过完整的质量管道。
 
 ```
-初始化 → 选择功能 → TDD Red-Green-Refactor → 质量门禁 → 功能验收 → 规范审查 → 下一个功能
-                          │                      │              │              │
-                          ▼                      ▼              ▼              ▼
-                    vibeflow-tdd          vibeflow-quality  vibeflow-     vibeflow-
-                                          · 行覆盖率        feature-st   spec-review
-                                          · 分支覆盖率
+初始化 → 选择功能 → TDD Red-Green-Refactor → 质量门禁 ──┬── 功能验收 ──┬── 下一个功能
+                          │                      │       │              │
+                          ▼                      ▼       │  (并行)      │
+                    vibeflow-tdd          vibeflow-quality│              │
+                                          · 行覆盖率     └── 规范审查 ──┘
+                                          · 分支覆盖率       (Agent)
                                           · 变异分数
 ```
 

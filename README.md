@@ -64,6 +64,18 @@ Four static templates (prototype → enterprise) control which stages are mandat
 
 Build phase processes one feature at a time. Each feature must complete the full TDD → Quality → Feature-ST → Spec-Review pipeline before it's considered done. Eliminates the "write everything first, test later" anti-pattern.
 
+### 6. Subagent Parallel Execution
+
+For independent sub-tasks, VibeFlow uses Claude Code's Agent tool to create subagents that execute in parallel, reducing delivery time:
+
+| Stage | Parallel Strategy | Speedup |
+|---|---|---|
+| Build: after Quality | Feature-ST + Spec-Review dual-path parallel | ~2x |
+| Review | Structure + Regression + Completeness triple-path parallel | ~3x |
+| Test-System | Integration + E2E + NFR + Exploratory quad-path parallel | ~4x |
+
+All parallel execution has a fallback: if the Agent tool is unavailable, gracefully degrades to sequential execution.
+
 ---
 
 ## Seven-Stage Architecture
@@ -101,12 +113,12 @@ Template  UCD    Gates    audit    QA      Version   Metrics
 **Goal**: Implement features one at a time, each passing through the full quality pipeline.
 
 ```
-Init → Pick Feature → TDD Red-Green-Refactor → Quality Gates → Acceptance → Spec Review → Next Feature
-                           │                        │               │              │
-                           ▼                        ▼               ▼              ▼
-                     vibeflow-tdd            vibeflow-quality  vibeflow-     vibeflow-
-                                             · line coverage   feature-st   spec-review
-                                             · branch coverage
+Init → Pick Feature → TDD Red-Green-Refactor → Quality Gates ──┬── Acceptance ──┬── Next Feature
+                           │                        │           │                │
+                           ▼                        ▼           │  (parallel)    │
+                     vibeflow-tdd            vibeflow-quality   │                │
+                                             · line coverage    └── Spec Review ─┘
+                                             · branch coverage      (Agent)
                                              · mutation score
 ```
 
