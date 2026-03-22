@@ -1,442 +1,445 @@
+**[English](README_EN.md) | 中文**
+
+---
+
 # VibeFlow
 
-**A structured seven-stage software delivery framework** — making AI deliver software with engineering discipline, not random vibe coding.
+**让 AI 按工程纪律交付软件，而不是随机 vibe coding。**
 
-English | [中文](README.zh-CN.md)
+别再让 AI "先写代码再说的" 了——VibeFlow 是一个结构化的 16 阶段软件交付框架，从问题框定到反思回顾，每一步都有文件状态持久化、确定性路由和质量门禁。
+
+> "VibeFlow is what happens when you take a senior engineer's discipline and give it to an AI that never gets tired, never forgets, and never ships without tests."
 
 ---
 
-## Quick Start
+## 三种安装方式
 
-### Prerequisites
-
-Clone the full VibeFlow repository. Skills, scripts, templates, and hooks all work together — a partial copy won't work.
+### 方式一：Claude Code Marketplace（推荐）
 
 ```bash
-git clone https://github.com/ttttstc/vibeflow.git
+# macOS / Linux
+curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.sh | bash
+
+# Windows PowerShell
+irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.ps1 | iex
+
+# 安装完成后，在 Claude Code 中激活插件：
+/plugin install vibeflow@vibeflow
 ```
 
-### Usage
+### 方式二：Shell 脚本（手动）
 
 ```bash
-# 1. Start the Think phase in your target project
-#    AI will write .vibeflow/think-output.md and recommend a template
+curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/install.sh | bash
+```
 
-# 2. Generate workflow config
-python scripts/new-vibeflow-config.py --template api-standard --project-root <your-project>
+### 方式三：OpenCode
 
-# 3. Generate build config (controls which steps are enabled, quality thresholds)
-python scripts/new-vibeflow-work-config.py --project-root <your-project>
-
-# 4. Detect current phase (session hook calls this automatically)
-python scripts/get-vibeflow-phase.py --project-root <your-project> --json
-
-# 5. Start working — AI routes to the correct skill based on phase
+```bash
+curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/install.sh | bash
 ```
 
 ---
 
-## Why VibeFlow
+## 为什么需要 VibeFlow
 
-| AI Coding Without VibeFlow | With VibeFlow |
+| 没有 VibeFlow 的 AI 编程 | 使用 VibeFlow |
 |---|---|
-| "Build me an API" → jumps straight to code, no requirements | Think → problem framing → template → SRS → design → then code |
-| Forgets halfway through, loses everything on session switch | `feature-list.json` + `task-progress.md` persist all state across sessions |
-| Tests? Coverage? "If it looks like it works, ship it" | TDD iron law → coverage gates → mutation testing → acceptance → spec review — five quality layers |
-| Code review is AI reviewing its own code | Structured spec review: validates compliance against SRS and Design line by line |
-| Done is done, no docs or retrospective | Ship phase generates release notes, Reflect phase produces retrospective and improvement suggestions |
-| Bigger projects = more confusion, AI loses track | File-driven deterministic routing: AI always knows what to do now and what comes next |
+| "帮我写个 API" → 直接开写，没有需求分析 | Think → Plan → Requirements → Design → 再编码 |
+| 写到一半忘记在做什么，换个会话全部丢失 | 文件持久化，跨会话秒级恢复 |
+| 测试？覆盖率？"能用就行" | TDD 铁律 → 覆盖率门禁 → 变异测试 → 验收，五层关卡 |
+| AI 审查自己写的代码 | 三视角评审（CEO 价值 + 工程 + 设计）|
+| 做完就完了，没有任何文档或回顾 | Ship 生成发布说明，Reflect 产出复盘改进 |
+| 项目越大 AI 越不知道该做什么 | 确定性路由，永远知道现在该做什么 |
 
 ---
 
-## Core Philosophy
+## 核心哲学
 
-### 1. Requirements-Driven, Not Code-Driven
+**需求驱动，而非代码驱动。** 先写需求规格（SRS），再写技术设计，最后才写代码。
 
-Write the requirements spec (SRS) first, then the technical design, then the code. Every feature implementation traces back to a specific requirement.
+**文件即状态。** 所有工作流状态持久化在仓库文件中（`.vibeflow/`、`docs/plans/`）。关闭会话、换机器、甚至换 AI — 项目状态完整保留。
 
-### 2. Files as State
+**确定性路由。** `get-vibeflow-phase.py` 通过检查文件存在性确定当前阶段。16 个阶段状态，严格 elif 链，没有歧义。
 
-All workflow state is persisted in repository files (`.vibeflow/`, `docs/plans/`, `feature-list.json`). No dependence on AI memory or chat history. Close the session, switch machines, even switch AIs — project state is fully preserved.
+**模板控制严格度。** 四种静态模板（prototype → enterprise）控制哪些阶段必须执行、质量门禁阈值多高。一次选择，全局生效。
 
-### 3. Deterministic Routing
+**单功能循环。** Build 阶段一次只处理一个功能，每个功能必须走完完整管道才算完成。杜绝"先全部写完再一起测试"的反模式。
 
-`get-vibeflow-phase.py` computes the current phase deterministically by checking file existence and feature status. 16 phase states, strict elif chain, zero ambiguity.
+---
 
-### 4. Template-Controlled Strictness
+## 16 阶段架构
 
-Four static templates (prototype → enterprise) control which stages are mandatory, quality gate thresholds, whether UI testing and reflection are required. Choose once, applied globally.
+```
+Think ── Plan ── Requirements ── Design
+  │                          │
+  ▼                          ▼
+Office Hours（可选）     Brainstorming（可选）
+                          │
+                          ▼
+Build-init ── Build-config ── Build-work
+                                    │
+                              ┌──────┴──────┐
+                              ▼              ▼
+                          TDD 循环     Quality Gates
+                              │              │
+                              ▼              ▼
+                      Feature-ST ◄───── Spec-Review
+                              │              │
+                              └──────┬───────┘
+                                     ▼
+                               Review（跨功能）
+                                     │
+                        ┌────────────┼────────────┐
+                        ▼            ▼            ▼
+                   Test-System   Test-QA       Ship
+                        │            │            │
+                        └────────────┴────────────┘
+                                     │
+                                     ▼
+                                  Reflect
+```
 
-### 5. Single-Feature Cycle
+### Think（思考）
 
-Build phase processes one feature at a time. Each feature must complete the full TDD → Quality → Feature-ST → Spec-Review pipeline before it's considered done. Eliminates the "write everything first, test later" anti-pattern.
+**目标**：定义问题、理解边界、扫描机会、选择工作流模板。
 
-### 6. Subagent Parallel Execution
+- 产出 `.vibeflow/think-output.md`
+- 可选：先跑一轮 `vibeflow-office-hours`（YC Office Hours 风格头脑风暴）验证想法是否值得投入
+- 推荐并确认模板（prototype / web-standard / api-standard / enterprise）
 
-For independent sub-tasks, VibeFlow uses Claude Code's Agent tool to create subagents that execute in parallel, reducing delivery time:
+### Plan（计划）
 
-| Stage | Parallel Strategy | Speedup |
+**目标**：CEO 视角价值评审，唯一关卡。
+
+- 调用 `vibeflow-plan-value-review` 评估项目价值
+- **价值评审失败 = 项目终止**（fail-fast）
+- 工程视角和设计视角评审移到 Design 阶段末尾执行（因为那时候才有具体设计文档可审）
+
+### Requirements（需求）
+
+**目标**：编写需求规格说明书（SRS），遵循 ISO/IEC/IEEE 29148。
+
+- 产出 `docs/plans/*-srs.md`
+- 逐条与用户确认，每条需求可测试
+
+### Design（设计）
+
+**目标**：技术设计 + 用户体验设计 + 三视角评审。
+
+这是整个框架最复杂的阶段：
+
+| 步骤 | Skill | 产出物 |
 |---|---|---|
-| Build: after Quality | Feature-ST + Spec-Review dual-path parallel | ~2x |
-| Review | Structure + Regression + Completeness triple-path parallel | ~3x |
-| Test-System | Integration + E2E + NFR + Exploratory quad-path parallel | ~4x |
+| 0. 问题探索 | `vibeflow-brainstorming`（可选）| `docs/plans/*-brainstorming.md` |
+| 1. 读取 SRS + UCD | 内置（UCD 按需生成）| 设计驱动提取 |
+| 2. 探索上下文 | 内置 | 上下文文档 |
+| 3. 提出方案 | 内置 | 方案对比 |
+| 4. 用户逐节审批 | 内置 | 用户签字确认 |
+| 5. **AI 深度评审** | `vibeflow-plan-eng-review` + `vibeflow-plan-design-review` | `.vibeflow/plan-eng-review.md` + `.vibeflow/plan-design-review.md` |
+| 6. **范围决策** | 内置 | Expand / Hold / Reduce |
+| 7. 编写设计文档 | 内置 | `docs/plans/*-design.md` |
+| 8. 过渡到初始化 | 内置 | — |
 
-All parallel execution has a fallback: if the Agent tool is unavailable, gracefully degrades to sequential execution.
+### Build-init（构建初始化）
+
+**目标**：初始化构建产物。
+
+- `feature-list.json`、`task-progress.md`、`RELEASE_NOTES.md`
+- 生成 `.vibeflow/work-config.json`（质量阈值）
+
+### Build-config（构建配置）
+
+**目标**：配置每个功能的实现细节。
+
+- 为每个 feature 分配阶段（设计/开发/测试）
+- 确认外部依赖和交付顺序
+
+### Build-work（构建执行）
+
+**目标**：逐功能实现，每个功能通过完整质量管道。
+
+```
+Pick Feature → TDD Red-Green-Refactor → Quality Gates
+                                         · 行覆盖率
+                                         · 分支覆盖率
+                                         · 变异分数
+                                    ┌──────┴──────┐
+                                    ▼              ▼
+                              Feature-ST     Spec-Review
+                                    │              │
+                                    └──────┬──────┘
+                                           ▼
+                                      Acceptance
+```
+
+### Review（审查）
+
+**目标**：跨功能整体变更审查。
+
+- `vibeflow-review`：架构一致性、安全性、性能分析
+- 可选激活安全护栏：`vibeflow-careful`（危险命令警告）、`vibeflow-freeze`（编辑边界）、`vibeflow-guard`（最大安全模式）
+
+### Test-System（系统测试）
+
+**目标**：系统级集成测试和非功能需求验证。
+
+- 集成测试、E2E 测试、NFR 验证、探索性测试四路并行（~4x 加速）
+
+### Test-QA（QA 测试）
+
+**目标**：浏览器驱动的 QA 验证（仅 UI 项目）。
+
+- 仅当模板需要 UI 且 `qa-report.md` 不存在时执行
+
+### Ship（发布）
+
+**目标**：准备发布产物。
+
+- 版本管理、PR 创建、标签打标、变更日志
+- `vibeflow-ship` 自动执行，可选（`ship_required()` 检测）
+
+### Reflect（反思）
+
+**目标**：回顾本轮迭代，为下一轮产出改进建议。
+
+- 产出 `.vibeflow/retro-YYYY-MM-DD.md`
+- 可选（`reflect_required()` 检测）
 
 ---
 
-## Seven-Stage Architecture
+## Skill 超能力架构
 
-```
-Think → Plan → Build → Review → Test → Ship → Reflect
-  │        │       │        │        │       │       │
-  ▼        ▼       ▼        ▼        ▼       ▼       ▼
-Problem   SRS    TDD      Cross-   System  Release  Retro
-framing   Design Quality  feature  test    artifact  Lessons
-Template  UCD    Gates    audit    QA      Version   Metrics
-```
+VibeFlow 由 23 个独立 skill 组成，分为五层：
 
-### Stage 1: Think
+### 核心层
 
-**Goal**: Define the problem, understand boundaries, scan opportunities, select workflow template.
-
-- Produces `.vibeflow/think-output.md`: problem statement, scope boundaries, user profile, complexity assessment, opportunity scan
-- Recommends and confirms template (prototype / web-standard / api-standard / enterprise)
-- Generates `.vibeflow/workflow.yaml`
-
-### Stage 2: Plan
-
-**Goal**: Get scope approval, write requirements spec, produce technical design.
-
-| Sub-stage | Skill | Output |
-|---|---|---|
-| Plan Review | `vibeflow-plan-review` | `.vibeflow/plan-review.md` |
-| Requirements | `vibeflow-requirements` | `docs/plans/*-srs.md` |
-| UI Design | `vibeflow-ucd` | `docs/plans/*-ucd.md` (when needed) |
-| Technical Design | `vibeflow-design` | `docs/plans/*-design.md` |
-
-### Stage 3: Build
-
-**Goal**: Implement features one at a time, each passing through the full quality pipeline.
-
-```
-Init → Pick Feature → TDD Red-Green-Refactor → Quality Gates ──┬── Acceptance ──┬── Next Feature
-                           │                        │           │                │
-                           ▼                        ▼           │  (parallel)    │
-                     vibeflow-tdd            vibeflow-quality   │                │
-                                             · line coverage    └── Spec Review ─┘
-                                             · branch coverage      (Agent)
-                                             · mutation score
-```
-
-- `vibeflow-build-init`: Scaffolds `feature-list.json`, `task-progress.md`, `RELEASE_NOTES.md`
-- `vibeflow-build-work`: Orchestrates single-feature flow through TDD → Quality → Feature-ST → Spec-Review
-- `.vibeflow/work-config.json`: Trims steps per template (prototype skips spec review, enterprise enforces all)
-
-### Stage 4: Review
-
-**Goal**: Cross-feature holistic change review.
-
-- `vibeflow-review`: Analyzes the full branch diff for architecture consistency, security, performance
-- Produces `.vibeflow/review-report.md`
-
-### Stage 5: Test
-
-**Goal**: System-level testing and QA verification.
-
-- `vibeflow-test-system`: Integration tests, E2E tests, non-functional requirement validation
-- `vibeflow-test-qa`: Browser-driven QA testing (UI projects only)
-- Produces `docs/plans/*-st-report.md`, `.vibeflow/qa-report.md`
-
-### Stage 6: Ship
-
-**Goal**: Prepare release artifacts.
-
-- `vibeflow-ship`: Version management, PR creation, tagging, release documentation
-- Produces `RELEASE_NOTES.md`
-
-### Stage 7: Reflect
-
-**Goal**: Review the iteration, produce improvement suggestions for the next cycle.
-
-- `vibeflow-reflect`: Metrics analysis — one-pass rate, defect density, coverage trends
-- Produces `.vibeflow/retro-YYYY-MM-DD.md`
-
----
-
-## 18-Skill Architecture
-
-VibeFlow consists of 18 independent skills organized in four layers:
-
-### Core Layer
-
-| Skill | Responsibility |
+| Skill | 职责 |
 |---|---|
-| `vibeflow` | Framework entry point, seven-stage overview and quick start |
-| `vibeflow-router` | Session router, dispatches to correct phase skill based on file state |
-| `vibeflow-think` | Think phase, problem framing and template selection |
+| `vibeflow` | 框架入口，概览和快速开始 |
+| `vibeflow-router` | 会话路由器，基于文件状态分派到正确阶段 |
+| `vibeflow-think` | Think 阶段，问题框定和模板选择 |
 
-### Planning Layer
+### 计划层
 
-| Skill | Responsibility |
+| Skill | 职责 |
 |---|---|
-| `vibeflow-plan-review` | Scope review before spec writing |
-| `vibeflow-requirements` | Software Requirements Specification (SRS), aligned with ISO/IEC/IEEE 29148 |
-| `vibeflow-ucd` | UI Component Design document, design system and component specs |
-| `vibeflow-design` | Technical design document, architecture and data models |
+| `vibeflow-plan` | Plan 阶段入口（调用 value-review） |
+| `vibeflow-plan-value-review` | CEO 视角价值评审，fail-fast 关卡 |
+| `vibeflow-plan-eng-review` | 工程视角评审（架构、代码质量、测试、性能） |
+| `vibeflow-plan-design-review` | 设计视角评审（信息架构、交互、用户体验） |
+| `vibeflow-requirements` | 需求规格说明书（ISO 29148） |
+| `vibeflow-design` | 技术设计文档（含 UCD 内联 + 三视角评审） |
 
-### Build Layer
+### 辅助探索层
 
-| Skill | Responsibility |
+| Skill | 职责 |
 |---|---|
-| `vibeflow-build-init` | Initialize build artifacts (`feature-list.json`, etc.) |
-| `vibeflow-build-work` | Single-feature orchestrator, drives TDD → Quality → ST → Review pipeline |
-| `vibeflow-tdd` | TDD Red-Green-Refactor cycle |
-| `vibeflow-quality` | Quality gates: line coverage, branch coverage, mutation score |
-| `vibeflow-feature-st` | Feature-level acceptance testing, ISO/IEC/IEEE 29119 test case docs |
-| `vibeflow-spec-review` | Spec compliance review, validates against SRS and Design |
+| `vibeflow-office-hours` | YC Office Hours 风格头脑风暴（Think 前置） |
+| `vibeflow-brainstorming` | 设计前问题探索（Design 前置） |
 
-### Verification & Release Layer
+### 构建层
 
-| Skill | Responsibility |
+| Skill | 职责 |
 |---|---|
-| `vibeflow-review` | Cross-feature holistic change review |
-| `vibeflow-test-system` | System-level integration and NFR testing |
-| `vibeflow-test-qa` | Browser-driven QA verification (UI projects only) |
-| `vibeflow-ship` | Version release, PR creation, changelog |
-| `vibeflow-reflect` | Iteration retrospective and improvement suggestions |
+| `vibeflow-build-init` | 初始化构建产物 |
+| `vibeflow-build-work` | 单功能编排器，驱动 TDD → Quality → ST → Review 管道 |
+| `vibeflow-tdd` | TDD Red-Green-Refactor 循环 |
+| `vibeflow-quality` | 质量门禁：行覆盖率、分支覆盖率、变异测试 |
+| `vibeflow-feature-st` | 功能级验收测试（ISO 29119） |
+| `vibeflow-spec-review` | 规范合规性审查，对照 SRS 和 Design 逐条验证 |
 
-### Skill Call Graph
+### 安全护栏（可选）
+
+| Skill | 职责 |
+|---|---|
+| `vibeflow-careful` | 危险命令警告（rm -rf、DROP TABLE 等）|
+| `vibeflow-freeze` | 编辑边界限制（限制 Edit/Write 在指定目录）|
+| `vibeflow-guard` | 最大安全模式（组合 careful + freeze）|
+| `vibeflow-unfreeze` | 解除冻结 |
+
+### 验证与发布层
+
+| Skill | 职责 |
+|---|---|
+| `vibeflow-review` | 跨功能整体变更审查 |
+| `vibeflow-test-system` | 系统级集成测试和 NFR 验证 |
+| `vibeflow-test-qa` | 浏览器驱动的 QA 验证（仅 UI 项目）|
+| `vibeflow-ship` | 版本发布、PR 创建、变更日志 |
+| `vibeflow-reflect` | 迭代回顾和改进建议 |
+
+### Skill 调用图
 
 ```
 Session Start
     │
     ▼
-vibeflow-router ──── get-vibeflow-phase.py ──── detects 16 phase states
+vibeflow-router ──── get-vibeflow-phase.py ──── 检测 16 种阶段状态
     │
-    ├── think ────────── vibeflow-think
-    ├── plan-review ──── vibeflow-plan-review
-    ├── requirements ─── vibeflow-requirements
-    ├── ucd ──────────── vibeflow-ucd
-    ├── design ───────── vibeflow-design
-    ├── build-init ───── vibeflow-build-init
-    ├── build-work ───── vibeflow-build-work
+    ├── think ─────────── vibeflow-think
+    │       └── [可选] ─── vibeflow-office-hours
+    │
+    ├── plan ───────────── vibeflow-plan
+    │       └── Step 1: ── vibeflow-plan-value-review
+    │
+    ├── requirements ───── vibeflow-requirements
+    │
+    ├── design ──────────── vibeflow-design
+    │       ├── [可选] ──── vibeflow-brainstorming
+    │       ├── Step 1: ── 读取 SRS + 条件 UCD
+    │       ├── Step 5: ── vibeflow-plan-eng-review
+    │       └── Step 5: ── vibeflow-plan-design-review
+    │
+    ├── build-init ──────── vibeflow-build-init
+    ├── build-config ────── vibeflow-build-config
+    ├── build-work ──────── vibeflow-build-work
     │                        ├── vibeflow-tdd
     │                        ├── vibeflow-quality
     │                        ├── vibeflow-feature-st
     │                        └── vibeflow-spec-review
-    ├── review ───────── vibeflow-review
-    ├── test-system ──── vibeflow-test-system
-    ├── test-qa ──────── vibeflow-test-qa
-    ├── ship ─────────── vibeflow-ship
-    └── reflect ──────── vibeflow-reflect
+    │
+    ├── review ──────────── vibeflow-review
+    │       └── [可选] ──── vibeflow-careful / freeze / guard
+    │
+    ├── test-system ─────── vibeflow-test-system
+    ├── test-qa ────────── vibeflow-test-qa
+    ├── ship ────────────── vibeflow-ship
+    └── reflect ─────────── vibeflow-reflect
 ```
 
 ---
 
-## Template System
+## 模板系统
 
-Four static templates control workflow strictness:
+四种静态模板控制工作流严格度：
 
-| Dimension | Prototype | Web-Standard | API-Standard | Enterprise |
+| 维度 | Prototype | Web-Standard | API-Standard | Enterprise |
 |---|---|---|---|---|
-| **Think Depth** | quick | standard | standard | deep |
-| **Plan Review** | CEO reduction mode | CEO hold mode | CEO hold mode | CEO expansion mode |
-| **Requirements** | Required | Required | Required | Required |
-| **UCD** | On demand | On demand | On demand | On demand |
-| **TDD** | Required | Required | Required | Required |
-| **Line Coverage** | 60% | 90% | 90% | 95% |
-| **Branch Coverage** | 40% | 80% | 80% | 85% |
-| **Mutation Score** | 50% | 80% | 80% | 85% |
-| **Feature Acceptance** | Optional | Required | Optional | Required |
-| **Spec Review** | Optional | Required | Required | Required |
-| **Global Review** | Optional | Required | Required | Required |
-| **System Testing** | Optional | Required | Required | Required |
-| **QA Testing** | Optional (skip if no UI) | On demand | On demand | On demand |
-| **Reflection** | Optional | Optional | Optional | Required |
-| **Version Strategy** | manual | semver | semver | semver |
-| **Best For** | Hackathons, POCs | Web apps | API services | Enterprise / compliance |
+| **Think 深度** | quick | standard | standard | deep |
+| **Plan 评审** | CEO 削减模式 | CEO 保持模式 | CEO 保持模式 | CEO 扩展模式 |
+| **需求规格** | 必需 | 必需 | 必需 | 必需 |
+| **UCD** | 按需 | 按需 | 按需 | 按需 |
+| **TDD** | 必需 | 必需 | 必需 | 必需 |
+| **行覆盖率** | 60% | 90% | 90% | 95% |
+| **分支覆盖率** | 40% | 80% | 80% | 85% |
+| **变异分数** | 50% | 80% | 80% | 85% |
+| **功能验收** | 可选 | 必需 | 可选 | 必需 |
+| **规范审查** | 可选 | 必需 | 必需 | 必需 |
+| **全局审查** | 可选 | 必需 | 必需 | 必需 |
+| **系统测试** | 可选 | 必需 | 必需 | 必需 |
+| **QA 测试** | 可选（无 UI 跳过）| 按需 | 按需 | 按需 |
+| **反思** | 可选 | 可选 | 可选 | 必需 |
+| **版本策略** | manual | semver | semver | semver |
+| **适用场景** | 黑客马拉松、POC | Web 应用 | API 服务 | 企业/合规系统 |
 
 ---
 
-## File-Driven Routing
+## 安装方式对比
 
-VibeFlow's core innovation is file-driven deterministic routing. `get-vibeflow-phase.py` checks specific files in the repository to determine which phase should execute:
-
-```
-increment-request.json exists?     ──yes──▶ increment
-think-output.md missing?           ──yes──▶ think
-workflow.yaml missing?             ──yes──▶ template-selection
-plan-review.md missing?            ──yes──▶ plan-review
-*-srs.md missing?                  ──yes──▶ requirements
-UI required and *-ucd.md missing?  ──yes──▶ ucd
-*-design.md missing?               ──yes──▶ design
-feature-list.json missing?        ──yes──▶ build-init
-work-config.json missing?         ──yes──▶ build-config
-features not all passing?          ──yes──▶ build-work
-review-report.md missing?         ──yes──▶ review
-*-st-report.md missing?           ──yes──▶ test-system
-UI required and qa-report missing? ──yes──▶ test-qa
-RELEASE_NOTES.md missing?         ──yes──▶ ship
-retro-*.md missing?               ──yes──▶ reflect
-all checks pass                           ▶ done
-```
-
-This design means:
-- **Cross-session recovery**: Close the chat, reopen — AI instantly knows what to continue
-- **Multi-AI collaboration**: Different AIs can relay the same project
-- **Zero ambiguity**: No chance of "AI misunderstood the current phase"
+| 安装方式 | 适合人群 | 自动化程度 | 插件注册 |
+|---|---|---|---|
+| Claude Code Marketplace | Claude Code 用户 | 高（一条命令）| 自动注册 |
+| Shell 脚本 | 手动管理插件的用户 | 高 | 需手动 |
+| OpenCode | OpenCode 用户 | 高 | 需手动 |
 
 ---
 
-## Session Hooks
+## 项目状态文件
 
-VibeFlow uses session hooks to automatically inject context at every session start:
+### 运行时状态（`.vibeflow/`）
 
-```
-hooks/
-  hooks.json          ← Claude Code hook config
-  session-start.ps1   ← Windows PowerShell entry
-  session-start.sh    ← macOS/Linux bash entry
-```
-
-Session hook responsibilities:
-1. Call `get-vibeflow-phase.py` to detect current phase
-2. Read the `vibeflow-router` SKILL.md
-3. Inject phase info and routing instructions into session context
-4. AI receives context and auto-routes to the correct phase skill
-
----
-
-## Project State Files
-
-### Runtime State (`.vibeflow/`)
-
-| File | Purpose |
+| 文件 | 用途 |
 |---|---|
-| `think-output.md` | Think output: problem statement, boundaries, template recommendation |
-| `workflow.yaml` | Active workflow config (copied from template) |
-| `work-config.json` | Build config: enabled steps, quality thresholds |
-| `plan-review.md` | Plan review record |
-| `review-report.md` | Global code review report |
-| `qa-report.md` | QA test report |
-| `retro-YYYY-MM-DD.md` | Iteration retrospective |
-| `increment-request.json` | Incremental requirements signal file |
+| `think-output.md` | Think 阶段产物：问题陈述、边界、模板推荐 |
+| `workflow.yaml` | 当前生效的工作流配置（从模板复制）|
+| `work-config.json` | 构建配置：启用的步骤、质量阈值 |
+| `plan-value-review.md` | Plan 阶段产物：CEO 价值评审结论 |
+| `plan-eng-review.md` | Design 阶段产物：工程评审结论 |
+| `plan-design-review.md` | Design 阶段产物：设计评审结论 |
+| `review-report.md` | 全局代码审查报告 |
+| `qa-report.md` | QA 测试报告 |
+| `retro-YYYY-MM-DD.md` | 迭代回顾文档 |
 
-### Delivery Artifacts
+### 交付产物
 
-| File | Purpose |
+| 文件 | 用途 |
 |---|---|
-| `docs/plans/*-srs.md` | Software Requirements Specification |
-| `docs/plans/*-ucd.md` | UI Component Design document |
-| `docs/plans/*-design.md` | Technical design document |
-| `docs/plans/*-st-report.md` | System test report |
-| `docs/test-cases/feature-*.md` | Feature test case documents |
-| `feature-list.json` | Feature inventory (single source of truth during Build) |
-| `task-progress.md` | Task progress log |
-| `RELEASE_NOTES.md` | Release notes |
+| `docs/plans/*-srs.md` | 需求规格说明书 |
+| `docs/plans/*-design.md` | 技术设计文档（含 UCD 内联章节）|
+| `docs/plans/*-st-report.md` | 系统测试报告 |
+| `docs/test-cases/feature-*.md` | 功能测试用例文档 |
+| `feature-list.json` | 功能清单（构建阶段的单一事实来源）|
+| `task-progress.md` | 任务进度日志 |
+| `RELEASE_NOTES.md` | 发布说明 |
 
 ---
 
-## Comparison Matrix
-
-| Dimension | Typical AI Coding | VibeFlow |
-|---|---|---|
-| **Requirements** | Verbal or none | Structured SRS (ISO 29148) |
-| **Design** | Jump to code | Technical design doc + UCD |
-| **State Management** | Relies on chat history | File persistence, deterministic routing |
-| **Quality Assurance** | "Looks like it works" | TDD + coverage + mutation testing + acceptance |
-| **Test Documentation** | None | ISO 29119 test case documents |
-| **Code Review** | None or self-review | Structured spec compliance review |
-| **Cross-Session** | Start over each time | File state fully preserved, instant recovery |
-| **Workflow** | Manual or none | Auto-routing, 16-state machine |
-| **Strictness** | Not adjustable | 4 templates, from prototype to enterprise |
-| **Traceability** | None | Requirements → design → features → tests, full chain |
-
----
-
-## Repository Structure
+## 仓库结构
 
 ```text
 vibeflow/
-├── skills/                          # 18 workflow skills
-│   ├── vibeflow/                    # Framework entry
-│   ├── vibeflow-router/             # Session router
-│   ├── vibeflow-think/              # Think phase
-│   ├── vibeflow-plan-review/        # Plan review
-│   ├── vibeflow-requirements/       # Requirements spec
-│   ├── vibeflow-ucd/                # UI design
-│   ├── vibeflow-design/             # Technical design
-│   ├── vibeflow-build-init/         # Build initialization
-│   ├── vibeflow-build-work/         # Feature orchestration
-│   ├── vibeflow-tdd/                # TDD cycle
-│   ├── vibeflow-quality/            # Quality gates
-│   ├── vibeflow-feature-st/         # Feature acceptance
-│   ├── vibeflow-spec-review/        # Spec review
-│   ├── vibeflow-review/             # Global review
-│   ├── vibeflow-test-system/        # System testing
-│   ├── vibeflow-test-qa/            # QA testing
-│   ├── vibeflow-ship/               # Release
-│   └── vibeflow-reflect/            # Reflection
-├── scripts/                         # Python scripts
-│   ├── get-vibeflow-phase.py        # Phase detection (16-state router)
-│   ├── new-vibeflow-config.py       # Workflow config generation
-│   ├── new-vibeflow-work-config.py  # Build config generation
-│   └── test-vibeflow-setup.py       # Environment validation
-├── templates/                       # Static workflow templates
+├── skills/                          # 23 个工作流 skill
+│   ├── vibeflow/                    # 框架入口
+│   ├── vibeflow-router/             # 会话路由器
+│   ├── vibeflow-think/              # Think 阶段
+│   ├── vibeflow-office-hours/       # YC Office Hours（可选）
+│   ├── vibeflow-plan/               # Plan 阶段入口
+│   ├── vibeflow-plan-value-review/  # CEO 价值评审
+│   ├── vibeflow-plan-eng-review/    # 工程评审
+│   ├── vibeflow-plan-design-review/ # 设计评审
+│   ├── vibeflow-requirements/       # 需求规格
+│   ├── vibeflow-design/             # 技术设计（含 UCD + 三视角评审）
+│   ├── vibeflow-brainstorming/      # 问题探索（可选）
+│   ├── vibeflow-build-init/         # 构建初始化
+│   ├── vibeflow-build-config/       # 构建配置
+│   ├── vibeflow-build-work/         # 功能编排
+│   ├── vibeflow-tdd/                # TDD 循环
+│   ├── vibeflow-quality/            # 质量门禁
+│   ├── vibeflow-feature-st/         # 功能验收
+│   ├── vibeflow-spec-review/        # 规范审查
+│   ├── vibeflow-review/             # 全局审查
+│   ├── vibeflow-careful/            # 危险命令警告
+│   ├── vibeflow-freeze/             # 编辑边界
+│   ├── vibeflow-guard/              # 最大安全模式
+│   ├── vibeflow-unfreeze/           # 解除冻结
+│   ├── vibeflow-test-system/        # 系统测试
+│   ├── vibeflow-test-qa/            # QA 测试
+│   ├── vibeflow-ship/               # 发布
+│   └── vibeflow-reflect/            # 反思
+├── scripts/                         # Python 脚本
+│   ├── get-vibeflow-phase.py        # 阶段检测（16 状态路由器）
+│   ├── new-vibeflow-config.py       # 工作流配置生成
+│   └── new-vibeflow-work-config.py  # 构建配置生成
+├── templates/                       # 静态工作流模板
 │   ├── prototype.yaml
 │   ├── web-standard.yaml
 │   ├── api-standard.yaml
 │   └── enterprise.yaml
-├── hooks/                           # Session hooks
+├── hooks/                           # 会话钩子
 │   ├── hooks.json
 │   ├── session-start.ps1
 │   └── session-start.sh
-├── validation/                      # Validation projects
-│   └── sample-priority-api/
-├── VIBEFLOW-DESIGN.md               # Design contract
-├── ARCHITECTURE.md                  # Architecture documentation
-├── USAGE.md                         # Usage guide
-└── TODOS.md                         # Backlog
+├── claude-code/                     # Claude Code Marketplace 安装脚本
+│   ├── install.sh
+│   └── install.ps1
+├── .claude-plugin/                  # Claude Code 插件元数据
+│   ├── plugin.json
+│   └── marketplace.json
+└── install.sh                       # OpenCode 安装脚本
 ```
 
 ---
 
-## Design Principles
+## 文档
 
-1. **Vendor-Neutral**: All project-facing names use `vibeflow` only, no binding to any specific AI provider
-2. **File-Driven Routing**: Current phase is determined by repository file state, not chat history or process memory
-3. **Thin Orchestration**: Skills define routing and contracts; implementation details stay in the target project
-4. **Template-Derived Behavior**: Workflow strictness is selected once and propagated globally through generated config
-5. **Repo-Local Artifacts**: All state needed for recovery or continuation lives in files under the target project
-
----
-
-## Roadmap
-
-- [ ] Port 9 validation scripts (init_project, validate_features, check_st_readiness, etc.)
-- [ ] Add 3 document templates (SRS/Design/ST-Case)
-- [ ] Split router SKILL.md (877 lines → ~200 line core + references/)
-- [ ] Add user shortcut commands (commands/)
-- [ ] Add skill reference docs (references/)
-- [ ] Unit tests for framework core scripts
-- [ ] CLAUDE.md cross-session context injection
-
-See [TODOS.md](TODOS.md) and [GitHub Issues](https://github.com/ttttstc/vibeflow/issues) for details.
-
----
-
-## Documentation
-
-| Document | Description |
+| 文档 | 说明 |
 |---|---|
-| [ARCHITECTURE.md](ARCHITECTURE.md) | Full architecture diagrams and component descriptions |
-| [USAGE.md](USAGE.md) | Operating guide for target projects |
-| [VIBEFLOW-DESIGN.md](VIBEFLOW-DESIGN.md) | Design contract and skill catalog |
-| [TODOS.md](TODOS.md) | Backlog and priorities |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | 完整架构图和组件说明 |
+| [USAGE.md](USAGE.md) | 目标项目操作指南 |
+| [VIBEFLOW-DESIGN.md](VIBEFLOW-DESIGN.md) | 设计契约和 skill 目录 |
 
 ---
 
-## License
+## 许可证
 
 MIT

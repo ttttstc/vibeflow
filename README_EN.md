@@ -1,0 +1,446 @@
+**[中文](README.md) | English**
+
+---
+
+# VibeFlow
+
+**A structured 16-phase software delivery framework** — making AI deliver software with engineering discipline, not random vibe coding.
+
+Stop letting AI "just start coding" — VibeFlow provides file-driven deterministic routing, quality gates at every phase, and a three-perspective review system (CEO + Engineering + Design) that actually catches problems before they become production incidents.
+
+> "VibeFlow is what happens when you take a senior engineer's discipline and give it to an AI that never gets tired, never forgets, and never ships without tests."
+
+---
+
+## Three Installation Methods
+
+### Method 1: Claude Code Marketplace (Recommended)
+
+```bash
+# macOS / Linux
+curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.sh | bash
+
+# Windows PowerShell
+irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.ps1 | iex
+
+# After installation, activate in Claude Code:
+/plugin install vibeflow@vibeflow
+```
+
+### Method 2: Shell Script (Manual)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/install.sh | bash
+```
+
+### Method 3: OpenCode
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/install.sh | bash
+```
+
+---
+
+## Why VibeFlow
+
+| AI Coding Without VibeFlow | With VibeFlow |
+|---|---|
+| "Build me an API" → jumps straight to code, no requirements | Think → Plan → Requirements → Design → then code |
+| Forgets halfway through, loses everything on session switch | File persistence, instant cross-session recovery |
+| Tests? Coverage? "If it looks like it works, ship it" | TDD iron law → coverage gates → mutation testing → acceptance, five quality layers |
+| AI reviewing its own code | Three-perspective review (CEO value + Engineering + Design) |
+| Done is done, no docs or retrospective | Ship generates release notes, Reflect produces retrospective |
+| Bigger projects = more confusion, AI loses track | Deterministic routing: always knows what to do now and what comes next |
+
+---
+
+## Core Philosophy
+
+**Requirements-Driven, Not Code-Driven.** Write the SRS first, then the technical design, then the code. Every feature implementation traces back to a specific requirement.
+
+**Files as State.** All workflow state persists in repository files (`.vibeflow/`, `docs/plans/`). Close the session, switch machines, even switch AIs — project state is fully preserved.
+
+**Deterministic Routing.** `get-vibeflow-phase.py` computes the current phase by checking file existence. 16 phase states, strict elif chain, zero ambiguity.
+
+**Template-Controlled Strictness.** Four static templates (prototype → enterprise) control which stages are mandatory and quality gate thresholds. Choose once, applied globally.
+
+**Single-Feature Cycle.** Build phase processes one feature at a time. Each feature must complete the full TDD → Quality → Feature-ST → Spec-Review pipeline before it's considered done.
+
+---
+
+## 16-Phase Architecture
+
+```
+Think ── Plan ── Requirements ── Design
+  │                          │
+  ▼                          ▼
+Office Hours (optional)  Brainstorming (optional)
+                          │
+                          ▼
+Build-init ── Build-config ── Build-work
+                                    │
+                              ┌──────┴──────┐
+                              ▼              ▼
+                          TDD Loop      Quality Gates
+                              │              │
+                              ▼              ▼
+                      Feature-ST ◄───── Spec-Review
+                              │              │
+                              └──────┬───────┘
+                                     ▼
+                               Review (cross-feature)
+                                     │
+                        ┌────────────┼────────────┐
+                        ▼            ▼            ▼
+                   Test-System   Test-QA        Ship
+                        │            │            │
+                        └────────────┴────────────┘
+                                     │
+                                     ▼
+                                 Reflect
+```
+
+### Think
+
+**Goal**: Define the problem, understand boundaries, scan opportunities, select workflow template.
+
+- Produces `.vibeflow/think-output.md`
+- Optional: Run `vibeflow-office-hours` first to validate if the idea is worth pursuing (YC Office Hours style)
+- Recommends and confirms template (prototype / web-standard / api-standard / enterprise)
+
+### Plan
+
+**Goal**: CEO value review — the only gate.
+
+- Invokes `vibeflow-plan-value-review` to assess project value
+- **Value review failure = project termination** (fail-fast)
+- Engineering and Design perspective reviews are moved to the end of the Design phase (because that's when there's an actual design document to review)
+
+### Requirements
+
+**Goal**: Write Software Requirements Specification (SRS), aligned with ISO/IEC/IEEE 29148.
+
+- Produces `docs/plans/*-srs.md`
+- Confirmed with user line by line; each requirement must be testable
+
+### Design
+
+**Goal**: Technical design + UX design + three-perspective review.
+
+This is the most complex phase in the framework:
+
+| Step | Skill | Output |
+|---|---|---|
+| 0. Problem Exploration | `vibeflow-brainstorming` (optional) | `docs/plans/*-brainstorming.md` |
+| 1. Read SRS + UCD | Built-in (UCD conditional) | Design drivers extraction |
+| 2. Explore Context | Built-in | Context document |
+| 3. Propose Approaches | Built-in | Approach comparison |
+| 4. User Section-by-Section Approval | Built-in | User sign-off |
+| 5. **AI Deep Review** | `vibeflow-plan-eng-review` + `vibeflow-plan-design-review` | `.vibeflow/plan-eng-review.md` + `.vibeflow/plan-design-review.md` |
+| 6. **Scope Decision** | Built-in | Expand / Hold / Reduce |
+| 7. Write Design Document | Built-in | `docs/plans/*-design.md` |
+| 8. Transition to Initialization | Built-in | — |
+
+### Build-init
+
+**Goal**: Initialize build artifacts.
+
+- `feature-list.json`, `task-progress.md`, `RELEASE_NOTES.md`
+- Generates `.vibeflow/work-config.json` (quality thresholds)
+
+### Build-config
+
+**Goal**: Configure implementation details for each feature.
+
+- Assigns phase (design/develop/test) to each feature
+- Confirms external dependencies and delivery order
+
+### Build-work
+
+**Goal**: Implement features one at a time, each through the complete quality pipeline.
+
+```
+Pick Feature → TDD Red-Green-Refactor → Quality Gates
+                                         · line coverage
+                                         · branch coverage
+                                         · mutation score
+                                    ┌──────┴──────┐
+                                    ▼              ▼
+                              Feature-ST     Spec-Review
+                                    │              │
+                                    └──────┬──────┘
+                                           ▼
+                                      Acceptance
+```
+
+### Review
+
+**Goal**: Cross-feature holistic change review.
+
+- `vibeflow-review`: Architecture consistency, security, performance analysis
+- Optional safety guardrails: `vibeflow-careful` (destructive command warnings), `vibeflow-freeze` (edit boundaries), `vibeflow-guard` (maximum safety mode)
+
+### Test-System
+
+**Goal**: System-level integration testing and NFR validation.
+
+- Integration tests, E2E tests, NFR validation, exploratory testing in four parallel paths (~4x speedup)
+
+### Test-QA
+
+**Goal**: Browser-driven QA verification (UI projects only).
+
+- Only runs when template requires UI and `qa-report.md` doesn't exist
+
+### Ship
+
+**Goal**: Prepare release artifacts.
+
+- Version management, PR creation, tagging, changelog
+- `vibeflow-ship` auto-executes; optional (`ship_required()` detection)
+
+### Reflect
+
+**Goal**: Review this iteration and produce improvement suggestions for the next cycle.
+
+- Produces `.vibeflow/retro-YYYY-MM-DD.md`
+- Optional (`reflect_required()` detection)
+
+---
+
+## Skill Superpowers Architecture
+
+VibeFlow consists of 23 independent skills organized in five layers:
+
+### Core Layer
+
+| Skill | Responsibility |
+|---|---|
+| `vibeflow` | Framework entry point, overview and quick start |
+| `vibeflow-router` | Session router, dispatches to correct phase based on file state |
+| `vibeflow-think` | Think phase, problem framing and template selection |
+
+### Planning Layer
+
+| Skill | Responsibility |
+|---|---|
+| `vibeflow-plan` | Plan phase entry (invokes value-review) |
+| `vibeflow-plan-value-review` | CEO perspective value review, fail-fast gate |
+| `vibeflow-plan-eng-review` | Engineering perspective review (architecture, code quality, testing, performance) |
+| `vibeflow-plan-design-review` | Design perspective review (information architecture, interaction, UX) |
+| `vibeflow-requirements` | Software Requirements Specification (ISO 29148) |
+| `vibeflow-design` | Technical design document (with inline UCD + three-perspective review) |
+
+### Exploratory Layer (Optional)
+
+| Skill | Responsibility |
+|---|---|
+| `vibeflow-office-hours` | YC Office Hours style brainstorming (pre-Think) |
+| `vibeflow-brainstorming` | Problem exploration before design (pre-Design) |
+
+### Build Layer
+
+| Skill | Responsibility |
+|---|---|
+| `vibeflow-build-init` | Initialize build artifacts |
+| `vibeflow-build-config` | Configure feature implementation details |
+| `vibeflow-build-work` | Single-feature orchestrator, drives TDD → Quality → ST → Review pipeline |
+| `vibeflow-tdd` | TDD Red-Green-Refactor cycle |
+| `vibeflow-quality` | Quality gates: line coverage, branch coverage, mutation score |
+| `vibeflow-feature-st` | Feature-level acceptance testing (ISO 29119) |
+| `vibeflow-spec-review` | Spec compliance review, validates against SRS and Design |
+
+### Safety Guardrails (Optional)
+
+| Skill | Responsibility |
+|---|---|
+| `vibeflow-careful` | Destructive command warnings (rm -rf, DROP TABLE, etc.) |
+| `vibeflow-freeze` | Edit boundary restrictions (limits Edit/Write to specified directory) |
+| `vibeflow-guard` | Maximum safety mode (combines careful + freeze) |
+| `vibeflow-unfreeze` | Clear freeze boundary |
+
+### Verification & Release Layer
+
+| Skill | Responsibility |
+|---|---|
+| `vibeflow-review` | Cross-feature holistic change review |
+| `vibeflow-test-system` | System-level integration tests and NFR validation |
+| `vibeflow-test-qa` | Browser-driven QA verification (UI projects only) |
+| `vibeflow-ship` | Version release, PR creation, changelog |
+| `vibeflow-reflect` | Iteration retrospective and improvement suggestions |
+
+### Skill Call Graph
+
+```
+Session Start
+    │
+    ▼
+vibeflow-router ──── get-vibeflow-phase.py ──── detects 16 phase states
+    │
+    ├── think ─────────── vibeflow-think
+    │       └── [optional] vibeflow-office-hours
+    │
+    ├── plan ───────────── vibeflow-plan
+    │       └── Step 1: ── vibeflow-plan-value-review
+    │
+    ├── requirements ───── vibeflow-requirements
+    │
+    ├── design ──────────── vibeflow-design
+    │       ├── [optional] vibeflow-brainstorming
+    │       ├── Step 1: ── Read SRS + conditional UCD
+    │       ├── Step 5: ── vibeflow-plan-eng-review
+    │       └── Step 5: ── vibeflow-plan-design-review
+    │
+    ├── build-init ──────── vibeflow-build-init
+    ├── build-config ───── vibeflow-build-config
+    ├── build-work ─────── vibeflow-build-work
+    │                        ├── vibeflow-tdd
+    │                        ├── vibeflow-quality
+    │                        ├── vibeflow-feature-st
+    │                        └── vibeflow-spec-review
+    │
+    ├── review ──────────── vibeflow-review
+    │       └── [optional] vibeflow-careful / freeze / guard
+    │
+    ├── test-system ─────── vibeflow-test-system
+    ├── test-qa ────────── vibeflow-test-qa
+    ├── ship ────────────── vibeflow-ship
+    └── reflect ─────────── vibeflow-reflect
+```
+
+---
+
+## Template System
+
+Four static templates control workflow strictness:
+
+| Dimension | Prototype | Web-Standard | API-Standard | Enterprise |
+|---|---|---|---|---|
+| **Think Depth** | quick | standard | standard | deep |
+| **Plan Review** | CEO reduction mode | CEO hold mode | CEO hold mode | CEO expansion mode |
+| **Requirements** | Required | Required | Required | Required |
+| **UCD** | On demand | On demand | On demand | On demand |
+| **TDD** | Required | Required | Required | Required |
+| **Line Coverage** | 60% | 90% | 90% | 95% |
+| **Branch Coverage** | 40% | 80% | 80% | 85% |
+| **Mutation Score** | 50% | 80% | 80% | 85% |
+| **Feature Acceptance** | Optional | Required | Optional | Required |
+| **Spec Review** | Optional | Required | Required | Required |
+| **Global Review** | Optional | Required | Required | Required |
+| **System Testing** | Optional | Required | Required | Required |
+| **QA Testing** | Optional (skip if no UI) | On demand | On demand | On demand |
+| **Reflection** | Optional | Optional | Optional | Required |
+| **Version Strategy** | manual | semver | semver | semver |
+| **Best For** | Hackathons, POC | Web apps | API services | Enterprise/compliance |
+
+---
+
+## Installation Method Comparison
+
+| Method | Best For | Automation | Plugin Registration |
+|---|---|---|---|
+| Claude Code Marketplace | Claude Code users | High (one command) | Auto-registered |
+| Shell Script | Users who manage plugins manually | High | Manual |
+| OpenCode | OpenCode users | High | Manual |
+
+---
+
+## Project State Files
+
+### Runtime State (`.vibeflow/`)
+
+| File | Purpose |
+|---|---|
+| `think-output.md` | Think output: problem statement, boundaries, template recommendation |
+| `workflow.yaml` | Active workflow config (copied from template) |
+| `work-config.json` | Build config: enabled steps, quality thresholds |
+| `plan-value-review.md` | Plan output: CEO value review conclusion |
+| `plan-eng-review.md` | Design output: engineering review conclusion |
+| `plan-design-review.md` | Design output: design review conclusion |
+| `review-report.md` | Global code review report |
+| `qa-report.md` | QA test report |
+| `retro-YYYY-MM-DD.md` | Iteration retrospective |
+
+### Delivery Artifacts
+
+| File | Purpose |
+|---|---|
+| `docs/plans/*-srs.md` | Software Requirements Specification |
+| `docs/plans/*-design.md` | Technical design document (with inline UCD chapter) |
+| `docs/plans/*-st-report.md` | System test report |
+| `docs/test-cases/feature-*.md` | Feature test case documents |
+| `feature-list.json` | Feature inventory (single source of truth during Build) |
+| `task-progress.md` | Task progress log |
+| `RELEASE_NOTES.md` | Release notes |
+
+---
+
+## Repository Structure
+
+```text
+vibeflow/
+├── skills/                          # 23 workflow skills
+│   ├── vibeflow/                    # Framework entry
+│   ├── vibeflow-router/             # Session router
+│   ├── vibeflow-think/              # Think phase
+│   ├── vibeflow-office-hours/      # YC Office Hours (optional)
+│   ├── vibeflow-plan/               # Plan phase entry
+│   ├── vibeflow-plan-value-review/ # CEO value review
+│   ├── vibeflow-plan-eng-review/    # Engineering review
+│   ├── vibeflow-plan-design-review/# Design review
+│   ├── vibeflow-requirements/       # Requirements spec
+│   ├── vibeflow-design/             # Technical design (with inline UCD + 3-perspective review)
+│   ├── vibeflow-brainstorming/      # Problem exploration (optional)
+│   ├── vibeflow-build-init/         # Build initialization
+│   ├── vibeflow-build-config/       # Build configuration
+│   ├── vibeflow-build-work/         # Feature orchestration
+│   ├── vibeflow-tdd/                # TDD cycle
+│   ├── vibeflow-quality/            # Quality gates
+│   ├── vibeflow-feature-st/         # Feature acceptance
+│   ├── vibeflow-spec-review/        # Spec review
+│   ├── vibeflow-review/             # Global review
+│   ├── vibeflow-careful/            # Destructive command warnings
+│   ├── vibeflow-freeze/             # Edit boundary
+│   ├── vibeflow-guard/              # Maximum safety mode
+│   ├── vibeflow-unfreeze/           # Clear freeze
+│   ├── vibeflow-test-system/        # System testing
+│   ├── vibeflow-test-qa/            # QA testing
+│   ├── vibeflow-ship/               # Release
+│   └── vibeflow-reflect/             # Reflection
+├── scripts/                         # Python scripts
+│   ├── get-vibeflow-phase.py        # Phase detection (16-state router)
+│   ├── new-vibeflow-config.py       # Workflow config generation
+│   └── new-vibeflow-work-config.py  # Build config generation
+├── templates/                       # Static workflow templates
+│   ├── prototype.yaml
+│   ├── web-standard.yaml
+│   ├── api-standard.yaml
+│   └── enterprise.yaml
+├── hooks/                           # Session hooks
+│   ├── hooks.json
+│   ├── session-start.ps1
+│   └── session-start.sh
+├── claude-code/                     # Claude Code Marketplace installers
+│   ├── install.sh
+│   └── install.ps1
+├── .claude-plugin/                  # Claude Code plugin metadata
+│   ├── plugin.json
+│   └── marketplace.json
+└── install.sh                       # OpenCode installer
+```
+
+---
+
+## Documentation
+
+| Document | Description |
+|---|---|
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Full architecture diagrams and component descriptions |
+| [USAGE.md](USAGE.md) | Operating guide for target projects |
+| [VIBEFLOW-DESIGN.md](VIBEFLOW-DESIGN.md) | Design contract and skill catalog |
+
+---
+
+## License
+
+MIT
