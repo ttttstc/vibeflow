@@ -188,9 +188,14 @@ def record_increment(project_root: Path, inc_id: str, inc: dict, result: str) ->
     save_phase_history(project_root, history)
 
 
-def process_increment(project_root: Path, inc_id: str) -> tuple[bool, str]:
+def process_increment(project_root: Path, inc_id: str, dry_run: bool = False) -> tuple[bool, str]:
     """
     处理单个增量请求。
+
+    Args:
+        project_root: 项目根目录
+        inc_id: 增量 ID
+        dry_run: 如果为 True，仅验证和报告，不修改任何文件
 
     Returns:
         (success, message)
@@ -211,7 +216,21 @@ def process_increment(project_root: Path, inc_id: str) -> tuple[bool, str]:
         except FileNotFoundError:
             return False, "feature-list.json not found"
 
-    # 执行增量
+    # 执行增量（dry-run 模式下仅模拟，不修改对象）
+    if dry_run:
+        if inc_type == "add_feature":
+            result = "[dry-run] Would add feature"
+        elif inc_type == "modify_feature":
+            result = "[dry-run] Would modify feature"
+        elif inc_type == "deprecate_feature":
+            result = "[dry-run] Would deprecate feature"
+        elif inc_type == "update_doc":
+            result = "[dry-run] Would update doc"
+        else:
+            result = f"[dry-run] Unknown increment type: {inc_type}"
+        return True, result
+
+    # 真实执行
     if inc_type == "add_feature":
         result = process_add_feature(inc, fl)
     elif inc_type == "modify_feature":
@@ -255,14 +274,16 @@ def main():
         print("Increment queue is empty — nothing to process.")
         sys.exit(0)
 
-    print(f"Processing {len(queue_ids)} increment(s)...")
+    dry_run = args.dry_run
+    if dry_run:
+        print(f"[dry-run] Would process {len(queue_ids)} increment(s) — no changes will be made")
 
     processed = []
     failed = []
 
     for inc_id in queue_ids:
-        print(f"\n[{inc_id}] Processing...")
-        success, msg = process_increment(project_root, inc_id)
+        print(f"\n[{inc_id}] {'[dry-run] would process' if dry_run else 'Processing'}...")
+        success, msg = process_increment(project_root, inc_id, dry_run=dry_run)
         print(f"  -> {msg}")
         if success:
             processed.append(inc_id)
@@ -270,18 +291,24 @@ def main():
             failed.append((inc_id, msg))
 
     # 清除已处理的 ID（保留失败的用于重试）
-    remaining = [i for i in queue_ids if i not in processed]
-    write_queue(project_root, remaining)
+    # 清除已处理的 ID（dry-run 模式下跳过，不修改队列）
+    if dry_run:
+        remaining = queue_ids  # 全部保留
+    else:
+        remaining = [i for i in queue_ids if i not in processed]
+        write_queue(project_root, remaining)
 
     # 摘要
     print(f"\nDone: {len(processed)} succeeded, {len(failed)} failed.")
+    if dry_run:
+        print("[dry-run] Queue unchanged.")
     if failed:
         print("\nFailed:")
         for inc_id, msg in failed:
             print(f"  [{inc_id}] {msg}")
         sys.exit(1)
     else:
-        print("All increments processed successfully.")
+        print("All increments processed successfully." if not dry_run else "Dry-run complete.")
         sys.exit(0)
 
 

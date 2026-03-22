@@ -275,28 +275,43 @@ def main():
     os.makedirs(scripts_dir, exist_ok=True)
 
     # Resolve plugin root.
-    # When this script runs from its original install location
-    # (skills/vibeflow-build-init/scripts/), three levels up is the plugin root.
-    # When the hook copies this script to a target project's scripts/ directory,
-    # it also writes a `.vibeflow-plugin-root` hint file alongside it so the
-    # copied script can locate the plugin's scripts/ directory correctly.
+    # Two layouts are supported:
+    #
+    # Layout A — normal checkout (THIS layout):
+    #   <repo-root>/scripts/init_project.py
+    #   <repo-root>/skills/
+    #   => _THIS_DIR = <repo-root>/scripts, _PLUGIN_ROOT = parent of scripts/ = repo root
+    #
+    # Layout B — hook-copied to target project:
+    #   <target-project>/scripts/init_project.py
+    #   <target-project>/.vibeflow-plugin-root (hint file written by the hook)
+    #   => use the hint file to find the original plugin root
+    #
     _THIS_DIR = os.path.dirname(os.path.abspath(__file__))
-    _hint_file = os.path.join(_THIS_DIR, '.vibeflow-plugin-root')
-    if os.path.isfile(_hint_file):
-        with open(_hint_file, encoding='utf-8') as _hf:
-            _hint = _hf.read().strip()
-        # Defensive: normalize Git Bash POSIX paths to Windows paths.
-        # Git Bash writes /c/Users/... or c/Users/... (missing colon); Python on
-        # Windows needs C:/Users/... for os.path.isdir() to succeed.
-        if sys.platform == 'win32' and _hint:
-            import re as _re
-            _m = _re.match(r'^/?([a-zA-Z])/(.*)', _hint)
-            if _m:
-                _hint = _m.group(1).upper() + ':/' + _m.group(2)
-        _PLUGIN_ROOT = _hint if (_hint and os.path.isdir(_hint)) else \
-            os.path.dirname(os.path.dirname(os.path.dirname(_THIS_DIR)))
+
+    # Try Layout A first: _THIS_DIR/../skills/ should exist at repo root
+    _candidates = [
+        os.path.dirname(_THIS_DIR),  # one level up (Layout A)
+        os.path.join(os.path.dirname(_THIS_DIR), 'skills'),  # explicit skills/ path check
+    ]
+    _repo_root = os.path.dirname(_THIS_DIR)
+    if os.path.isdir(os.path.join(_repo_root, 'skills')):
+        # Layout A: normal checkout
+        _PLUGIN_ROOT = _repo_root
     else:
-        _PLUGIN_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(_THIS_DIR)))
+        # Layout B: hook-copied, use hint file
+        _hint_file = os.path.join(_THIS_DIR, '.vibeflow-plugin-root')
+        if os.path.isfile(_hint_file):
+            with open(_hint_file, encoding='utf-8') as _hf:
+                _hint = _hf.read().strip()
+            if sys.platform == 'win32' and _hint:
+                import re as _re
+                _m = _re.match(r'^/?([a-zA-Z])/(.*)', _hint)
+                if _m:
+                    _hint = _m.group(1).upper() + ':/' + _m.group(2)
+            _PLUGIN_ROOT = _hint if (_hint and os.path.isdir(_hint)) else _repo_root
+        else:
+            _PLUGIN_ROOT = _repo_root
     plugin_scripts_dir = os.path.join(_PLUGIN_ROOT, "scripts")
 
     helper_scripts = [
