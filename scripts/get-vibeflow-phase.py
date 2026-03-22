@@ -69,7 +69,6 @@ def detect_phase(project_root: Path, verbose: bool = False) -> dict:
     feature_list_path = project_root / 'feature-list.json'
     plans_path = project_root / 'docs' / 'plans'
     latest_srs = latest_matching_file(plans_path, '*-srs.md')
-    latest_ucd = latest_matching_file(plans_path, '*-ucd.md')
     latest_design = latest_matching_file(plans_path, '*-design.md')
     latest_st = latest_matching_file(plans_path, '*-st-report.md')
     latest_retro = latest_matching_file(state_root, 'retro-*.md') if state_root.exists() else None
@@ -84,8 +83,9 @@ def detect_phase(project_root: Path, verbose: bool = False) -> dict:
     checks.append(('template-selection', not workflow_path.exists(), 'workflow.yaml ' + ('missing' if not workflow_path.exists() else 'exists')))
     checks.append(('plan', not plan_path.exists(), 'plan ' + ('missing' if not plan_path.exists() else 'exists')))
     checks.append(('requirements', latest_srs is None, 'SRS ' + (f'{latest_srs.name}' if latest_srs else 'not found')))
-    checks.append(('ucd', _ui_req and latest_ucd is None, f'UI={_ui_req}, UCD={"missing" if latest_ucd is None else latest_ucd.name}'))
     checks.append(('design', latest_design is None, 'design ' + (f'{latest_design.name}' if latest_design else 'not found')))
+    checks.append(('design-eng-review', latest_design is not None and not (state_root / 'plan-eng-review.md').exists(), 'plan-eng-review ' + ('missing' if latest_design is not None and not (state_root / 'plan-eng-review.md').exists() else 'exists')))
+    checks.append(('design-design-review', latest_design is not None and not (state_root / 'plan-design-review.md').exists(), 'plan-design-review ' + ('missing' if latest_design is not None and not (state_root / 'plan-design-review.md').exists() else 'exists')))
     checks.append(('build-init', not feature_list_path.exists(), 'feature-list ' + ('missing' if not feature_list_path.exists() else 'exists')))
     checks.append(('build-config', not work_config_path.exists(), 'work-config ' + ('missing' if not work_config_path.exists() else 'exists')))
     checks.append(('build-work', not all_features_passing(feature_list_path), 'features ' + ('not passing' if not all_features_passing(feature_list_path) else 'all passing')))
@@ -109,10 +109,12 @@ def detect_phase(project_root: Path, verbose: bool = False) -> dict:
         phase, reason = 'plan', '.vibeflow/plan.md is missing.'
     elif latest_srs is None:
         phase, reason = 'requirements', 'No SRS document found in docs/plans.'
-    elif _ui_req and latest_ucd is None:
-        phase, reason = 'ucd', 'UI workflow requires a UCD document.'
     elif latest_design is None:
         phase, reason = 'design', 'No design document found in docs/plans.'
+    elif not (state_root / 'plan-eng-review.md').exists():
+        phase, reason = 'design', '.vibeflow/plan-eng-review.md is missing.'
+    elif not (state_root / 'plan-design-review.md').exists():
+        phase, reason = 'design', '.vibeflow/plan-design-review.md is missing.'
     elif not feature_list_path.exists():
         phase, reason = 'build-init', 'feature-list.json is missing.'
     elif not work_config_path.exists():
@@ -145,7 +147,6 @@ def detect_phase(project_root: Path, verbose: bool = False) -> dict:
             'feature_list': str(feature_list_path),
             'qa_report': str(qa_report_path),
             'latest_srs': str(latest_srs) if latest_srs else None,
-            'latest_ucd': str(latest_ucd) if latest_ucd else None,
             'latest_design': str(latest_design) if latest_design else None,
             'latest_st': str(latest_st) if latest_st else None,
             'latest_retro': str(latest_retro) if latest_retro else None,

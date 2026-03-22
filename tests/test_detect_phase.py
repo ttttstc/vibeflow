@@ -57,17 +57,30 @@ class TestDetectPhase:
         result = detect_phase(tmp_path)
         assert result['phase'] == 'requirements'
 
-    def test_ucd_required_missing(self, tmp_path):
+    def test_design_eng_review_missing(self, tmp_path):
         (tmp_path / '.vibeflow').mkdir()
         (tmp_path / '.vibeflow' / 'think-output.md').write_text('think')
-        (tmp_path / '.vibeflow' / 'workflow.yaml').write_text(
-            'template: "web-standard"\nqa:\n    required: true'
-        )
+        (tmp_path / '.vibeflow' / 'workflow.yaml').write_text('template: "prototype"')
         (tmp_path / '.vibeflow' / 'plan.md').write_text('plan complete')
         (tmp_path / 'docs' / 'plans').mkdir(parents=True)
         (tmp_path / 'docs' / 'plans' / 'test-srs.md').write_text('srs')
+        (tmp_path / 'docs' / 'plans' / 'test-design.md').write_text('design')
         result = detect_phase(tmp_path)
-        assert result['phase'] == 'ucd'
+        assert result['phase'] == 'design'
+        assert 'plan-eng-review' in result['reason']
+
+    def test_design_design_review_missing(self, tmp_path):
+        (tmp_path / '.vibeflow').mkdir()
+        (tmp_path / '.vibeflow' / 'think-output.md').write_text('think')
+        (tmp_path / '.vibeflow' / 'workflow.yaml').write_text('template: "prototype"')
+        (tmp_path / '.vibeflow' / 'plan.md').write_text('plan complete')
+        (tmp_path / 'docs' / 'plans').mkdir(parents=True)
+        (tmp_path / 'docs' / 'plans' / 'test-srs.md').write_text('srs')
+        (tmp_path / 'docs' / 'plans' / 'test-design.md').write_text('design')
+        (tmp_path / '.vibeflow' / 'plan-eng-review.md').write_text('eng review')
+        result = detect_phase(tmp_path)
+        assert result['phase'] == 'design'
+        assert 'plan-design-review' in result['reason']
 
     def test_design_missing(self, tmp_path):
         (tmp_path / '.vibeflow').mkdir()
@@ -88,6 +101,8 @@ class TestDetectPhase:
         (tmp_path / 'docs' / 'plans' / 'test-srs.md').write_text('srs')
         (tmp_path / 'docs' / 'plans' / 'test-ucd.md').write_text('ucd')
         (tmp_path / 'docs' / 'plans' / 'test-design.md').write_text('design')
+        (tmp_path / '.vibeflow' / 'plan-eng-review.md').write_text('eng review')
+        (tmp_path / '.vibeflow' / 'plan-design-review.md').write_text('design review')
         result = detect_phase(tmp_path)
         assert result['phase'] == 'build-init'
 
@@ -100,6 +115,8 @@ class TestDetectPhase:
         (tmp_path / 'docs' / 'plans' / 'test-srs.md').write_text('srs')
         (tmp_path / 'docs' / 'plans' / 'test-ucd.md').write_text('ucd')
         (tmp_path / 'docs' / 'plans' / 'test-design.md').write_text('design')
+        (tmp_path / '.vibeflow' / 'plan-eng-review.md').write_text('eng review')
+        (tmp_path / '.vibeflow' / 'plan-design-review.md').write_text('design review')
         (tmp_path / 'feature-list.json').write_text(json.dumps({'features': []}))
         result = detect_phase(tmp_path)
         assert result['phase'] == 'build-config'
@@ -114,6 +131,8 @@ class TestDetectPhase:
         (tmp_path / 'docs' / 'plans' / 'test-srs.md').write_text('srs')
         (tmp_path / 'docs' / 'plans' / 'test-ucd.md').write_text('ucd')
         (tmp_path / 'docs' / 'plans' / 'test-design.md').write_text('design')
+        (tmp_path / '.vibeflow' / 'plan-eng-review.md').write_text('eng review')
+        (tmp_path / '.vibeflow' / 'plan-design-review.md').write_text('design review')
         (tmp_path / 'docs' / 'plans' / 'test-st-report.md').write_text('st')
         (tmp_path / '.vibeflow' / 'review-report.md').write_text('review')
         (tmp_path / 'feature-list.json').write_text(json.dumps({
@@ -136,6 +155,8 @@ class TestDetectPhase:
         (tmp_path / 'docs' / 'plans' / 'test-srs.md').write_text('srs')
         (tmp_path / 'docs' / 'plans' / 'test-ucd.md').write_text('ucd')
         (tmp_path / 'docs' / 'plans' / 'test-design.md').write_text('design')
+        (tmp_path / '.vibeflow' / 'plan-eng-review.md').write_text('eng review')
+        (tmp_path / '.vibeflow' / 'plan-design-review.md').write_text('design review')
         (tmp_path / 'docs' / 'plans' / 'test-st-report.md').write_text('st')
         (tmp_path / 'feature-list.json').write_text(json.dumps({
             'features': [{'id': 'f1', 'status': 'passing', 'deprecated': False}]
@@ -154,6 +175,8 @@ class TestDetectPhase:
         (tmp_path / 'docs' / 'plans' / 'test-srs.md').write_text('srs')
         (tmp_path / 'docs' / 'plans' / 'test-ucd.md').write_text('ucd')
         (tmp_path / 'docs' / 'plans' / 'test-design.md').write_text('design')
+        (tmp_path / '.vibeflow' / 'plan-eng-review.md').write_text('eng review')
+        (tmp_path / '.vibeflow' / 'plan-design-review.md').write_text('design review')
         (tmp_path / 'feature-list.json').write_text(json.dumps({
             'features': [{'id': 'f1', 'status': 'passing', 'deprecated': False}]
         }))
@@ -173,6 +196,8 @@ class TestDetectPhase:
         (tmp_path / 'docs' / 'plans' / 'test-srs.md').write_text('srs')
         (tmp_path / 'docs' / 'plans' / 'test-ucd.md').write_text('ucd')
         (tmp_path / 'docs' / 'plans' / 'test-design.md').write_text('design')
+        (tmp_path / '.vibeflow' / 'plan-eng-review.md').write_text('eng review')
+        (tmp_path / '.vibeflow' / 'plan-design-review.md').write_text('design review')
         (tmp_path / 'docs' / 'plans' / 'test-st-report.md').write_text('st')
         (tmp_path / 'feature-list.json').write_text(json.dumps({
             'features': [{'id': 'f1', 'status': 'passing', 'deprecated': False}]
@@ -191,6 +216,8 @@ class TestDetectPhase:
         (tmp_path / 'docs' / 'plans' / 'test-srs.md').write_text('srs')
         (tmp_path / 'docs' / 'plans' / 'test-ucd.md').write_text('ucd')
         (tmp_path / 'docs' / 'plans' / 'test-design.md').write_text('design')
+        (tmp_path / '.vibeflow' / 'plan-eng-review.md').write_text('eng review')
+        (tmp_path / '.vibeflow' / 'plan-design-review.md').write_text('design review')
         (tmp_path / 'docs' / 'plans' / 'test-st-report.md').write_text('st')
         (tmp_path / 'feature-list.json').write_text(json.dumps({
             'features': [{'id': 'f1', 'status': 'passing', 'deprecated': False}]
@@ -209,6 +236,8 @@ class TestDetectPhase:
         (tmp_path / 'docs' / 'plans' / 'test-srs.md').write_text('srs')
         (tmp_path / 'docs' / 'plans' / 'test-ucd.md').write_text('ucd')
         (tmp_path / 'docs' / 'plans' / 'test-design.md').write_text('design')
+        (tmp_path / '.vibeflow' / 'plan-eng-review.md').write_text('eng review')
+        (tmp_path / '.vibeflow' / 'plan-design-review.md').write_text('design review')
         (tmp_path / 'docs' / 'plans' / 'test-st-report.md').write_text('st')
         (tmp_path / 'feature-list.json').write_text(json.dumps({
             'features': [{'id': 'f1', 'status': 'passing', 'deprecated': False}]
@@ -229,6 +258,8 @@ class TestDetectPhase:
         (tmp_path / 'docs' / 'plans' / 'test-srs.md').write_text('srs')
         (tmp_path / 'docs' / 'plans' / 'test-ucd.md').write_text('ucd')
         (tmp_path / 'docs' / 'plans' / 'test-design.md').write_text('design')
+        (tmp_path / '.vibeflow' / 'plan-eng-review.md').write_text('eng review')
+        (tmp_path / '.vibeflow' / 'plan-design-review.md').write_text('design review')
         (tmp_path / 'docs' / 'plans' / 'test-st-report.md').write_text('st')
         (tmp_path / 'feature-list.json').write_text(json.dumps({
             'features': [{'id': 'f1', 'status': 'passing', 'deprecated': False}]
