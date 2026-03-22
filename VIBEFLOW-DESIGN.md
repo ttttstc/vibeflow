@@ -1,8 +1,8 @@
 # VibeFlow Design
 
-> Version: v1.0
-> Date: 2026-03-21
-> Status: Full local workflow scaffold implemented
+> Version: v1.2
+> Date: 2026-03-22
+> Status: Full local workflow scaffold implemented + unified plan phase
 
 ## Overview
 
@@ -36,7 +36,7 @@ skills/
   vibeflow/
   vibeflow-router/
   vibeflow-think/
-  vibeflow-plan-review/
+  vibeflow-plan/
   vibeflow-requirements/
   vibeflow-ucd/
   vibeflow-design/
@@ -78,7 +78,7 @@ Detected phases:
 - `increment`
 - `think`
 - `template-selection`
-- `plan-review`
+- `plan`
 - `requirements`
 - `ucd`
 - `design`
@@ -99,6 +99,9 @@ VibeFlow uses these runtime artifacts:
 - `.vibeflow/think-output.md`
 - `.vibeflow/workflow.yaml`
 - `.vibeflow/work-config.json`
+- `.vibeflow/plan.md`（Plan 阶段完成标记）
+- `.vibeflow/plan-value-review.md`（价值审查结论）
+- `.vibeflow/plan-review.md`（范围审查结论）
 - `.vibeflow/qa-report.md`
 - `.vibeflow/retro-YYYY-MM-DD.md`
 - `.vibeflow/increment-request.json`
@@ -136,7 +139,7 @@ Template-derived build trimming writes `.vibeflow/work-config.json`.
 
 ### Plan
 
-- `vibeflow-plan-review`
+- `vibeflow-plan`
 - `vibeflow-requirements`
 - `vibeflow-ucd`
 - `vibeflow-design`

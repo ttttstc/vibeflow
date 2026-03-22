@@ -47,7 +47,7 @@ def detect_phase(project_root: Path, verbose: bool = False) -> dict:
     workflow_path = resolve_yaml(state_root, 'workflow')
     work_config_path = state_root / 'work-config.json'
     qa_report_path = state_root / 'qa-report.md'
-    plan_review_path = state_root / 'plan-review.md'
+    plan_path = state_root / 'plan.md'
     review_report_path = state_root / 'review-report.md'
     increment_path = state_root / 'increment-request.json'
     feature_list_path = project_root / 'feature-list.json'
@@ -64,7 +64,7 @@ def detect_phase(project_root: Path, verbose: bool = False) -> dict:
     checks.append(('increment', increment_path.exists(), 'increment-path ' + ('exists' if increment_path.exists() else 'missing')))
     checks.append(('think', not think_path.exists(), 'think-output ' + ('missing' if not think_path.exists() else 'exists')))
     checks.append(('template-selection', not workflow_path.exists(), 'workflow.yaml ' + ('missing' if not workflow_path.exists() else 'exists')))
-    checks.append(('plan-review', not plan_review_path.exists(), 'plan-review ' + ('missing' if not plan_review_path.exists() else 'exists')))
+    checks.append(('plan', not plan_path.exists(), 'plan ' + ('missing' if not plan_path.exists() else 'exists')))
     checks.append(('requirements', latest_srs is None, 'SRS ' + (f'{latest_srs.name}' if latest_srs else 'not found')))
     checks.append(('ucd', _ui_req and latest_ucd is None, f'UI={_ui_req}, UCD={"missing" if latest_ucd is None else latest_ucd.name}'))
     checks.append(('design', latest_design is None, 'design ' + (f'{latest_design.name}' if latest_design else 'not found')))
@@ -87,8 +87,8 @@ def detect_phase(project_root: Path, verbose: bool = False) -> dict:
         phase, reason = 'think', '.vibeflow/think-output.md is missing.'
     elif not workflow_path.exists():
         phase, reason = 'template-selection', '.vibeflow/workflow.yaml (or .yml) is missing.'
-    elif not plan_review_path.exists():
-        phase, reason = 'plan-review', '.vibeflow/plan-review.md is missing.'
+    elif not plan_path.exists():
+        phase, reason = 'plan', '.vibeflow/plan.md is missing.'
     elif latest_srs is None:
         phase, reason = 'requirements', 'No SRS document found in docs/plans.'
     elif _ui_req and latest_ucd is None:
@@ -120,7 +120,7 @@ def detect_phase(project_root: Path, verbose: bool = False) -> dict:
         'paths': {
             'think': str(think_path),
             'workflow': str(workflow_path),
-            'plan_review': str(plan_review_path),
+            'plan': str(plan_path),
             'work_config': str(work_config_path),
             'review': str(review_report_path),
             'feature_list': str(feature_list_path),

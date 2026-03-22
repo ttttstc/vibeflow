@@ -42,18 +42,18 @@ class TestDetectPhase:
         result = detect_phase(tmp_path)
         assert result['phase'] == 'template-selection'
 
-    def test_plan_review_missing(self, tmp_path):
+    def test_plan_missing(self, tmp_path):
         (tmp_path / '.vibeflow').mkdir()
         (tmp_path / '.vibeflow' / 'think-output.md').write_text('think')
         (tmp_path / '.vibeflow' / 'workflow.yaml').write_text('template: "prototype"')
         result = detect_phase(tmp_path)
-        assert result['phase'] == 'plan-review'
+        assert result['phase'] == 'plan'
 
     def test_requirements_missing(self, tmp_path):
         (tmp_path / '.vibeflow').mkdir()
         (tmp_path / '.vibeflow' / 'think-output.md').write_text('think')
         (tmp_path / '.vibeflow' / 'workflow.yaml').write_text('template: "prototype"')
-        (tmp_path / '.vibeflow' / 'plan-review.md').write_text('review')
+        (tmp_path / '.vibeflow' / 'plan.md').write_text('plan complete')
         result = detect_phase(tmp_path)
         assert result['phase'] == 'requirements'
 
@@ -63,7 +63,7 @@ class TestDetectPhase:
         (tmp_path / '.vibeflow' / 'workflow.yaml').write_text(
             'template: "web-standard"\nqa:\n    required: true'
         )
-        (tmp_path / '.vibeflow' / 'plan-review.md').write_text('review')
+        (tmp_path / '.vibeflow' / 'plan.md').write_text('plan complete')
         (tmp_path / 'docs' / 'plans').mkdir(parents=True)
         (tmp_path / 'docs' / 'plans' / 'test-srs.md').write_text('srs')
         result = detect_phase(tmp_path)
@@ -73,7 +73,7 @@ class TestDetectPhase:
         (tmp_path / '.vibeflow').mkdir()
         (tmp_path / '.vibeflow' / 'think-output.md').write_text('think')
         (tmp_path / '.vibeflow' / 'workflow.yaml').write_text('template: "prototype"')
-        (tmp_path / '.vibeflow' / 'plan-review.md').write_text('review')
+        (tmp_path / '.vibeflow' / 'plan.md').write_text('plan complete')
         (tmp_path / 'docs' / 'plans').mkdir(parents=True)
         (tmp_path / 'docs' / 'plans' / 'test-srs.md').write_text('srs')
         result = detect_phase(tmp_path)
@@ -83,7 +83,7 @@ class TestDetectPhase:
         (tmp_path / '.vibeflow').mkdir()
         (tmp_path / '.vibeflow' / 'think-output.md').write_text('think')
         (tmp_path / '.vibeflow' / 'workflow.yaml').write_text('template: "prototype"')
-        (tmp_path / '.vibeflow' / 'plan-review.md').write_text('review')
+        (tmp_path / '.vibeflow' / 'plan.md').write_text('plan complete')
         (tmp_path / 'docs' / 'plans').mkdir(parents=True)
         (tmp_path / 'docs' / 'plans' / 'test-srs.md').write_text('srs')
         (tmp_path / 'docs' / 'plans' / 'test-ucd.md').write_text('ucd')
@@ -95,7 +95,7 @@ class TestDetectPhase:
         (tmp_path / '.vibeflow').mkdir()
         (tmp_path / '.vibeflow' / 'think-output.md').write_text('think')
         (tmp_path / '.vibeflow' / 'workflow.yaml').write_text('template: "prototype"')
-        (tmp_path / '.vibeflow' / 'plan-review.md').write_text('review')
+        (tmp_path / '.vibeflow' / 'plan.md').write_text('plan complete')
         (tmp_path / 'docs' / 'plans').mkdir(parents=True)
         (tmp_path / 'docs' / 'plans' / 'test-srs.md').write_text('srs')
         (tmp_path / 'docs' / 'plans' / 'test-ucd.md').write_text('ucd')
@@ -108,7 +108,7 @@ class TestDetectPhase:
         (tmp_path / '.vibeflow').mkdir()
         (tmp_path / '.vibeflow' / 'think-output.md').write_text('think')
         (tmp_path / '.vibeflow' / 'workflow.yaml').write_text('template: "prototype"')
-        (tmp_path / '.vibeflow' / 'plan-review.md').write_text('review')
+        (tmp_path / '.vibeflow' / 'plan.md').write_text('plan complete')
         (tmp_path / '.vibeflow' / 'work-config.json').write_text('{}')
         (tmp_path / 'docs' / 'plans').mkdir(parents=True)
         (tmp_path / 'docs' / 'plans' / 'test-srs.md').write_text('srs')
@@ -130,7 +130,7 @@ class TestDetectPhase:
         (tmp_path / '.vibeflow').mkdir()
         (tmp_path / '.vibeflow' / 'think-output.md').write_text('think')
         (tmp_path / '.vibeflow' / 'workflow.yaml').write_text('template: "prototype"')
-        (tmp_path / '.vibeflow' / 'plan-review.md').write_text('review')
+        (tmp_path / '.vibeflow' / 'plan.md').write_text('plan complete')
         (tmp_path / '.vibeflow' / 'work-config.json').write_text('{}')
         (tmp_path / 'docs' / 'plans').mkdir(parents=True)
         (tmp_path / 'docs' / 'plans' / 'test-srs.md').write_text('srs')
@@ -147,7 +147,7 @@ class TestDetectPhase:
         (tmp_path / '.vibeflow').mkdir()
         (tmp_path / '.vibeflow' / 'think-output.md').write_text('think')
         (tmp_path / '.vibeflow' / 'workflow.yaml').write_text('template: "prototype"')
-        (tmp_path / '.vibeflow' / 'plan-review.md').write_text('review')
+        (tmp_path / '.vibeflow' / 'plan.md').write_text('plan complete')
         (tmp_path / '.vibeflow' / 'work-config.json').write_text('{}')
         (tmp_path / '.vibeflow' / 'review-report.md').write_text('review')
         (tmp_path / 'docs' / 'plans').mkdir(parents=True)
@@ -166,7 +166,7 @@ class TestDetectPhase:
         (tmp_path / '.vibeflow' / 'workflow.yaml').write_text(
             'template: "web-standard"\nqa:\n    required: true'
         )
-        (tmp_path / '.vibeflow' / 'plan-review.md').write_text('review')
+        (tmp_path / '.vibeflow' / 'plan.md').write_text('plan complete')
         (tmp_path / '.vibeflow' / 'work-config.json').write_text('{}')
         (tmp_path / '.vibeflow' / 'review-report.md').write_text('review')
         (tmp_path / 'docs' / 'plans').mkdir(parents=True)
@@ -184,7 +184,7 @@ class TestDetectPhase:
         (tmp_path / '.vibeflow').mkdir()
         (tmp_path / '.vibeflow' / 'think-output.md').write_text('think')
         (tmp_path / '.vibeflow' / 'workflow.yaml').write_text('template: "prototype"')
-        (tmp_path / '.vibeflow' / 'plan-review.md').write_text('review')
+        (tmp_path / '.vibeflow' / 'plan.md').write_text('plan complete')
         (tmp_path / '.vibeflow' / 'work-config.json').write_text('{}')
         (tmp_path / '.vibeflow' / 'review-report.md').write_text('review')
         (tmp_path / 'docs' / 'plans').mkdir(parents=True)
@@ -202,7 +202,7 @@ class TestDetectPhase:
         (tmp_path / '.vibeflow').mkdir()
         (tmp_path / '.vibeflow' / 'think-output.md').write_text('think')
         (tmp_path / '.vibeflow' / 'workflow.yaml').write_text('template: "prototype"')
-        (tmp_path / '.vibeflow' / 'plan-review.md').write_text('review')
+        (tmp_path / '.vibeflow' / 'plan.md').write_text('plan complete')
         (tmp_path / '.vibeflow' / 'work-config.json').write_text('{}')
         (tmp_path / '.vibeflow' / 'review-report.md').write_text('review')
         (tmp_path / 'docs' / 'plans').mkdir(parents=True)
@@ -221,7 +221,7 @@ class TestDetectPhase:
         (tmp_path / '.vibeflow').mkdir()
         (tmp_path / '.vibeflow' / 'think-output.md').write_text('think')
         (tmp_path / '.vibeflow' / 'workflow.yaml').write_text('template: "prototype"')
-        (tmp_path / '.vibeflow' / 'plan-review.md').write_text('review')
+        (tmp_path / '.vibeflow' / 'plan.md').write_text('plan complete')
         (tmp_path / '.vibeflow' / 'work-config.json').write_text('{}')
         (tmp_path / '.vibeflow' / 'review-report.md').write_text('review')
         (tmp_path / '.vibeflow' / 'retro-2026-01-01.md').write_text('retro')
