@@ -1,22 +1,29 @@
 # VibeFlow Design
 
-> Version: v1.2
-> Date: 2026-03-22
-> Status: Full local workflow scaffold implemented + unified plan phase
+> Version: v1.3
+> Date: 2026-03-23
+> Status: Full local workflow scaffold implemented + 16-phase architecture
 
 ## Overview
 
-VibeFlow is a seven-stage workflow for iterative product delivery:
+VibeFlow is a 16-phase workflow for iterative product delivery:
 
 1. Think
 2. Plan
-3. Build
-4. Review
-5. Test
-6. Ship
-7. Reflect
+3. Requirements
+4. Design
+5. Build-init
+6. Build-config
+7. Build-work
+8. Review
+9. Test-system
+10. Test-qa
+11. Ship
+12. Reflect
 
-The repository now contains the complete local scaffold for all seven stages.
+Plus optional phases and sub-phases detected by `get-vibeflow-phase.py`.
+
+The repository contains the complete local scaffold for all phases.
 All project-facing names are unified under `vibeflow`.
 
 ## Naming Rules
@@ -36,18 +43,26 @@ skills/
   vibeflow/
   vibeflow-router/
   vibeflow-think/
+  vibeflow-office-hours/           # YC Office Hours (optional pre-Think)
   vibeflow-plan/
-  vibeflow-plan-value-review/
+  vibeflow-plan-value-review/      # CEO value review
+  vibeflow-plan-eng-review/        # Engineering review (Design phase Step 5.1)
+  vibeflow-plan-design-review/     # Design review (Design phase Step 5.2)
   vibeflow-requirements/
-  vibeflow-ucd/
-  vibeflow-design/
+  vibeflow-design/                 # Tech design (UCD inlined + 3-perspective review)
+  vibeflow-brainstorming/          # Problem exploration (optional pre-Design)
   vibeflow-build-init/
+  vibeflow-build-config/
   vibeflow-build-work/
   vibeflow-tdd/
   vibeflow-quality/
   vibeflow-feature-st/
   vibeflow-spec-review/
   vibeflow-review/
+  vibeflow-careful/                # Safety: destructive command warnings
+  vibeflow-freeze/                 # Safety: edit boundary restrictions
+  vibeflow-guard/                  # Safety: careful + freeze combined
+  vibeflow-unfreeze/              # Safety: clear freeze boundary
   vibeflow-test-system/
   vibeflow-test-qa/
   vibeflow-ship/
@@ -56,6 +71,7 @@ skills/
 hooks/
   hooks.json
   session-start.ps1
+  session-start.sh
 
 scripts/
   get-vibeflow-phase.py
@@ -68,6 +84,14 @@ templates/
   web-standard.yaml
   api-standard.yaml
   enterprise.yaml
+
+claude-code/
+  install.sh
+  install.ps1
+
+.claude-plugin/
+  marketplace.json
+  plugin.json
 ```
 
 ## Router State Machine
@@ -81,7 +105,6 @@ Detected phases:
 - `template-selection`
 - `plan`
 - `requirements`
-- `ucd`
 - `design`
 - `build-init`
 - `build-config`
@@ -95,28 +118,30 @@ Detected phases:
 
 ## Runtime Artifacts
 
-VibeFlow uses these runtime artifacts:
+### VibeFlow State (`.vibeflow/`)
 
-- `.vibeflow/think-output.md`
-- `.vibeflow/workflow.yaml`
-- `.vibeflow/work-config.json`
-- `.vibeflow/plan.md`（Plan 阶段完成标记）
-- `.vibeflow/plan-value-review.md`（价值审查结论）
-- `.vibeflow/plan-review.md`（范围审查结论）
-- `.vibeflow/qa-report.md`
-- `.vibeflow/retro-YYYY-MM-DD.md`
-- `.vibeflow/increment-request.json`
+- `.vibeflow/think-output.md` — Think phase output
+- `.vibeflow/workflow.yaml` — Workflow config (from template)
+- `.vibeflow/work-config.json` — Build config (quality gates, enabled steps)
+- `.vibeflow/plan.md` — Plan phase completion marker (value review passed)
+- `.vibeflow/plan-value-review.md` — CEO value review conclusion
+- `.vibeflow/plan-eng-review.md` — Engineering review conclusion (Design Step 5.1)
+- `.vibeflow/plan-design-review.md` — Design review conclusion (Design Step 5.2)
+- `.vibeflow/review-report.md` — Cross-feature review report
+- `.vibeflow/qa-report.md` — QA test report
+- `.vibeflow/retro-YYYY-MM-DD.md` — Iteration retrospective
+- `.vibeflow/increment-request.json` — Incremental requirements signal
 
-Inherited project artifacts remain where the build and test process expects them:
+### Project Artifacts
 
-- `docs/plans/*-srs.md`
-- `docs/plans/*-ucd.md`
-- `docs/plans/*-design.md`
-- `docs/plans/*-st-report.md`
-- `docs/test-cases/feature-*.md`
-- `feature-list.json`
-- `task-progress.md`
-- `RELEASE_NOTES.md`
+- `docs/plans/*-srs.md` — Software Requirements Specification
+- `docs/plans/*-design.md` — Technical design document (UCD inlined)
+- `docs/plans/*-st-report.md` — System test report
+- `docs/plans/*-brainstorming.md` — Brainstorming output (optional)
+- `docs/test-cases/feature-*.md` — Feature test case documents
+- `feature-list.json` — Feature inventory (single source of truth during Build)
+- `task-progress.md` — Task progress log
+- `RELEASE_NOTES.md` — Release notes
 
 ## Templates
 
@@ -132,43 +157,59 @@ Template-derived build trimming writes `.vibeflow/work-config.json`.
 
 ## Skill Catalog
 
-### Core
+### Core Layer
 
-- `vibeflow`
-- `vibeflow-router`
-- `vibeflow-think`
+- `vibeflow` — Framework entry point
+- `vibeflow-router` — Session router, file-driven phase dispatch
+- `vibeflow-think` — Think phase: problem framing and template selection
 
-### Plan
+### Exploratory Layer (Optional)
 
-- `vibeflow-plan`
-- `vibeflow-plan-value-review`（CEO 价值评估，复自 /plan-ceo-review）
-- `vibeflow-requirements`
-- `vibeflow-ucd`
-- `vibeflow-design`
+- `vibeflow-office-hours` — YC Office Hours style brainstorming (pre-Think)
+- `vibeflow-brainstorming` — Problem exploration (pre-Design)
 
-### Build
+### Planning Layer
 
-- `vibeflow-build-init`
-- `vibeflow-build-work`
-- `vibeflow-tdd`
-- `vibeflow-quality`
-- `vibeflow-feature-st`
-- `vibeflow-spec-review`
+- `vibeflow-plan` — Plan phase entry: CEO value review gate
+- `vibeflow-plan-value-review` — CEO/Founder perspective value review (fail-fast gate)
+- `vibeflow-plan-eng-review` — Engineering perspective review (architecture, code quality, testing, performance)
+- `vibeflow-plan-design-review` — Design perspective review (7-round review: IA, interaction, journey, AI slop, design system, a11y, unresolved)
+- `vibeflow-requirements` — Software Requirements Specification (ISO 29148)
+- `vibeflow-design` — Technical design document (with inline UCD + 3-perspective review at Step 5)
 
-### Post-Build
+### Build Layer
 
-- `vibeflow-review`
-- `vibeflow-test-system`
-- `vibeflow-test-qa`
-- `vibeflow-ship`
-- `vibeflow-reflect`
+- `vibeflow-build-init` — Initialize build artifacts
+- `vibeflow-build-config` — Configure feature implementation details
+- `vibeflow-build-work` — Single-feature orchestrator: TDD → Quality → ST → Review
+- `vibeflow-tdd` — TDD Red-Green-Refactor cycle
+- `vibeflow-quality` — Quality gates: line coverage, branch coverage, mutation score
+- `vibeflow-feature-st` — Feature-level acceptance testing (ISO 29119)
+- `vibeflow-spec-review` — Spec compliance review against SRS and Design
+
+### Safety Guardrails Layer (Optional)
+
+- `vibeflow-careful` — Warns before destructive commands (rm -rf, DROP TABLE, etc.)
+- `vibeflow-freeze` — Restricts Edit/Write to specified directory
+- `vibeflow-guard` — Combines careful + freeze for maximum safety mode
+- `vibeflow-unfreeze` — Clears freeze boundary
+
+### Verification & Release Layer
+
+- `vibeflow-review` — Cross-feature holistic change review
+- `vibeflow-test-system` — System-level integration tests and NFR validation
+- `vibeflow-test-qa` — Browser-driven QA verification (UI projects only)
+- `vibeflow-ship` — Version release, PR creation, changelog
+- `vibeflow-reflect` — Iteration retrospective and improvement suggestions
 
 ## Implementation Notes
 
 - the repository contains the full local alias layer for all stages
 - routing is deterministic and based on files rather than memory
-- workflow-specific build trimming is derived from the selected template
-- UI-only testing remains conditional on workflow state and generated artifacts
+- UCD is inlined into the Design phase (Step 1), not a separate phase
+- Plan phase only does CEO value review; eng/design reviews happen at Design phase Step 5
+- safety guardrails are opt-in (not enabled by default)
+- exploratory skills (office-hours, brainstorming) are optional pre-cursors
 
 ## Verification
 
@@ -176,7 +217,6 @@ Use these commands locally:
 
 ```powershell
 python scripts/get-vibeflow-phase.py
+python scripts/get-vibeflow-phase.py --verbose
 python scripts/test-vibeflow-setup.py --json
 ```
-
-
