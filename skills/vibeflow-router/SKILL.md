@@ -89,7 +89,7 @@ cat .vibeflow/increment-queue.txt 2>/dev/null || echo "No pending increments"
 ### 阶段：`plan`
 **条件**：模板已选定，需进行价值评估 + 范围审查。
 **操作**：使用 `skills/vibeflow-plan/SKILL.md`，两步审查：
-1. CEO 价值评估（调用 `/plan-ceo-review`）→ 产出 `.vibeflow/plan-value-review.md`
+1. CEO 价值评估（内联自 `/plan-ceo-review` 的方法论）→ 产出 `.vibeflow/plan-value-review.md`
 2. 执行范围审查 → 产出 `.vibeflow/plan-review.md`
 价值审查失败则项目终止；两者都通过后写入 `.vibeflow/plan.md`，进入 requirements。
 
