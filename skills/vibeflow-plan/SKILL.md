@@ -44,9 +44,15 @@ description: "Plan 阶段 — 先进行 CEO 视角的商业价值评估，再执
 
 ### Step 1：价值判断
 
-#### 1.1 CEO 视角商业价值评估
+#### 1.1 调用 vibeflow-plan-value-review
 
-以下内容直接内联自 `/plan-ceo-review`，已适配 VibeFlow 工作流上下文。
+使用 `Skill` 工具调用本地 `vibeflow-plan-value-review` Skill：
+
+```
+Skill: vibeflow-plan-value-review
+```
+
+**注意：** 此为 VibeFlow 自有 skill，已复制自 `/plan-ceo-review` 并适配 VibeFlow 上下文。不依赖外部全局配置。
 
 ---
 

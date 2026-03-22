@@ -37,6 +37,7 @@ skills/
   vibeflow-router/
   vibeflow-think/
   vibeflow-plan/
+  vibeflow-plan-value-review/
   vibeflow-requirements/
   vibeflow-ucd/
   vibeflow-design/
@@ -140,6 +141,7 @@ Template-derived build trimming writes `.vibeflow/work-config.json`.
 ### Plan
 
 - `vibeflow-plan`
+- `vibeflow-plan-value-review`（CEO 价值评估，复自 /plan-ceo-review）
 - `vibeflow-requirements`
 - `vibeflow-ucd`
 - `vibeflow-design`
