@@ -5,7 +5,7 @@ $phaseScript = Join-Path $pluginRoot 'scripts\get-vibeflow-phase.py'
 
 # Detect current phase
 $phaseInfo = if (Test-Path $phaseScript) {
-    python $phaseScript --project-root . --json 2>$null | ConvertFrom-Json
+    python $phaseScript --project-root $pluginRoot --json 2>$null | ConvertFrom-Json
 } else {
     [pscustomobject]@{ phase = 'think'; reason = 'Phase detection unavailable.' }
 }
@@ -13,10 +13,10 @@ $phaseInfo = if (Test-Path $phaseScript) {
 $phase = $phaseInfo.phase
 $reason = $phaseInfo.reason
 
-# Check for key project files
-$hasFeatureList = Test-Path 'feature-list.json'
-$hasSrs = (Get-ChildItem 'docs/plans/*-srs.md' -ErrorAction SilentlyContinue).Count -gt 0
-$hasDesign = (Get-ChildItem 'docs/plans/*-design.md' -ErrorAction SilentlyContinue).Count -gt 0
+# Check for key project files (use $pluginRoot to handle resume from subdirectory)
+$hasFeatureList = Test-Path (Join-Path $pluginRoot 'feature-list.json')
+$hasSrs = (Get-ChildItem (Join-Path $pluginRoot 'docs/plans/*-srs.md') -ErrorAction SilentlyContinue).Count -gt 0
+$hasDesign = (Get-ChildItem (Join-Path $pluginRoot 'docs/plans/*-design.md') -ErrorAction SilentlyContinue).Count -gt 0
 
 # Build lightweight context (no SKILL.md injection — use Skill tool instead)
 $sessionContext = @"

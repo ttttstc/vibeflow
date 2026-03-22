@@ -7,19 +7,19 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PLUGIN_ROOT="$(dirname "$SCRIPT_DIR")"
 PHASE_SCRIPT="$PLUGIN_ROOT/scripts/get-vibeflow-phase.py"
 
-# Detect current phase
-phase_json=$(python "$PHASE_SCRIPT" --project-root . --json 2>/dev/null || echo '{"phase":"think","reason":"Phase detection unavailable."}')
+# Detect current phase (use PLUGIN_ROOT to handle resume from subdirectory)
+phase_json=$(python "$PHASE_SCRIPT" --project-root "$PLUGIN_ROOT" --json 2>/dev/null || echo '{"phase":"think","reason":"Phase detection unavailable."}')
 
 phase=$(echo "$phase_json" | python -c "import sys,json; print(json.load(sys.stdin).get('phase','unknown'))" 2>/dev/null || echo "unknown")
 reason=$(echo "$phase_json" | python -c "import sys,json; print(json.load(sys.stdin).get('reason',''))" 2>/dev/null || echo "")
 
-# Check for key project files
+# Check for key project files (use $PLUGIN_ROOT to handle resume from subdirectory)
 has_feature_list="false"
 has_srs="false"
 has_design="false"
-[ -f "feature-list.json" ] && has_feature_list="true"
-ls docs/plans/*-srs.md >/dev/null 2>&1 && has_srs="true"
-ls docs/plans/*-design.md >/dev/null 2>&1 && has_design="true"
+[ -f "$PLUGIN_ROOT/feature-list.json" ] && has_feature_list="true"
+ls "$PLUGIN_ROOT/docs/plans/"*-srs.md >/dev/null 2>&1 && has_srs="true"
+ls "$PLUGIN_ROOT/docs/plans/"*-design.md >/dev/null 2>&1 && has_design="true"
 
 # Build lightweight context (no SKILL.md injection — use Skill tool instead)
 python -c "
