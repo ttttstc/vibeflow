@@ -27,6 +27,21 @@ description: 在VibeFlow项目中用于Think阶段，定义问题、边界、机
 - `VIBEFLOW-DESIGN.md`
 - 仓库中现有的根文档
 
+## Office Hours（可选前置）
+
+在开始问题框定之前，用户可选择先运行 YC Office Hours 风格的头脑风暴：
+
+Skill: vibeflow-office-hours
+
+这会帮助从战略层面验证想法是否值得投入，而非直接进入执行规划。
+
+**何时使用：**
+- 用户有模糊的想法但不确定是否值得做
+- 需要在投入工程资源前验证需求真实性
+- 用户要求"先聊聊这个想法"
+
+**如用户跳过此步骤**，直接进入标准 Think 流程。
+
 ## Think流程
 
 ### 1. 问题框定

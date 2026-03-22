@@ -334,6 +334,6 @@ API call       | timeout           | TimeoutError
 
 ## 后续行动
 
-- [如果通过：继续 Step 2 范围审查]
+- [如果通过：继续 requirements 阶段（eng/design review 在 design 阶段末尾执行）]
 - [如果拒绝：项目终止，记录原因]
 ```

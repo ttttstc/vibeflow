@@ -1,6 +1,6 @@
 ---
 name: vibeflow-ucd
-description: "SRS 存在但无 UCD 文档时使用 — 基于审批通过的 SRS 生成 UI 组件设计风格指南，含文生图提示词"
+description: "独立生成 UCD 风格指南（视觉风格、Token、组件/页面提示词）。已并入 vibeflow-design 的步骤 1；此 skill 作为可选独立入口保留。"
 ---
 
 # UI 组件设计 (UCD) 风格指南生成
@@ -263,7 +263,10 @@ UCD 文档保存并提交后：
 
 ## 集成
 
-**调用者：** vibeflow-router 或 vibeflow-requirements（步骤 8 链接到此）
+**调用者：** 用户主动调用（可选独立入口）
 **依赖：** `docs/plans/*-srs.md`
 **链接到：** vibeflow-design（UCD 审批后）
 **产出：** `docs/plans/YYYY-MM-DD-<topic>-ucd.md`
+
+> **注意：** UCD 已并入 `vibeflow-design` 的步骤 1。如通过 `vibeflow-design` 进入设计流程，UCD 会自动在内联生成，无需先运行此 skill。
+> 此 skill 作为可选独立入口保留——当用户想单独生成 UCD 再合并到设计时使用。

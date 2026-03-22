@@ -19,10 +19,9 @@
 increment --> increment-handler
 think --> vibeflow-think
 template-selection --> new-vibeflow-config.py + new-vibeflow-work-config.py
-plan-review --> vibeflow-plan-review
+plan --> vibeflow-plan (value review only; eng/design review in design phase)
 requirements --> vibeflow-requirements
-ucd --> vibeflow-ucd
-design --> vibeflow-design
+design --> vibeflow-design (UCD + user approval + eng review + design review + scope decision)
 build-init --> vibeflow-build-init
 build-config --> new-vibeflow-work-config.py
 build-work --> vibeflow-build-work

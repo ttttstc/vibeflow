@@ -55,10 +55,9 @@ cat .vibeflow/increment-queue.txt 2>/dev/null || echo "No pending increments"
 | `increment` | `scripts/increment-handler.py` | 更新 feature-list.json |
 | `think` | `skills/vibeflow-think/SKILL.md` | `.vibeflow/think-output.md` |
 | `template-selection` | `scripts/new-vibeflow-config.py` + `scripts/new-vibeflow-work-config.py` | `.vibeflow/workflow.yaml` |
-| `plan` | `skills/vibeflow-plan/SKILL.md` | `.vibeflow/plan.md` + `.vibeflow/plan-value-review.md` + `.vibeflow/plan-review.md` |
+| `plan` | `skills/vibeflow-plan/SKILL.md` | `.vibeflow/plan.md` + `.vibeflow/plan-value-review.md` |
 | `requirements` | `skills/vibeflow-requirements/SKILL.md` | `docs/plans/*-srs.md` |
-| `ucd` | `skills/vibeflow-ucd/SKILL.md` | `docs/plans/*-ucd.md` |
-| `design` | `skills/vibeflow-design/SKILL.md` | `docs/plans/*-design.md` |
+| `design` | `skills/vibeflow-design/SKILL.md` | `docs/plans/*-design.md`（含 UCD 内联）+ `.vibeflow/plan-eng-review.md` + `.vibeflow/plan-design-review.md` |
 | `build-init` | `skills/vibeflow-build-init/SKILL.md` | 项目脚手架 |
 | `build-config` | `scripts/new-vibeflow-work-config.py` | `.vibeflow/work-config.json` |
 | `build-work` | `skills/vibeflow-build-work/SKILL.md` | 已实现功能 |
@@ -87,23 +86,19 @@ cat .vibeflow/increment-queue.txt 2>/dev/null || echo "No pending increments"
 3. 用户确认后运行：`python scripts/new-vibeflow-config.py --template <template>`，然后 `scripts/new-vibeflow-work-config.py`
 
 ### 阶段：`plan`
-**条件**：模板已选定，需进行价值评估 + 范围审查。
-**操作**：使用 `skills/vibeflow-plan/SKILL.md`，两步审查：
-1. CEO 价值评估（调用 `vibeflow-plan-value-review`）→ 产出 `.vibeflow/plan-value-review.md`
-2. 执行范围审查 → 产出 `.vibeflow/plan-review.md`
-价值审查失败则项目终止；两者都通过后写入 `.vibeflow/plan.md`，进入 requirements。
+**条件**：模板已选定，需进行价值评估。
+**操作**：使用 `skills/vibeflow-plan/SKILL.md`，执行 CEO 价值评估（调用 `vibeflow-plan-value-review`），产出 `.vibeflow/plan-value-review.md`。
+价值审查失败则项目终止；通过后写入 `.vibeflow/plan.md`，进入 requirements。
+**注意**：eng review 和 design review 在 design 阶段末尾执行（有具体 design doc 可审时才做评审）。
 
 ### 阶段：`requirements`
 **条件**：计划已批准，开始需求收集。
 **操作**：使用 `skills/vibeflow-requirements/SKILL.md`，输出 `docs/plans/*-srs.md`，更新 feature-list.json。
 
-### 阶段：`ucd`
-**条件**：需求已完成，需用例设计。
-**操作**：使用 `skills/vibeflow-ucd/SKILL.md`，输出 `docs/plans/*-ucd.md`。
-
 ### 阶段：`design`
-**条件**：用例已完成，开始技术设计。
-**操作**：使用 `skills/vibeflow-design/SKILL.md`，输出 `docs/plans/*-design.md`。
+**条件**：需求已完成，开始技术设计。
+**操作**：使用 `skills/vibeflow-design/SKILL.md`，输出 `docs/plans/*-design.md`。含内置步骤：UCD（如需）→ 用户审批 → AI eng review → AI design review → scope decision。
+**说明**：UCD（视觉风格指南）已并入 design 阶段。如 SRS 有 UI 需求且无现有 UCD 文档，design 阶段内生成；无 UI 需求时跳过。
 
 ### 阶段：`build-init`
 **条件**：设计完成，初始化构建。
