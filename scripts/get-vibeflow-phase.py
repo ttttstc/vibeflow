@@ -29,8 +29,24 @@ def ui_required(workflow_path: Path) -> bool:
     return ('qa:\n    required: true' in content) or ('design_review:\n    required: true' in content)
 
 
+def ship_required(workflow_path: Path) -> bool:
+    content = workflow_text(workflow_path)
+    # Default to False (optional) if not specified
+    if 'ship:\n  required: true' in content:
+        return True
+    if 'ship:\n    required: true' in content:
+        return True
+    return False
+
+
 def reflect_required(workflow_path: Path) -> bool:
-    return 'reflect:\n  required: true' in workflow_text(workflow_path)
+    content = workflow_text(workflow_path)
+    # Default to False (optional) if not specified
+    if 'reflect:\n  required: true' in content:
+        return True
+    if 'reflect:\n    required: true' in content:
+        return True
+    return False
 
 
 def all_features_passing(feature_list_path: Path) -> bool:
@@ -59,6 +75,8 @@ def detect_phase(project_root: Path, verbose: bool = False) -> dict:
     latest_retro = latest_matching_file(state_root, 'retro-*.md') if state_root.exists() else None
     checks = []
     _ui_req = ui_required(workflow_path)
+    _ship_req = ship_required(workflow_path)
+    _reflect_req = reflect_required(workflow_path)
 
     # Build checks list for verbose mode (all conditions checked regardless of phase)
     checks.append(('increment', increment_path.exists(), 'increment-path ' + ('exists' if increment_path.exists() else 'missing')))
@@ -74,8 +92,8 @@ def detect_phase(project_root: Path, verbose: bool = False) -> dict:
     checks.append(('review', not review_report_path.exists(), 'review-report ' + ('missing' if not review_report_path.exists() else 'exists')))
     checks.append(('test-system', latest_st is None, 'ST ' + (f'{latest_st.name}' if latest_st else 'not found')))
     checks.append(('test-qa', _ui_req and not qa_report_path.exists(), f'UI={_ui_req}, QA={"missing" if not qa_report_path.exists() else "exists"}'))
-    checks.append(('ship', not (project_root / 'RELEASE_NOTES.md').exists(), 'RELEASE_NOTES ' + ('missing' if not (project_root / 'RELEASE_NOTES.md').exists() else 'exists')))
-    checks.append(('reflect', latest_retro is None, 'retro ' + (f'{latest_retro.name}' if latest_retro else 'not found')))
+    checks.append(('ship', _ship_req and not (project_root / 'RELEASE_NOTES.md').exists(), 'RELEASE_NOTES ' + ('missing' if not (project_root / 'RELEASE_NOTES.md').exists() else 'exists') + ' (required=' + str(_ship_req) + ')'))
+    checks.append(('reflect', _reflect_req and latest_retro is None, 'retro ' + (f'{latest_retro.name}' if latest_retro else 'not found') + ' (required=' + str(_reflect_req) + ')'))
 
     # Phase detection using elif chain (first matching wins)
     phase = 'done'
@@ -107,16 +125,17 @@ def detect_phase(project_root: Path, verbose: bool = False) -> dict:
         phase, reason = 'test-system', 'System test report is missing.'
     elif _ui_req and not qa_report_path.exists():
         phase, reason = 'test-qa', 'UI workflow requires .vibeflow/qa-report.md.'
-    elif not (project_root / 'RELEASE_NOTES.md').exists():
+    elif _ship_req and not (project_root / 'RELEASE_NOTES.md').exists():
         phase, reason = 'ship', 'RELEASE_NOTES.md is missing.'
-    elif latest_retro is None:
+    elif _reflect_req and latest_retro is None:
         phase, reason = 'reflect', 'No retrospective file exists.'
 
     result = {
         'phase': phase,
         'reason': reason,
         'has_ui': _ui_req,
-        'reflect_required': reflect_required(workflow_path),
+        'ship_required': _ship_req,
+        'reflect_required': _reflect_req,
         'paths': {
             'think': str(think_path),
             'workflow': str(workflow_path),
