@@ -29,8 +29,24 @@ def ui_required(workflow_path: Path) -> bool:
     return ('qa:\n    required: true' in content) or ('design_review:\n    required: true' in content)
 
 
+def ship_required(workflow_path: Path) -> bool:
+    content = workflow_text(workflow_path)
+    # Default to False (optional) if not specified
+    if 'ship:\n  required: true' in content:
+        return True
+    if 'ship:\n    required: true' in content:
+        return True
+    return False
+
+
 def reflect_required(workflow_path: Path) -> bool:
-    return 'reflect:\n  required: true' in workflow_text(workflow_path)
+    content = workflow_text(workflow_path)
+    # Default to False (optional) if not specified
+    if 'reflect:\n  required: true' in content:
+        return True
+    if 'reflect:\n    required: true' in content:
+        return True
+    return False
 
 
 def all_features_passing(feature_list_path: Path) -> bool:
@@ -47,35 +63,37 @@ def detect_phase(project_root: Path, verbose: bool = False) -> dict:
     workflow_path = resolve_yaml(state_root, 'workflow')
     work_config_path = state_root / 'work-config.json'
     qa_report_path = state_root / 'qa-report.md'
-    plan_review_path = state_root / 'plan-review.md'
+    plan_path = state_root / 'plan.md'
     review_report_path = state_root / 'review-report.md'
     increment_path = state_root / 'increment-request.json'
     feature_list_path = project_root / 'feature-list.json'
     plans_path = project_root / 'docs' / 'plans'
     latest_srs = latest_matching_file(plans_path, '*-srs.md')
-    latest_ucd = latest_matching_file(plans_path, '*-ucd.md')
     latest_design = latest_matching_file(plans_path, '*-design.md')
     latest_st = latest_matching_file(plans_path, '*-st-report.md')
     latest_retro = latest_matching_file(state_root, 'retro-*.md') if state_root.exists() else None
     checks = []
     _ui_req = ui_required(workflow_path)
+    _ship_req = ship_required(workflow_path)
+    _reflect_req = reflect_required(workflow_path)
 
     # Build checks list for verbose mode (all conditions checked regardless of phase)
     checks.append(('increment', increment_path.exists(), 'increment-path ' + ('exists' if increment_path.exists() else 'missing')))
     checks.append(('think', not think_path.exists(), 'think-output ' + ('missing' if not think_path.exists() else 'exists')))
     checks.append(('template-selection', not workflow_path.exists(), 'workflow.yaml ' + ('missing' if not workflow_path.exists() else 'exists')))
-    checks.append(('plan-review', not plan_review_path.exists(), 'plan-review ' + ('missing' if not plan_review_path.exists() else 'exists')))
+    checks.append(('plan', not plan_path.exists(), 'plan ' + ('missing' if not plan_path.exists() else 'exists')))
     checks.append(('requirements', latest_srs is None, 'SRS ' + (f'{latest_srs.name}' if latest_srs else 'not found')))
-    checks.append(('ucd', _ui_req and latest_ucd is None, f'UI={_ui_req}, UCD={"missing" if latest_ucd is None else latest_ucd.name}'))
     checks.append(('design', latest_design is None, 'design ' + (f'{latest_design.name}' if latest_design else 'not found')))
+    checks.append(('design-eng-review', latest_design is not None and not (state_root / 'plan-eng-review.md').exists(), 'plan-eng-review ' + ('missing' if latest_design is not None and not (state_root / 'plan-eng-review.md').exists() else 'exists')))
+    checks.append(('design-design-review', latest_design is not None and not (state_root / 'plan-design-review.md').exists(), 'plan-design-review ' + ('missing' if latest_design is not None and not (state_root / 'plan-design-review.md').exists() else 'exists')))
     checks.append(('build-init', not feature_list_path.exists(), 'feature-list ' + ('missing' if not feature_list_path.exists() else 'exists')))
     checks.append(('build-config', not work_config_path.exists(), 'work-config ' + ('missing' if not work_config_path.exists() else 'exists')))
     checks.append(('build-work', not all_features_passing(feature_list_path), 'features ' + ('not passing' if not all_features_passing(feature_list_path) else 'all passing')))
     checks.append(('review', not review_report_path.exists(), 'review-report ' + ('missing' if not review_report_path.exists() else 'exists')))
     checks.append(('test-system', latest_st is None, 'ST ' + (f'{latest_st.name}' if latest_st else 'not found')))
     checks.append(('test-qa', _ui_req and not qa_report_path.exists(), f'UI={_ui_req}, QA={"missing" if not qa_report_path.exists() else "exists"}'))
-    checks.append(('ship', not (project_root / 'RELEASE_NOTES.md').exists(), 'RELEASE_NOTES ' + ('missing' if not (project_root / 'RELEASE_NOTES.md').exists() else 'exists')))
-    checks.append(('reflect', latest_retro is None, 'retro ' + (f'{latest_retro.name}' if latest_retro else 'not found')))
+    checks.append(('ship', _ship_req and not (project_root / 'RELEASE_NOTES.md').exists(), 'RELEASE_NOTES ' + ('missing' if not (project_root / 'RELEASE_NOTES.md').exists() else 'exists') + ' (required=' + str(_ship_req) + ')'))
+    checks.append(('reflect', _reflect_req and latest_retro is None, 'retro ' + (f'{latest_retro.name}' if latest_retro else 'not found') + ' (required=' + str(_reflect_req) + ')'))
 
     # Phase detection using elif chain (first matching wins)
     phase = 'done'
@@ -87,14 +105,16 @@ def detect_phase(project_root: Path, verbose: bool = False) -> dict:
         phase, reason = 'think', '.vibeflow/think-output.md is missing.'
     elif not workflow_path.exists():
         phase, reason = 'template-selection', '.vibeflow/workflow.yaml (or .yml) is missing.'
-    elif not plan_review_path.exists():
-        phase, reason = 'plan-review', '.vibeflow/plan-review.md is missing.'
+    elif not plan_path.exists():
+        phase, reason = 'plan', '.vibeflow/plan.md is missing.'
     elif latest_srs is None:
         phase, reason = 'requirements', 'No SRS document found in docs/plans.'
-    elif _ui_req and latest_ucd is None:
-        phase, reason = 'ucd', 'UI workflow requires a UCD document.'
     elif latest_design is None:
         phase, reason = 'design', 'No design document found in docs/plans.'
+    elif not (state_root / 'plan-eng-review.md').exists():
+        phase, reason = 'design', '.vibeflow/plan-eng-review.md is missing.'
+    elif not (state_root / 'plan-design-review.md').exists():
+        phase, reason = 'design', '.vibeflow/plan-design-review.md is missing.'
     elif not feature_list_path.exists():
         phase, reason = 'build-init', 'feature-list.json is missing.'
     elif not work_config_path.exists():
@@ -107,26 +127,26 @@ def detect_phase(project_root: Path, verbose: bool = False) -> dict:
         phase, reason = 'test-system', 'System test report is missing.'
     elif _ui_req and not qa_report_path.exists():
         phase, reason = 'test-qa', 'UI workflow requires .vibeflow/qa-report.md.'
-    elif not (project_root / 'RELEASE_NOTES.md').exists():
+    elif _ship_req and not (project_root / 'RELEASE_NOTES.md').exists():
         phase, reason = 'ship', 'RELEASE_NOTES.md is missing.'
-    elif latest_retro is None:
+    elif _reflect_req and latest_retro is None:
         phase, reason = 'reflect', 'No retrospective file exists.'
 
     result = {
         'phase': phase,
         'reason': reason,
         'has_ui': _ui_req,
-        'reflect_required': reflect_required(workflow_path),
+        'ship_required': _ship_req,
+        'reflect_required': _reflect_req,
         'paths': {
             'think': str(think_path),
             'workflow': str(workflow_path),
-            'plan_review': str(plan_review_path),
+            'plan': str(plan_path),
             'work_config': str(work_config_path),
             'review': str(review_report_path),
             'feature_list': str(feature_list_path),
             'qa_report': str(qa_report_path),
             'latest_srs': str(latest_srs) if latest_srs else None,
-            'latest_ucd': str(latest_ucd) if latest_ucd else None,
             'latest_design': str(latest_design) if latest_design else None,
             'latest_st': str(latest_st) if latest_st else None,
             'latest_retro': str(latest_retro) if latest_retro else None,

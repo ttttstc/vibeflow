@@ -26,9 +26,9 @@ description: "SRS 文档不存在且无设计文档时使用 — 通过结构化
 5. **验证 SRS** — 检查 8 项质量属性，检测反模式，验证可测试性
 6. **展示并审批 SRS** — 非简单项目逐节审批
 7. **保存 SRS 文档** — `docs/plans/YYYY-MM-DD-<topic>-srs.md` 并提交
-8. **过渡到 UCD** — 调用 `vibeflow-ucd`（如 SRS 无 UI 需求则自动跳过至设计）
+8. **过渡到设计** — 调用 `vibeflow-design`（含 UCD 内联，如需）
 
-**终止状态是进入 vibeflow-ucd。** 不要调用其他阶段。
+**终止状态是进入 vibeflow-design。** 不要调用其他阶段。
 
 ## 步骤 1：探索上下文
 
@@ -207,8 +207,8 @@ SRS 文档保存并提交后：
    - 功能需求数量和优先级分布
    - 影响架构选择的关键约束
    - 影响技术选型的 NFR 阈值
-   - SRS 是否包含 UI 相关功能需求（决定 UCD 是否运行或自动跳过）
-2. 进入 `vibeflow-ucd`（如无 UI 功能则自动跳过至设计）
+   - SRS 是否包含 UI 相关功能需求（design 阶段据此判断是否执行 UCD 子步骤）
+2. 进入 `vibeflow-design`
 
 ## 规模适配
 
@@ -232,6 +232,6 @@ SRS 文档保存并提交后：
 
 ## 集成
 
-**调用者：** vibeflow-router（当无 SRS、无设计文档、无 feature-list.json 时）
-**链接到：** vibeflow-ucd（SRS 审批后；如无 UI 功能则自动跳过至设计）
+**调用者：** vibeflow-router（requirements 阶段）
+**链接到：** vibeflow-design（SRS 审批后）
 **产出：** `docs/plans/YYYY-MM-DD-<topic>-srs.md`

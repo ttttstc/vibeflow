@@ -1,0 +1,13 @@
+{
+  "name": "vibeflow",
+  "description": "VibeFlow skill library: full 16-phase workflow with plan reviews, safety guards, brainstorming, and office-hours.",
+  "version": "1.0.0",
+  "author": {
+    "name": "VibeFlow",
+    "email": "vibeflow@example.com"
+  },
+  "homepage": "https://github.com/ttttstc/vibeflow",
+  "repository": "https://github.com/ttttstc/vibeflow",
+  "license": "MIT",
+  "keywords": ["workflow", "project-management", "tdd", "plan-review", "safety", "brainstorming"]
+}

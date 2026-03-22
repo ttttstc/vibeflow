@@ -1,0 +1,20 @@
+{
+  "name": "vibeflow",
+  "description": "VibeFlow - AI-powered project workflow system for Claude Code. 16-phase workflow: Think → Plan → Requirements → Design → Build → Test → Ship → Reflect",
+  "owner": {
+    "name": "VibeFlow",
+    "email": "vibeflow@example.com"
+  },
+  "plugins": [
+    {
+      "name": "vibeflow",
+      "description": "VibeFlow skill library: full 16-phase workflow with plan reviews, safety guards, brainstorming, and office-hours.",
+      "version": "1.0.0",
+      "source": "./",
+      "author": {
+        "name": "VibeFlow",
+        "email": "vibeflow@example.com"
+      }
+    }
+  ]
+}

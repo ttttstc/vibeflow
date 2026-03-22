@@ -102,7 +102,6 @@ ls skills/vibeflow-*/
 - vibeflow-plan-review
 - vibeflow-requirements
 - vibeflow-design
-- vibeflow-ucd
 - vibeflow-build-init
 - vibeflow-build-work
 - vibeflow-tdd
@@ -150,14 +149,12 @@ cat feature-list.json
 
 **关键产出物**：
 - `docs/plans/*-srs.md`（需求）
-- `docs/plans/*-design.md`（技术设计）
-- `docs/plans/*-ucd.md`（UI控制文档，如果适用）
+- `docs/plans/*-design.md`（技术设计，含 UI/UX 章节）
 
 **使用的技能**：
 - `vibeflow-plan-review` - 执行范围审查
 - `vibeflow-requirements` - 需求规范（SRS）
-- `vibeflow-design` - 技术设计文档
-- `vibeflow-ucd` - 用户界面控制文档
+- `vibeflow-design` - 技术设计文档（含 UCD 内联）
 
 **退出标准**：利益相关者批准的需求和设计。
 
@@ -355,8 +352,7 @@ VibeFlow支持四种工作流程模板。根据项目范围、团队规模和治
 | `vibeflow-think` | 定义问题、边界、机会扫描、选择工作流程模板 |
 | `vibeflow-plan-review` | 在规范编写之前的执行范围审查 |
 | `vibeflow-requirements` | 编写批准的需求规范（SRS） |
-| `vibeflow-design` | 在初始化之前编写技术设计文档 |
-| `vibeflow-ucd` | 为UI工作创建用户界面控制文档 |
+| `vibeflow-design` | 在初始化之前编写技术设计（含 UCD 内联：视觉风格、Token、组件提示词） |
 | `vibeflow-build-init` | 在设计批准后初始化实现产物 |
 | `vibeflow-build-work` | 驱动功能通过TDD到质量关卡再到规范审查 |
 | `vibeflow-tdd` | 构建阶段内的红-绿-重构步骤 |
