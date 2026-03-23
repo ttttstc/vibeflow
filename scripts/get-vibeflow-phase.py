@@ -72,12 +72,15 @@ def detect_phase(project_root: Path, verbose: bool = False) -> dict:
     latest_design = latest_matching_file(plans_path, '*-design.md')
     latest_st = latest_matching_file(plans_path, '*-st-report.md')
     latest_retro = latest_matching_file(state_root, 'retro-*.md') if state_root.exists() else None
+    quick_config_path = state_root / 'quick-config.json'
+    quick_design_path = project_root / 'docs' / 'quick-design.md'
     checks = []
     _ui_req = ui_required(workflow_path)
     _ship_req = ship_required(workflow_path)
     _reflect_req = reflect_required(workflow_path)
 
     # Build checks list for verbose mode (all conditions checked regardless of phase)
+    checks.append(('quick', quick_config_path.exists(), 'quick-config ' + ('exists' if quick_config_path.exists() else 'missing')))
     checks.append(('increment', increment_path.exists(), 'increment-path ' + ('exists' if increment_path.exists() else 'missing')))
     checks.append(('think', not think_path.exists(), 'think-output ' + ('missing' if not think_path.exists() else 'exists')))
     checks.append(('template-selection', not workflow_path.exists(), 'workflow.yaml ' + ('missing' if not workflow_path.exists() else 'exists')))
@@ -86,6 +89,7 @@ def detect_phase(project_root: Path, verbose: bool = False) -> dict:
     checks.append(('design', latest_design is None, 'design ' + (f'{latest_design.name}' if latest_design else 'not found')))
     checks.append(('design-eng-review', latest_design is not None and not (state_root / 'plan-eng-review.md').exists(), 'plan-eng-review ' + ('missing' if latest_design is not None and not (state_root / 'plan-eng-review.md').exists() else 'exists')))
     checks.append(('design-design-review', latest_design is not None and not (state_root / 'plan-design-review.md').exists(), 'plan-design-review ' + ('missing' if latest_design is not None and not (state_root / 'plan-design-review.md').exists() else 'exists')))
+    checks.append(('quick-design', quick_config_path.exists() and not quick_design_path.exists(), 'quick-design ' + ('missing' if quick_config_path.exists() and not quick_design_path.exists() else 'exists')))
     checks.append(('build-init', not feature_list_path.exists(), 'feature-list ' + ('missing' if not feature_list_path.exists() else 'exists')))
     checks.append(('build-config', not work_config_path.exists(), 'work-config ' + ('missing' if not work_config_path.exists() else 'exists')))
     checks.append(('build-work', not all_features_passing(feature_list_path), 'features ' + ('not passing' if not all_features_passing(feature_list_path) else 'all passing')))
@@ -99,7 +103,12 @@ def detect_phase(project_root: Path, verbose: bool = False) -> dict:
     phase = 'done'
     reason = 'All detectable phases completed.'
 
-    if increment_path.exists():
+    if quick_config_path.exists() and not quick_design_path.exists():
+        phase, reason = 'quick', 'docs/quick-design.md is missing.'
+    elif quick_config_path.exists() and quick_design_path.exists():
+        # Quick Mode: config + design exist → proceed to build-work (skip full Think/Plan/Requirements/Design)
+        phase, reason = 'build-work', 'Quick mode: quick-design complete, proceeding to build.'
+    elif increment_path.exists():
         phase, reason = 'increment', '.vibeflow/increment-request.json exists.'
     elif not think_path.exists():
         phase, reason = 'think', '.vibeflow/think-output.md is missing.'
@@ -138,6 +147,7 @@ def detect_phase(project_root: Path, verbose: bool = False) -> dict:
         'has_ui': _ui_req,
         'ship_required': _ship_req,
         'reflect_required': _reflect_req,
+        'is_quick_mode': quick_config_path.exists(),
         'paths': {
             'think': str(think_path),
             'workflow': str(workflow_path),
@@ -150,6 +160,7 @@ def detect_phase(project_root: Path, verbose: bool = False) -> dict:
             'latest_design': str(latest_design) if latest_design else None,
             'latest_st': str(latest_st) if latest_st else None,
             'latest_retro': str(latest_retro) if latest_retro else None,
+            'quick_design': str(quick_design_path),
         },
     }
     if verbose:

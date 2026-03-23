@@ -1,11 +1,41 @@
 ---
 name: vibeflow
-description: 当仓库包含VIBEFLOW-DESIGN.md或用户想要运行七阶段VibeFlow工作流程时使用。
+description: VibeFlow框架入口。运行 /vibeflow 开始新项目或继续现有工作流。
 ---
 
 # VibeFlow框架
 
 VibeFlow是一个结构化的七阶段工作流程，用于有目的性地、有质量关卡地、持续反思地构建软件。
+
+## 入口选择
+
+运行 `/vibeflow` 后，请选择你的开发模式：
+
+### 模式 1: Quick Mode（快速开发）
+
+**适用场景**：
+- Bug fix 或 hot fix
+- 小改动、单文件修改
+- 配置文件更新
+- 测试文件编写
+- 文档更新
+
+**跳过**：Think、Plan、Requirements、Design（但保留最简设计文档）
+
+**入口**：`/vibeflow-quick`
+
+### 模式 2: Full Mode（完整流程）
+
+**适用场景**：
+- 新功能开发
+- 架构变更
+- 需要 UI/UX 设计的工作
+- 重要系统变更（支付、认证等）
+- 不确定复杂度的任务
+
+**完整流程**：Think → Plan → Requirements → Design → Build → Review → Test → Ship
+
+**入口**：`/vibeflow`（选择 Full Mode）
 
 ## 框架概述
 
