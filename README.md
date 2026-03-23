@@ -14,29 +14,55 @@
 
 ## 三种安装方式
 
-### 方式一：Claude Code Marketplace（推荐）
+### 方式一：一键安装（推荐，最简单）
 
-```bash
-# macOS / Linux
-curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.sh | bash
+在 Claude Code 对话框中运行：
 
-# Windows PowerShell
-irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.ps1 | iex
+```
+/sh curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/refs/heads/feat/plan-value-review/claude-code/install.sh | bash
+```
 
-# 安装完成后，在 Claude Code 中激活插件：
+安装完成后激活：
+
+```
 /plugin install vibeflow@vibeflow
 ```
 
-### 方式二：Shell 脚本（手动）
+### 方式二：让 Claude Code 自行安装
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/install.sh | bash
+复制以下内容，粘贴到 Claude Code 对话框：
+
+```
+帮我安装 VibeFlow 插件。
+
+执行以下步骤：
+
+1. 下载仓库（选一种方式）：
+   方式A - git clone：
+   git clone --depth 1 https://github.com/ttttstc/vibeflow.git ~/.claude/plugins/marketplaces/vibeflow
+   方式B - 如果 git 不可用，用 curl 下载 ZIP：
+   curl -fsSL https://github.com/ttttstc/vibeflow/archive/refs/heads/feat/plan-value-review.zip -o /tmp/vibeflow.zip
+   unzip /tmp/vibeflow.zip -d /tmp/
+   rm -rf ~/.claude/plugins/marketplaces/vibeflow
+   mv /tmp/vibeflow-feat-plan-value-review ~/.claude/plugins/marketplaces/vibeflow
+
+2. 在 ~/.claude/plugins/known_marketplaces.json 注册（如果文件不存在则创建）：
+   使用 jq 或 python3 更新 JSON，添加：
+   "vibeflow": {
+     "source": {"source": "github", "repo": "ttttstc/vibeflow"},
+     "installLocation": "~/.claude/plugins/marketplaces/vibeflow/",
+     "lastUpdated": "2026-03-23T00:00:00.000Z"
+   }
+
+3. 完成后报告
 ```
 
-### 方式三：OpenCode
+### 方式三：PowerShell 启动器（开箱即用）
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/install.sh | bash
+双击即用，自动完成下载 + 安装 + 启动 Claude Code + 加载插件：
+
+```powershell
+irm https://raw.githubusercontent.com/ttttstc/vibeflow/refs/heads/feat/plan-value-review/claude-code/vibeflow-launcher.ps1 | iex
 ```
 
 ---
@@ -336,11 +362,13 @@ vibeflow-router ──── get-vibeflow-phase.py ──── 检测 16 种阶
 
 ## 安装方式对比
 
-| 安装方式 | 适合人群 | 自动化程度 | 插件注册 |
+| 安装方式 | 适合人群 | 是否需要 git | 插件注册 |
 |---|---|---|---|
-| Claude Code Marketplace | Claude Code 用户 | 高（一条命令）| 自动注册 |
-| Shell 脚本 | 手动管理插件的用户 | 高 | 需手动 |
-| OpenCode | OpenCode 用户 | 高 | 需手动 |
+| 方式一：一键命令 | Claude Code 用户 | 否 | 需手动激活 |
+| 方式二：Claude Code 自行安装 | 新机器、无 git 环境 | 否 | 需手动激活 |
+| 方式三：PowerShell 启动器 | Windows 用户追求开箱即用 | 否 | 自动加载（会话级）|
+
+> **激活**：无论用哪种方式，安装完成后都需要在 Claude Code 中运行 `/plugin install vibeflow@vibeflow` 激活插件（方式三除外，launcher 会自动加载）。
 
 ---
 
@@ -420,8 +448,13 @@ vibeflow/
 │   ├── session-start.ps1
 │   └── session-start.sh
 ├── claude-code/                     # Claude Code Marketplace 安装脚本
-│   ├── install.sh
-│   └── install.ps1
+│   ├── install.sh                   # bash 一键安装（支持 jq/python3 fallback）
+│   ├── install.ps1                  # PowerShell git-based 安装
+│   ├── install-simple.ps1           # PowerShell ZIP 下载安装（不需要 git）
+│   ├── install-all-in-one.ps1      # Claude Code 内专用安装脚本
+│   ├── vibeflow-launcher.ps1       # PowerShell 启动器（开箱即用）
+│   ├── debug-install.ps1           # 安装诊断脚本
+│   └── INSTALL-PROMPT.md           # 安装提示词文档
 ├── .claude-plugin/                  # Claude Code 插件元数据
 │   ├── plugin.json
 │   └── marketplace.json
