@@ -3,13 +3,51 @@ name: vibeflow-build-work
 description: "feature-list.json 存在且部分功能仍失败时使用 — 驱动功能通过完整 TDD 管线、质量门禁和代码审查"
 ---
 
-# Worker — 每次循环一个功能
+# VibeFlow Build Work
 
 通过每次循环实现一个功能来执行多会话软件项目。每个循环遵循严格管线：Orient -> Gate -> Plan -> TDD -> Quality -> ST 验收 -> Review -> Persist。
 
 **启动宣告：** "正在使用 vibeflow-build-work。让我先定位当前状态。"
 
 **核心原则：** 每个子步骤有其专属 skill。严格遵循编排顺序。
+
+## 执行模式选择
+
+### 模式一：Sequential（顺序执行）
+
+每次循环一个功能，主会话上下文顺序执行。
+
+适用场景：
+- 调试阶段，需要逐步观察
+- 小项目（< 5 个 feature）
+- 依赖关系复杂的场景
+
+### 模式二：Parallel（并行执行）
+
+使用 Agent 工具同时启动多个 subagent，每个 subagent 在独立 200k token 上下文中执行一个 feature。
+
+适用场景：
+- 中大项目（≥ 5 个 feature）
+- feature 之间无文件重叠（设计阶段已验证）
+- 需要快速完成多个独立功能
+
+**启动并行模式：**
+
+在调用 build-work 时明确告知模式选择：
+
+```
+请使用并行模式执行所有 failing features。
+```
+
+或
+
+```
+请使用顺序模式执行。
+```
+
+默认模式为 Sequential（更稳定）。
+
+---
 
 ## work-config.json 步骤裁剪
 
@@ -162,6 +200,155 @@ Quality Gates 通过
 4. 为 bug 写失败测试
 5. 单一有针对性的修改
 6. 3 次尝试后放弃 -> 升级到用户
+
+---
+
+## Parallel Mode（并行执行）
+
+当选择并行模式时，使用 Agent 工具同时执行多个 feature。
+
+### 执行流程
+
+```
+1. 读取 feature-list.json
+   → 找出所有 status=failing 的 feature
+   → 按优先级排序
+
+2. 读取每个 feature 的设计章节
+   → 确认 feature 之间无文件重叠
+
+3. 同时 Spawn N 个 Agent（每个 failing feature 一个）
+
+4. 等待所有 Agent 完成
+
+5. 汇总结果
+   → 更新 feature-list.json
+   → 更新 task-progress.md
+   → 报告汇总
+```
+
+### Agent 提示词模板
+
+每个 subagent 收到：
+
+```markdown
+# Feature Implementation Agent
+
+你是 VibeFlow 的 feature 实现 Agent。你的上下文是**全新的 200k token**，没有任何历史包袱。
+
+## 你的任务
+
+实现 feature：
+- **ID**: {feature_id}
+- **名称**: {feature_name}
+- **优先级**: {priority}
+
+## 上下文文件（请先读取）
+
+1. `docs/plans/*-design.md` — 技术设计（找到第 4.N 节）
+2. `feature-list.json` — 功能详情（找到 id={feature_id} 的条目）
+3. `.vibeflow/work-config.json` — 启用了哪些步骤
+4. `.vibeflow/vibeflow-guide.md`（如存在）— 项目专属指导
+
+## 执行步骤
+
+按顺序执行：
+
+### Step 1: Orient
+理解功能需求，确认设计章节。
+
+### Step 2: TDD
+读取 `skills/vibeflow-tdd/SKILL.md`，执行红→绿→重构循环。
+
+### Step 3: Quality Gates
+读取 `skills/vibeflow-quality/SKILL.md`，运行覆盖率 + 变异测试。
+
+### Step 4: Feature-ST
+读取 `skills/vibeflow-feature-st/SKILL.md`，执行验收测试。
+
+### Step 5: Spec-Review
+读取 `skills/vibeflow-spec-review/SKILL.md`，检查实现是否符合 SRS。
+
+### Step 6: Persist
+1. Git commit（atomic commit，包含实现、测试、示例）
+2. 更新 `RELEASE_NOTES.md`
+3. 更新 `feature-list.json` 中该 feature 的 status 为 "passing"
+4. 更新 `task-progress.md` 的进度
+
+## 产出
+
+完成后返回结构化结果：
+
+```
+RESULT: {feature_id}: PASS
+COMMIT: {git_hash}
+SUMMARY: {一句话总结}
+```
+
+如失败：
+
+```
+RESULT: {feature_id}: FAIL
+ERROR: {具体错误描述}
+RETRY: {是否可自动重试}
+```
+
+## 重要约束
+
+- **每个 feature 独立执行**，不知道其他 feature 的存在
+- **不要与其他 subagent 通信**，结果通过文件共享
+- **遇到错误不要放弃**，尽力完成，能走多远走多远
+```
+
+### Orchestrator 汇总逻辑
+
+```markdown
+所有 Agent 完成后：
+
+1. 读取每个 Agent 返回的结果
+
+2. 更新 feature-list.json：
+   - status = "passing"（如 PASS）
+   - status = "failing" + last_error（如 FAIL）
+   - completed_at = timestamp
+
+3. 生成汇总报告：
+   ```
+   ═══════════════════════════════════
+   Parallel Execution Results
+   ═══════════════════════════════════
+   Total: N | PASS: M | FAIL: K
+
+   ✅ Feature A — PASS (commit: abc123)
+   ✅ Feature B — PASS (commit: def456)
+   ❌ Feature C — FAIL (覆盖率不足)
+
+   Next: [处理失败 feature 的建议]
+   ═══════════════════════════════════
+   ```
+
+4. 如有失败：
+   - 询问用户是否继续 Sequential 模式逐个修复
+   - 或在下一个会话处理
+```
+
+### 使用场景
+
+| 场景 | 推荐模式 |
+|------|---------|
+| 项目启动，第一次执行所有 feature | Parallel |
+| 调试某个具体 feature | Sequential |
+| 有 feature 失败后的重试 | Sequential（修复单个） |
+| 多个独立 feature 需要快速完成 | Parallel |
+
+### 前提条件
+
+**并行模式要求**：
+- feature 之间**无文件重叠**（Plan 阶段已分配好文件范围）
+- 所有 feature 的**依赖都已满足**（依赖的 feature 状态为 passing）
+- 开发环境**已初始化**（build-init 已完成）
+
+**如不满足条件**，自动降级为 Sequential 模式。
 
 ## 集成
 
