@@ -1,27 +1,27 @@
 # VibeFlow Design
 
-> Version: v1.3
+> Version: v1.4
 > Date: 2026-03-23
-> Status: Full local workflow scaffold implemented + 16-phase architecture
+> Status: Full local workflow scaffold implemented + 7-phase architecture
 
 ## Overview
 
-VibeFlow is a 16-phase workflow for iterative product delivery:
+VibeFlow is a 7-phase workflow for iterative product delivery:
 
+**决策阶段（Human）：**
 1. Think
 2. Plan
 3. Requirements
 4. Design
-5. Build-init
-6. Build-config
-7. Build-work
-8. Review
-9. Test-system
-10. Test-qa
-11. Ship
-12. Reflect
 
-Plus optional phases and sub-phases detected by `get-vibeflow-phase.py`.
+**执行阶段（Automated）：**
+5. Build
+6. Review
+7. Test
+
+**可选阶段：**
+- Ship（发布）
+- Reflect（复盘）
 
 The repository contains the complete local scaffold for all phases.
 All project-facing names are unified under `vibeflow`.

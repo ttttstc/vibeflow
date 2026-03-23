@@ -6,7 +6,7 @@
 
 **让 AI 按工程纪律交付软件，而不是随机 vibe coding。**
 
-别再让 AI "先写代码再说的" 了——VibeFlow 是一个结构化的 16 阶段软件交付框架，从问题框定到反思回顾，每一步都有文件状态持久化、确定性路由和质量门禁。
+别再让 AI "先写代码再说的" 了——VibeFlow 是一个结构化的 7 阶段软件交付框架，从问题框定到测试完成，每一步都有文件状态持久化、确定性路由和质量门禁。
 
 > "VibeFlow is what happens when you take a senior engineer's discipline and give it to an AI that never gets tired, never forgets, and never ships without tests."
 
@@ -86,7 +86,7 @@ irm https://raw.githubusercontent.com/ttttstc/vibeflow/refs/heads/feat/plan-valu
 
 **文件即状态。** 所有工作流状态持久化在仓库文件中（`.vibeflow/`、`docs/plans/`）。关闭会话、换机器、甚至换 AI — 项目状态完整保留。
 
-**确定性路由。** `get-vibeflow-phase.py` 通过检查文件存在性确定当前阶段。16 个阶段状态，严格 elif 链，没有歧义。
+**确定性路由。** `get-vibeflow-phase.py` 通过检查文件存在性确定当前阶段。7 个核心阶段 + 2 个可选阶段，严格 elif 链，没有歧义。
 
 **模板控制严格度。** 四种静态模板（prototype → enterprise）控制哪些阶段必须执行、质量门禁阈值多高。一次选择，全局生效。
 
@@ -94,37 +94,42 @@ irm https://raw.githubusercontent.com/ttttstc/vibeflow/refs/heads/feat/plan-valu
 
 ---
 
-## 16 阶段架构
+## 7 阶段架构
 
 ```
-Think ── Plan ── Requirements ── Design
-  │                          │
-  ▼                          ▼
-Office Hours（可选）     Brainstorming（可选）
-                          │
-                          ▼
-Build-init ── Build-config ── Build-work
-                                    │
-                              ┌──────┴──────┐
-                              ▼              ▼
-                          TDD 循环     Quality Gates
-                              │              │
-                              ▼              ▼
-                      Feature-ST ◄───── Spec-Review
-                              │              │
-                              └──────┬───────┘
-                                     ▼
-                               Review（跨功能）
-                                     │
-                        ┌────────────┼────────────┐
-                        ▼            ▼            ▼
-                   Test-System   Test-QA       Ship
-                        │            │            │
-                        └────────────┴────────────┘
-                                     │
-                                     ▼
-                                  Reflect
+┌─────────────────────────────────────────────────────────────┐
+│  决策阶段（人工参与）                                          │
+│  Think → Plan → Requirements → Design                       │
+│  人做判断、做审批、做签字确认                                  │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│  执行阶段（自动完成）                                          │
+│  Build → Review → Test                                      │
+│  设计方案确认后，AI 自动完成全部构建、审查、测试               │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                         ┌────┴────┐
+                         ▼         ▼
+                       Ship    Reflect
+                         │         │
+                         └── 可选 ──┘
 ```
+
+**7 个核心阶段：**
+
+| 阶段 | 性质 | 说明 |
+|------|------|------|
+| Think | 人工 | 问题框定、模板选择 |
+| Plan | 人工 | CEO 视角价值评审（fail-fast 关卡）|
+| Requirements | 人工 | 需求规格说明书（ISO 29148）|
+| Design | 人工 | 技术设计 + 三视角评审 + 用户签字 |
+| Build | 自动 | 构建初始化 → 功能配置 → 实现（TDD 管道）|
+| Review | 自动 | 跨功能审查（架构、安全、性能）|
+| Test | 自动 | 系统测试 + QA 验证 |
+
+**2 个可选阶段（Ship / Reflect）：** 发布和复盘，非必选。
 
 ### Think（思考）
 
@@ -167,56 +172,62 @@ Build-init ── Build-config ── Build-work
 | 7. 编写设计文档 | 内置 | `docs/plans/*-design.md` |
 | 8. 过渡到初始化 | 内置 | — |
 
-### Build-init（构建初始化）
+### Build（构建）
 
-**目标**：初始化构建产物。
+**目标**：自动完成所有构建工作。
 
-- `feature-list.json`、`task-progress.md`、`RELEASE_NOTES.md`
-- 生成 `.vibeflow/work-config.json`（质量阈值）
+Design 阶段确认后，Build 阶段自动完成以下全部工作，无需人工干预：
 
-### Build-config（构建配置）
-
-**目标**：配置每个功能的实现细节。
-
-- 为每个 feature 分配阶段（设计/开发/测试）
-- 确认外部依赖和交付顺序
-
-### Build-work（构建执行）
-
-**目标**：逐功能实现，每个功能通过完整质量管道。
+| 步骤 | 内容 | 产出 |
+|------|------|------|
+| 初始化 | 创建脚手架文件 | `feature-list.json`、`task-progress.md`、`work-config.json` |
+| 功能配置 | 分配每个功能的开发/测试阶段 | `feature-list.json`（更新）|
+| 实现 | 逐功能 TDD 管道 | 源代码、测试文件 |
+| 质量门禁 | 行覆盖率、分支覆盖率、变异测试 | 覆盖率报告 |
+| 功能验收 | Feature-ST + Spec-Review | 验收报告 |
 
 ```
-Pick Feature → TDD Red-Green-Refactor → Quality Gates
-                                         · 行覆盖率
-                                         · 分支覆盖率
-                                         · 变异分数
-                                    ┌──────┴──────┐
-                                    ▼              ▼
-                              Feature-ST     Spec-Review
-                                    │              │
-                                    └──────┬──────┘
-                                           ▼
-                                      Acceptance
+Design 确认
+    │
+    ▼
+Build-init ── Build-config ── Build-work
+    │              │             │
+    │              │         ┌────┴────┐
+    │              │         ▼         ▼
+    │              │    TDD 循环  Quality Gates
+    │              │         │         │
+    │              │         ▼         ▼
+    │              │   Feature-ST  Spec-Review
+    │              │         │         │
+    │              │         └────┬────┘
+    │              │              ▼
+    │              │         Acceptance
+    │              │              │
+    └──────────────┴──────────────┘
+                   │
+                   ▼
+              Review（自动）
 ```
 
 ### Review（审查）
 
-**目标**：跨功能整体变更审查。
+**目标**：跨功能整体变更审查（自动完成）。
 
 - `vibeflow-review`：架构一致性、安全性、性能分析
 - 可选激活安全护栏：`vibeflow-careful`（危险命令警告）、`vibeflow-freeze`（编辑边界）、`vibeflow-guard`（最大安全模式）
 
-### Test-System（系统测试）
+### Test（测试）
 
-**目标**：系统级集成测试和非功能需求验证。
+**目标**：系统级集成测试和 QA 验证（自动完成）。
 
-- 集成测试、E2E 测试、NFR 验证、探索性测试四路并行（~4x 加速）
+| 步骤 | 内容 | 触发条件 |
+|------|------|---------|
+| Test-System | 集成测试、E2E、NFR 验证、探索性测试 | 所有项目 |
+| Test-QA | 浏览器驱动 QA 验证 | 仅 UI 项目 |
 
-### Test-QA（QA 测试）
-
-**目标**：浏览器驱动的 QA 验证（仅 UI 项目）。
-
-- 仅当模板需要 UI 且 `qa-report.md` 不存在时执行
+Test-QA 发现的问题：
+- **严重/重要**：自动修复后重新验证
+- **次要/外观**：与用户确认是否修复或推迟
 
 ### Ship（发布）
 
@@ -264,11 +275,12 @@ VibeFlow 由 23 个独立 skill 组成，分为五层：
 | `vibeflow-office-hours` | YC Office Hours 风格头脑风暴（Think 前置） |
 | `vibeflow-brainstorming` | 设计前问题探索（Design 前置） |
 
-### 构建层
+### 构建层（Build 阶段内部 skill）
 
 | Skill | 职责 |
 |---|---|
 | `vibeflow-build-init` | 初始化构建产物 |
+| `vibeflow-build-config` | 配置每个功能的实现细节 |
 | `vibeflow-build-work` | 单功能编排器，驱动 TDD → Quality → ST → Review 管道 |
 | `vibeflow-tdd` | TDD Red-Green-Refactor 循环 |
 | `vibeflow-quality` | 质量门禁：行覆盖率、分支覆盖率、变异测试 |
@@ -300,7 +312,7 @@ VibeFlow 由 23 个独立 skill 组成，分为五层：
 Session Start
     │
     ▼
-vibeflow-router ──── get-vibeflow-phase.py ──── 检测 16 种阶段状态
+vibeflow-router ──── get-vibeflow-phase.py ──── 检测 7 种核心阶段
     │
     ├── think ─────────── vibeflow-think
     │       └── [可选] ─── vibeflow-office-hours
@@ -316,9 +328,7 @@ vibeflow-router ──── get-vibeflow-phase.py ──── 检测 16 种阶
     │       ├── Step 5: ── vibeflow-plan-eng-review
     │       └── Step 5: ── vibeflow-plan-design-review
     │
-    ├── build-init ──────── vibeflow-build-init
-    ├── build-config ────── vibeflow-build-config
-    ├── build-work ──────── vibeflow-build-work
+    ├── build ───────────── vibeflow-build-work（内部编排 build-init → build-config → build-work）
     │                        ├── vibeflow-tdd
     │                        ├── vibeflow-quality
     │                        ├── vibeflow-feature-st
@@ -327,10 +337,11 @@ vibeflow-router ──── get-vibeflow-phase.py ──── 检测 16 种阶
     ├── review ──────────── vibeflow-review
     │       └── [可选] ──── vibeflow-careful / freeze / guard
     │
-    ├── test-system ─────── vibeflow-test-system
-    ├── test-qa ────────── vibeflow-test-qa
-    ├── ship ────────────── vibeflow-ship
-    └── reflect ─────────── vibeflow-reflect
+    ├── test ────────────── vibeflow-test-system
+    │                       vibeflow-test-qa（仅 UI 项目）
+    │
+    ├── ship ────────────── vibeflow-ship（可选）
+    └── reflect ─────────── vibeflow-reflect（可选）
 ```
 
 ---
