@@ -5,11 +5,7 @@
 #
 # 使用方法：复制以下命令，粘贴到 Claude Code 对话框运行：
 #
-#   /sh curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/refs/heads/feat/plan-value-review/claude-code/install.sh | bash
-#
-# 或者一行：
-#
-#   /sh bash -c "$(curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/refs/heads/feat/plan-value-review/claude-code/install.sh)"
+#   /sh curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.sh | bash
 #
 # 安装后运行：
 #   /plugin install vibeflow@vibeflow
@@ -19,10 +15,7 @@
 set -euo pipefail
 
 MARKETPLACE_NAME="vibeflow"
-BRANCH="feat/plan-value-review"
-DOWNLOAD_URL="https://github.com/ttttstc/vibeflow/archive/refs/heads/${BRANCH}.zip"
-GITHUB_RAW="https://raw.githubusercontent.com/ttttstc/vibeflow/refs/heads/${BRANCH}"
-
+BRANCH="main"
 MARKETPLACE_GIT_URL="https://github.com/ttttstc/vibeflow.git"
 REPO_NAME="ttttstc/vibeflow"
 
@@ -41,12 +34,6 @@ info()    { echo -e "${CYAN}[INFO]${RESET} $*"; }
 success() { echo -e "${GREEN}[OK]${RESET} $*"; }
 error()   { echo -e "${RED}[ERROR]${RESET} $*" >&2; }
 
-# Check git
-if ! command -v git &>/dev/null; then
-  error "git is required but not installed"
-  exit 1
-fi
-
 info "开始安装 VibeFlow..."
 
 # 1. Create directories
@@ -59,14 +46,56 @@ if [[ -d "$TARGET_DIR" ]]; then
   rm -rf "$TARGET_DIR"
 fi
 
-# 3. Clone
+# 3. Download - try git first, fall back to ZIP
 info "下载中..."
-git clone --depth 1 "$MARKETPLACE_GIT_URL" "$TARGET_DIR" 2>&1
-if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
-  error "下载失败"
-  exit 1
+
+download_ok=false
+if command -v git &>/dev/null; then
+  if git clone --depth 1 "$MARKETPLACE_GIT_URL" "$TARGET_DIR" 2>&1; then
+    download_ok=true
+    success "下载完成 (git)"
+  fi
 fi
-success "下载完成"
+
+if [[ "$download_ok" != "true" ]]; then
+  info "git 不可用，尝试 ZIP 下载..."
+  TEMP_ZIP="/tmp/vibeflow-download.zip"
+  TEMP_EXTRACT="/tmp/vibeflow-extract"
+
+  if command -v curl &>/dev/null; then
+    curl -fsSL "https://github.com/ttttstc/vibeflow/archive/refs/heads/${BRANCH}.zip" -o "$TEMP_ZIP" 2>&1
+  elif command -v wget &>/dev/null; then
+    wget -q "https://github.com/ttttstc/vibeflow/archive/refs/heads/${BRANCH}.zip" -O "$TEMP_ZIP" 2>&1
+  else
+    error "curl 和 wget 都不可用，无法下载"
+    exit 1
+  fi
+
+  if [[ ! -f "$TEMP_ZIP" ]]; then
+    error "下载失败"
+    exit 1
+  fi
+
+  rm -rf "$TEMP_EXTRACT"
+  mkdir -p "$TEMP_EXTRACT"
+  if command -v unzip &>/dev/null; then
+    unzip -q "$TEMP_ZIP" -d "$TEMP_EXTRACT"
+  else
+    error "unzip 不可用"
+    exit 1
+  fi
+
+  # Find extracted directory (handles any branch name)
+  EXTRACTED_DIR=$(find "$TEMP_EXTRACT" -maxdepth 1 -type d -name "vibeflow-*" | head -1)
+  if [[ -z "$EXTRACTED_DIR" ]]; then
+    error "解压失败，无法找到 vibeflow 目录"
+    exit 1
+  fi
+
+  mv "$EXTRACTED_DIR" "$TARGET_DIR"
+  rm -rf "$TEMP_ZIP" "$TEMP_EXTRACT"
+  success "下载完成 (ZIP)"
+fi
 
 # 4. Verify
 MARKETPLACE_JSON="${TARGET_DIR}/.claude-plugin/marketplace.json"

@@ -4,7 +4,7 @@
 #
 # 使用方法：在 Claude Code 中运行（只需要这一条命令）：
 #
-#   /sh irm https://raw.githubusercontent.com/ttttstc/vibeflow/refs/heads/feat/plan-value-review/claude-code/install-all-in-one.ps1 | iex
+#   /sh irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install-all-in-one.ps1 | iex
 #
 # 安装程序会自动完成：
 #   1. 下载 vibeflow 文件到 ~/.claude/plugins/marketplaces/vibeflow/
@@ -23,8 +23,8 @@ param(
 $ErrorActionPreference = "Stop"
 
 $MarketplaceName = "vibeflow"
-$Branch = "feat/plan-value-review"
-$DownloadUrl = "https://github.com/ttttstc/vibeflow/archive/refs/heads/$Branch.zip"
+$Branch = "main"
+$DownloadUrl = "https://github.com/ttttstc/vibeflow/archive/refs/heads/main.zip"
 
 $ClaudePluginsDir = Join-Path $env:USERPROFILE ".claude\plugins"
 $MarketplacesDir = Join-Path $ClaudePluginsDir "marketplaces"

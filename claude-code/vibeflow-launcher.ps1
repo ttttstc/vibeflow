@@ -6,7 +6,7 @@
 #   .\vibeflow-launcher.ps1
 #
 # 或者一行命令（推荐）：
-#   irm https://raw.githubusercontent.com/ttttstc/vibeflow/refs/heads/feat/plan-value-review/claude-code/vibeflow-launcher.ps1 | iex
+#   irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/vibeflow-launcher.ps1 | iex
 #
 # 此脚本会：
 #   1. 检查并安装 vibeflow（如需要）
@@ -20,9 +20,9 @@
 $ErrorActionPreference = "Stop"
 
 $MarketplaceName = "vibeflow"
-$Branch = "feat/plan-value-review"
-$DownloadUrl = "https://github.com/ttttstc/vibeflow/archive/refs/heads/$Branch.zip"
-$RawBase = "https://raw.githubusercontent.com/ttttstc/vibeflow/refs/heads/$Branch"
+$Branch = "main"
+$DownloadUrl = "https://github.com/ttttstc/vibeflow/archive/refs/heads/main.zip"
+$RawBase = "https://raw.githubusercontent.com/ttttstc/vibeflow/refs/heads/main"
 
 $ClaudePluginsDir = Join-Path $env:USERPROFILE ".claude\plugins"
 $MarketplacesDir = Join-Path $ClaudePluginsDir "marketplaces"
@@ -153,7 +153,7 @@ if (Test-VibeflowInstalled) {
         Write-Host ""
         Write-Host "安装失败，请检查网络后重试" -ForegroundColor Red
         Write-Host "或者手动下载安装："
-        Write-Host "  irm https://raw.githubusercontent.com/ttttstc/vibeflow/refs/heads/feat/plan-value-review/claude-code/install-simple.ps1 | iex" -ForegroundColor Gray
+        Write-Host "  irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install-simple.ps1 | iex" -ForegroundColor Gray
         exit 1
     }
 }

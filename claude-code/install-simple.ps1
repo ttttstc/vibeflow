@@ -3,10 +3,10 @@
 # =============================================================================
 #
 # Usage:
-#   irm https://raw.githubusercontent.com/ttttstc/vibeflow/refs/heads/feat/plan-value-review/claude-code/install-simple.ps1 | iex
+#   irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install-simple.ps1 | iex
 #
 # Or download and run manually:
-#   Invoke-WebRequest -Uri "https://raw.githubusercontent.com/ttttstc/vibeflow/refs/heads/feat/plan-value-review/claude-code/install-simple.ps1" -OutFile install-simple.ps1
+#   Invoke-WebRequest -Uri "https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install-simple.ps1" -OutFile install-simple.ps1
 #   .\install-simple.ps1
 #
 
@@ -14,8 +14,8 @@ $ErrorActionPreference = "Stop"
 
 $MarketplaceName = "vibeflow"
 $RepoUrl = "https://github.com/ttttstc/vibeflow"
-$Branch = "refs/heads/feat/plan-value-review"
-$DownloadUrl = "https://github.com/ttttstc/vibeflow/archive/refs/heads/feat/plan-value-review.zip"
+$Branch = "refs/heads/main"
+$DownloadUrl = "https://github.com/ttttstc/vibeflow/archive/refs/heads/main.zip"
 
 $ClaudePluginsDir = Join-Path $env:USERPROFILE ".claude\plugins"
 $MarketplacesDir = Join-Path $ClaudePluginsDir "marketplaces"
@@ -45,13 +45,13 @@ $TempZip = Join-Path $env:TEMP "vibeflow-download.zip"
 $TempExtract = Join-Path $env:TEMP "vibeflow-extract"
 
 try {
-    Invoke-WebRequest -Uri "https://github.com/ttttstc/vibeflow/archive/refs/heads/feat/plan-value-review.zip" -OutFile $TempZip -UserAgent "vibeflow-installer/1.0"
+    Invoke-WebRequest -Uri "https://github.com/ttttstc/vibeflow/archive/refs/heads/main.zip" -OutFile $TempZip -UserAgent "vibeflow-installer/1.0"
     Write-Host "  Downloaded ($((Get-Item $TempZip).Length / 1MB) MB)" -ForegroundColor Green
 
     # Extract
     Write-Host "  Extracting..." -ForegroundColor Green
     Expand-Archive -Path $TempZip -DestinationPath $TempExtract -Force
-    $ExtractedRepo = Join-Path $TempExtract "vibeflow-feat-plan-value-review"
+    $ExtractedRepo = Join-Path $TempExtract "vibeflow-main"
 
     # Move to final location
     Move-Item -Path $ExtractedRepo -Destination $TargetDir -Force

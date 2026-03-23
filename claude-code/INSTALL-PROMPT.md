@@ -5,7 +5,7 @@
 在 Claude Code 对话框中运行：
 
 ```
-/sh curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/refs/heads/feat/plan-value-review/claude-code/install.sh | bash
+/sh curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.sh | bash
 ```
 
 安装完成后激活：
@@ -31,10 +31,10 @@
    git clone --depth 1 https://github.com/ttttstc/vibeflow.git ~/.claude/plugins/marketplaces/vibeflow
 
    方式B - 如果 git 不可用，用 curl 下载 ZIP：
-   curl -fsSL https://github.com/ttttstc/vibeflow/archive/refs/heads/feat/plan-value-review.zip -o /tmp/vibeflow.zip
+   curl -fsSL https://github.com/ttttstc/vibeflow/archive/refs/heads/main.zip -o /tmp/vibeflow.zip
    unzip /tmp/vibeflow.zip -d /tmp/
    rm -rf ~/.claude/plugins/marketplaces/vibeflow
-   mv /tmp/vibeflow-feat-plan-value-review ~/.claude/plugins/marketplaces/vibeflow
+   mv /tmp/vibeflow-main ~/.claude/plugins/marketplaces/vibeflow
 
 2. 确保目录是 ~/.claude/plugins/marketplaces/vibeflow/
 
@@ -89,5 +89,5 @@
 如果遇到问题，运行诊断脚本：
 
 ```
-/sh curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/refs/heads/feat/plan-value-review/claude-code/debug-install.ps1 | iex
+/sh curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/debug-install.ps1 | iex
 ```
