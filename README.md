@@ -19,7 +19,7 @@
 在 Claude Code 对话框中运行：
 
 ```
-/sh curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/refs/heads/feat/plan-value-review/claude-code/install.sh | bash
+/sh curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.sh | bash
 ```
 
 安装完成后激活：
@@ -41,10 +41,10 @@
    方式A - git clone：
    git clone --depth 1 https://github.com/ttttstc/vibeflow.git ~/.claude/plugins/marketplaces/vibeflow
    方式B - 如果 git 不可用，用 curl 下载 ZIP：
-   curl -fsSL https://github.com/ttttstc/vibeflow/archive/refs/heads/feat/plan-value-review.zip -o /tmp/vibeflow.zip
+   curl -fsSL https://github.com/ttttstc/vibeflow/archive/refs/heads/main.zip -o /tmp/vibeflow.zip
    unzip /tmp/vibeflow.zip -d /tmp/
    rm -rf ~/.claude/plugins/marketplaces/vibeflow
-   mv /tmp/vibeflow-feat-plan-value-review ~/.claude/plugins/marketplaces/vibeflow
+   mv /tmp/vibeflow-main ~/.claude/plugins/marketplaces/vibeflow
 
 2. 在 ~/.claude/plugins/known_marketplaces.json 注册（如果文件不存在则创建）：
    使用 jq 或 python3 更新 JSON，添加：
@@ -62,7 +62,7 @@
 双击即用，自动完成下载 + 安装 + 启动 Claude Code + 加载插件：
 
 ```powershell
-irm https://raw.githubusercontent.com/ttttstc/vibeflow/refs/heads/feat/plan-value-review/claude-code/vibeflow-launcher.ps1 | iex
+irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/vibeflow-launcher.ps1 | iex
 ```
 
 ---
