@@ -75,6 +75,10 @@ hooks/
 
 scripts/
   get-vibeflow-phase.py
+  get-vibeflow-paths.py
+  vibeflow_paths.py
+  increment-handler.py
+  migrate-vibeflow-v2.py
   new-vibeflow-config.py
   new-vibeflow-work-config.py
   test-vibeflow-setup.py
@@ -120,27 +124,32 @@ Detected phases:
 
 ### VibeFlow State (`.vibeflow/`)
 
-- `.vibeflow/think-output.md` — Think phase output
+- `.vibeflow/state.json` — Workflow state, current phase, active change, artifact map
 - `.vibeflow/workflow.yaml` — Workflow config (from template)
 - `.vibeflow/work-config.json` — Build config (quality gates, enabled steps)
-- `.vibeflow/plan.md` — Plan phase completion marker (value review passed)
-- `.vibeflow/plan-value-review.md` — CEO value review conclusion
-- `.vibeflow/plan-eng-review.md` — Engineering review conclusion (Design Step 5.1)
-- `.vibeflow/plan-design-review.md` — Design review conclusion (Design Step 5.2)
-- `.vibeflow/review-report.md` — Cross-feature review report
-- `.vibeflow/qa-report.md` — QA test report
-- `.vibeflow/retro-YYYY-MM-DD.md` — Iteration retrospective
-- `.vibeflow/increment-request.json` — Incremental requirements signal
+- `.vibeflow/guides/build.md` — Build session guide
+- `.vibeflow/guides/services.md` — Service lifecycle guide
+- `.vibeflow/logs/session-log.md` — Human-readable progress log
+- `.vibeflow/logs/retro-YYYY-MM-DD.md` — Iteration retrospective
+- `.vibeflow/increments/queue.json` — Pending increments queue
+- `.vibeflow/increments/requests/*.json` — Increment request payloads
+- `.vibeflow/increments/history.json` — Increment processing history
 
 ### Project Artifacts
 
-- `docs/plans/*-srs.md` — Software Requirements Specification
-- `docs/plans/*-design.md` — Technical design document (UCD inlined)
-- `docs/plans/*-st-report.md` — System test report
+- `docs/changes/<change-id>/context.md` — Think artifact
+- `docs/changes/<change-id>/proposal.md` — Plan / value-review artifact
+- `docs/changes/<change-id>/requirements.md` — Software Requirements Specification
+- `docs/changes/<change-id>/ucd.md` — UCD artifact (when UI applies)
+- `docs/changes/<change-id>/design.md` — Technical design document
+- `docs/changes/<change-id>/design-review.md` — Engineering + design review conclusions
+- `docs/changes/<change-id>/tasks.md` — Build task breakdown
+- `docs/changes/<change-id>/verification/review.md` — Global review report
+- `docs/changes/<change-id>/verification/system-test.md` — System test report
+- `docs/changes/<change-id>/verification/qa.md` — QA test report
 - `docs/plans/*-brainstorming.md` — Brainstorming output (optional)
 - `docs/test-cases/feature-*.md` — Feature test case documents
 - `feature-list.json` — Feature inventory (single source of truth during Build)
-- `task-progress.md` — Task progress log
 - `RELEASE_NOTES.md` — Release notes
 
 ## Templates

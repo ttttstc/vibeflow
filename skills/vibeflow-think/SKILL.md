@@ -7,7 +7,7 @@ description: 在VibeFlow项目中用于Think阶段，定义问题、边界、机
 
 产生阶段1 MVP产物：
 
-- `.vibeflow/think-output.md`
+- `docs/changes/<change-id>/context.md`
 - 模板确认后的`.vibeflow/workflow.yaml`
 
 ## 首先重用
@@ -80,9 +80,9 @@ Skill: vibeflow-office-hours
 | `api-standard` | 后端或集成优先系统，不需要大量UI工作 |
 | `enterprise` | 严格审查、可审计性和更高的质量阈值 |
 
-### 5. 编写think输出
+### 5. 编写 think 输出
 
-使用完全相同的结构编写`.vibeflow/think-output.md`：
+先运行 `python scripts/get-vibeflow-paths.py --json` 确认当前工作包路径，然后使用完全相同的结构编写 `docs/changes/<change-id>/context.md`：
 
 ```markdown
 # Think Output
@@ -120,7 +120,7 @@ Reason: [...]
 
 ### 6. 确认并创建工作流程
 
-编写`think-output.md`后：
+编写 `context.md` 后：
 
 - 如果用户尚未明确选择，请请求模板确认
 - 创建`.vibeflow/`

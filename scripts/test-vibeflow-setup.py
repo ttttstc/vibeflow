@@ -14,11 +14,12 @@ def load_module(path: Path):
 
 
 SKILL_NAMES = [
-    'vibeflow', 'vibeflow-router', 'vibeflow-think', 'vibeflow-plan-review',
+    'vibeflow', 'vibeflow-router', 'vibeflow-think', 'vibeflow-plan',
+    'vibeflow-plan-value-review', 'vibeflow-plan-eng-review', 'vibeflow-plan-design-review',
     'vibeflow-requirements', 'vibeflow-ucd', 'vibeflow-design', 'vibeflow-build-init',
     'vibeflow-build-work', 'vibeflow-tdd', 'vibeflow-quality', 'vibeflow-feature-st',
     'vibeflow-spec-review', 'vibeflow-review', 'vibeflow-test-system', 'vibeflow-test-qa',
-    'vibeflow-ship', 'vibeflow-reflect'
+    'vibeflow-ship', 'vibeflow-reflect', 'vibeflow-quick'
 ]
 
 
@@ -46,6 +47,7 @@ def main():
     skills_dir = repo_root / 'skills'
     workflow_path = project_root / '.vibeflow' / 'workflow.yaml'
     work_config_path = project_root / '.vibeflow' / 'work-config.json'
+    state_path = project_root / '.vibeflow' / 'state.json'
 
     # Check skills (framework-level verification)
     skill_results = []
@@ -56,25 +58,21 @@ def main():
             missing_count += 1
         skill_results.append(result)
 
-    workflow_ok = workflow_path.exists()
+    workflow_ok = workflow_path.exists() or (project_root / '.vibeflow' / 'workflow.yml').exists()
     work_config_ok = work_config_path.exists()
+    state_ok = state_path.exists()
 
-    # setup_ok requires: all skills present + workflow + work_config
-    all_ok = missing_count == 0 and workflow_ok and work_config_ok
+    # setup_ok requires: all skills present + state + workflow + work_config
+    all_ok = missing_count == 0 and state_ok and workflow_ok and work_config_ok
 
     phase_info = phase_module.detect_phase(project_root)
     report = {
         'setup_ok': all_ok,
         'phase': phase_info['phase'],
-        'workflow': (project_root / '.vibeflow' / 'workflow.yaml').exists() or (project_root / '.vibeflow' / 'workflow.yml').exists(),
+        'state': state_ok,
+        'workflow': workflow_ok,
         'work_config': (project_root / '.vibeflow' / 'work-config.json').exists(),
-        'skills': [
-            'vibeflow', 'vibeflow-router', 'vibeflow-think', 'vibeflow-plan-review',
-            'vibeflow-requirements', 'vibeflow-ucd', 'vibeflow-design', 'vibeflow-build-init',
-            'vibeflow-build-work', 'vibeflow-tdd', 'vibeflow-quality', 'vibeflow-feature-st',
-            'vibeflow-spec-review', 'vibeflow-review', 'vibeflow-test-system', 'vibeflow-test-qa',
-            'vibeflow-ship', 'vibeflow-reflect'
-        ],
+        'skills': SKILL_NAMES,
     }
     if args.as_json:
         print(json.dumps(report, indent=2))
@@ -83,6 +81,8 @@ def main():
         warnings = []
         if missing_count > 0:
             warnings.append(f"{missing_count} skills missing")
+        if not state_ok:
+            warnings.append('state.json missing')
         if not workflow_ok:
             warnings.append('workflow.yaml missing')
         if not work_config_ok:

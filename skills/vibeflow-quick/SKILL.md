@@ -52,7 +52,7 @@ description: Quick Mode for VibeFlow - fast development without formal design. U
                            ▼
 ┌─────────────────────────────────────────────────────────────┐
 │  Step 2: 最小化设计                                        │
-│  · 生成 docs/quick-design.md（1-2 页）                      │
+│  · 生成 docs/changes/<change-id>/design.md（1-2 页）        │
 │  · 用户确认后再继续                                         │
 └─────────────────────────────────────────────────────────────┘
                            │
@@ -138,7 +138,7 @@ description: Quick Mode for VibeFlow - fast development without formal design. U
 
 ## Step 2: 最小化设计
 
-基于快速评估，生成 `docs/quick-design.md`：
+先运行 `python scripts/get-vibeflow-paths.py --json`，基于快速评估生成 `docs/changes/<change-id>/design.md`：
 
 ```markdown
 # Quick Design: [改动名称]
@@ -182,7 +182,7 @@ mkdir -p .vibeflow docs/test-cases
 ```
 
 **创建 feature-list.json：**
-从 `docs/quick-design.md` 提取功能列表：
+从 `docs/changes/<change-id>/design.md` 提取功能列表：
 
 ```bash
 cat > feature-list.json << 'EOF'
@@ -196,8 +196,8 @@ cat > feature-list.json << 'EOF'
       "verification_steps": ["实现功能", "运行测试", "验证通过"]
     }
   ],
-  "created_from": "quick-design.md",
-  "mode": "quick"
+"created_from": "docs/changes/<change-id>/design.md",
+"mode": "quick"
 }
 EOF
 ```
@@ -216,10 +216,10 @@ cat > .vibeflow/work-config.json << 'EOF'
 EOF
 ```
 
-**创建 task-progress.md：**
+**创建 `.vibeflow/logs/session-log.md`：**
 ```bash
-cat > .vibeflow/task-progress.md << 'EOF'
-# Task Progress
+cat > .vibeflow/logs/session-log.md << 'EOF'
+# Session Log
 
 ## Current State
 - Progress: 0/1 features
@@ -230,22 +230,22 @@ cat > .vibeflow/task-progress.md << 'EOF'
 EOF
 ```
 
-**更新 quick-config.json：**
+**更新 `.vibeflow/state.json`：**
 ```bash
-cat > .vibeflow/quick-config.json << 'EOF'
+cat > .vibeflow/state.json << 'EOF'
 {
   "mode": "quick",
-  "created_at": "DATE",
-  "scope": "MINIMAL",
-  "design_doc": "docs/quick-design.md",
-  "build_artifacts": "ready"
+  "current_phase": "build-work",
+  "checkpoints": {
+    "quick_ready": true
+  }
 }
 EOF
 ```
 
 ### 3.2 功能实现
 
-根据 `docs/quick-design.md` 直接实现：
+根据 `docs/changes/<change-id>/design.md` 直接实现：
 
 1. 按设计文档实现改动
 2. 编写基本测试
@@ -261,7 +261,7 @@ cat > .vibeflow/phase-history.json << 'EOF'
     "completed_at": "DATE"
   },
   {
-    "phase": "quick-design",
+    "phase": "quick",
     "completed_at": "DATE"
   },
   {
@@ -380,6 +380,6 @@ EOF
 ## 硬规则
 
 1. **Eligibility 诚实**：如果改动涉及重要系统，强制使用 Full Mode
-2. **最小化设计不可跳过**：即使 Quick Mode 也必须有 `docs/quick-design.md`
+2. **最小化设计不可跳过**：即使 Quick Mode 也必须有 `docs/changes/<change-id>/design.md`
 3. **Review 简化但不全跳过**：安全和功能正确性必须检查
 4. **产出同步**：所有产物必须写入文件，不留在记忆中

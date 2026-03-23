@@ -57,10 +57,10 @@ flowchart TD
     end
 
     subgraph State[Project State]
-        S1[.vibeflow/*]
-        S2[docs/plans/*]
+        S1[.vibeflow/state + guides + logs]
+        S2[docs/changes/*]
         S3[feature-list.json]
-        S4[task-progress.md]
+        S4[phase-history.json]
         S5[RELEASE_NOTES.md]
     end
 
@@ -119,8 +119,8 @@ graph LR
     Skills[skills/vibeflow-*]
     Target[Target Project]
     State[.vibeflow/*]
-    Plans[docs/plans/*]
-    BuildFiles[feature-list.json + task-progress.md]
+    Plans[docs/changes/*]
+    BuildFiles[feature-list.json + .vibeflow/logs/session-log.md]
     Release[RELEASE_NOTES.md]
     Validation[validation/sample-priority-api]
 
@@ -171,7 +171,7 @@ sequenceDiagram
     Phase-->>Router: think / plan / build / review / test / ship / reflect / done
 
     alt Think phase
-        Router->>Project: Write .vibeflow/think-output.md
+        Router->>Project: Write docs/changes/<change-id>/context.md
         Router->>Template: Generate workflow.yaml
         Template->>Project: Write .vibeflow/workflow.yaml
         Router->>WorkCfg: Derive work-config.json
@@ -179,8 +179,8 @@ sequenceDiagram
     end
 
     alt Plan and build phases
-        Router->>Project: Produce docs/plans/* and feature inventory
-        Router->>Project: Update feature-list.json and task-progress.md
+        Router->>Project: Produce docs/changes/<change-id>/* and feature inventory
+        Router->>Project: Update feature-list.json and .vibeflow/logs/session-log.md
     end
 
     alt Verification and release phases
@@ -227,7 +227,7 @@ Core skills:
 - `vibeflow-think`
 
 Plan/build/test/release skills:
-- `vibeflow-plan-review`
+- `vibeflow-plan`
 - `vibeflow-requirements`
 - `vibeflow-ucd`
 - `vibeflow-design`
@@ -298,23 +298,27 @@ Current validation project:
 Each target project stores runtime state under `.vibeflow/`.
 
 Primary state files:
-- `.vibeflow/think-output.md`
+- `.vibeflow/state.json`
 - `.vibeflow/workflow.yaml`
 - `.vibeflow/work-config.json`
-- `.vibeflow/plan-review.md`
-- `.vibeflow/review-report.md`
-- `.vibeflow/qa-report.md`
-- `.vibeflow/retro-YYYY-MM-DD.md`
-- `.vibeflow/increment-request.json`
+- `.vibeflow/guides/build.md`
+- `.vibeflow/guides/services.md`
+- `.vibeflow/logs/session-log.md`
+- `.vibeflow/logs/retro-YYYY-MM-DD.md`
+- `.vibeflow/increments/queue.json`
 
 Project delivery artifacts remain in conventional paths:
-- `docs/plans/*-srs.md`
-- `docs/plans/*-ucd.md`
-- `docs/plans/*-design.md`
-- `docs/plans/*-st-report.md`
+- `docs/changes/<change-id>/context.md`
+- `docs/changes/<change-id>/proposal.md`
+- `docs/changes/<change-id>/requirements.md`
+- `docs/changes/<change-id>/ucd.md`
+- `docs/changes/<change-id>/design.md`
+- `docs/changes/<change-id>/design-review.md`
+- `docs/changes/<change-id>/verification/review.md`
+- `docs/changes/<change-id>/verification/system-test.md`
+- `docs/changes/<change-id>/verification/qa.md`
 - `docs/test-cases/feature-*.md`
 - `feature-list.json`
-- `task-progress.md`
 - `RELEASE_NOTES.md`
 
 ## 8. Routing Architecture
@@ -333,19 +337,18 @@ Output phases:
 1. `increment`
 2. `think`
 3. `template-selection`
-4. `plan-review`
+4. `plan`
 5. `requirements`
-6. `ucd`
-7. `design`
-8. `build-init`
-9. `build-config`
-10. `build-work`
-11. `review`
-12. `test-system`
-13. `test-qa`
-14. `ship`
-15. `reflect`
-16. `done`
+6. `design`
+7. `build-init`
+8. `build-config`
+9. `build-work`
+10. `review`
+11. `test-system`
+12. `test-qa`
+13. `ship`
+14. `reflect`
+15. `done`
 
 ### 8.1 Detection Strategy
 

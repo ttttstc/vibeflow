@@ -13,8 +13,8 @@ description: "设计文档存在但 feature-list.json 尚未创建时使用 — 
 
 | 文档 | 位置 | 提供 |
 |------|------|------|
-| **SRS** | `docs/plans/*-srs.md` | FR-xxx、NFR-xxx、CON-xxx、ASM-xxx、IFR-xxx、术语表、用户画像、验收标准 |
-| **设计** | `docs/plans/*-design.md` | 技术栈、架构、数据模型、API 设计、测试策略 |
+| **需求** | `docs/changes/<change-id>/requirements.md` | FR-xxx、NFR-xxx、CON-xxx、ASM-xxx、IFR-xxx、术语表、用户画像、验收标准 |
+| **设计** | `docs/changes/<change-id>/design.md` | 技术栈、架构、数据模型、API 设计、测试策略 |
 | **工作流** | `.vibeflow/workflow.yaml` | 模板配置、质量门禁阈值 |
 
 ## 检查清单
@@ -22,8 +22,9 @@ description: "设计文档存在但 feature-list.json 尚未创建时使用 — 
 按顺序完成以下步骤：
 
 ### 1. 读取审批文档
-- SRS：`docs/plans/*-srs.md` — 需求、约束、假设、NFR
-- 设计：`docs/plans/*-design.md` — 技术栈、架构决策
+- 先运行 `python scripts/get-vibeflow-paths.py --json`
+- 需求：`docs/changes/<change-id>/requirements.md` — 需求、约束、假设、NFR
+- 设计：`docs/changes/<change-id>/design.md` — 技术栈、架构决策
 - 工作流：`.vibeflow/workflow.yaml` — 质量阈值和启用的步骤
 
 ### 2. 搭建项目骨架
@@ -113,17 +114,17 @@ description: "设计文档存在但 feature-list.json 尚未创建时使用 — 
 ```
 将 `.env` 加入 `.gitignore`。
 
-### 8. 生成 vibeflow-guide.md
-创建项目专属的构建会话指南，放在项目根目录：
+### 8. 生成 build.md
+创建项目专属的构建会话指南，放在 `.vibeflow/guides/build.md`：
 
 必须包含的章节：
 - **环境命令** — 环境激活、测试执行、覆盖率、变异测试的具体命令
 - **构建流程** — Orient -> Bootstrap -> Config Gate -> TDD -> Quality -> Feature ST -> Review -> Persist
-- **服务命令**（仅当项目有服务进程时）— 引用 env-guide.md
+- **服务命令**（仅当项目有服务进程时）— 引用 `.vibeflow/guides/services.md`
 - **关键规则** — 一次一个功能、严格步骤顺序、不跳过子步骤
 
-### 9. 生成 env-guide.md（如项目有服务进程）
-在项目根目录创建服务生命周期指南：
+### 9. 生成 services.md（如项目有服务进程）
+在 `.vibeflow/guides/services.md` 创建服务生命周期指南：
 
 - 服务表格（名称、端口、启动命令、停止命令、健康检查 URL）
 - 启动所有服务（含日志输出捕获、PID 提取）
@@ -141,7 +142,7 @@ description: "设计文档存在但 feature-list.json 尚未创建时使用 — 
 - 克隆后立即可执行
 
 ### 11. 生成辅助文件
-- `task-progress.md` — 含 `## Current State` 头部（0/N 功能通过）
+- `.vibeflow/logs/session-log.md` — 含 `## Current State` 头部（0/N 功能通过）
 - `RELEASE_NOTES.md` — Keep a Changelog 格式
 
 ### 12. 验证
@@ -164,16 +165,16 @@ python scripts/new-vibeflow-work-config.py --project-root .
 | 文件 | 用途 |
 |------|------|
 | `feature-list.json` | 带状态的结构化任务清单 |
-| `task-progress.md` | 逐会话进度日志 |
+| `.vibeflow/logs/session-log.md` | 逐会话进度日志 |
 | `RELEASE_NOTES.md` | 活跃的发布说明 |
-| `vibeflow-guide.md` | 项目专属构建指南 |
-| `env-guide.md` | 服务生命周期命令（如适用） |
+| `.vibeflow/guides/build.md` | 项目专属构建指南 |
+| `.vibeflow/guides/services.md` | 服务生命周期命令（如适用） |
 | `init.sh` / `init.ps1` | 环境引导脚本 |
 | `.env.example` | 必需环境配置模板 |
 
 ## 集成
 
 **调用者：** vibeflow-router 或 vibeflow-design（步骤 6）
-**读取：** `docs/plans/*-srs.md` + `docs/plans/*-design.md` + `.vibeflow/workflow.yaml`
+**读取：** `docs/changes/<change-id>/requirements.md` + `docs/changes/<change-id>/design.md` + `.vibeflow/workflow.yaml`
 **链接到：** vibeflow-build-work（初始化完成后）
 **产出：** feature-list.json + 上述所有工件

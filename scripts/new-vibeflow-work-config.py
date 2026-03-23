@@ -2,7 +2,15 @@
 import argparse
 import json
 import re
+import sys
 from pathlib import Path
+
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+
+from vibeflow_paths import ensure_state, save_state, set_checkpoint  # noqa: E402
 
 
 def step_enabled(content: str, step_id: str) -> bool:
@@ -56,6 +64,13 @@ def main():
     state_root.mkdir(parents=True, exist_ok=True)
     path = state_root / 'work-config.json'
     path.write_text(json.dumps(config, indent=2), encoding='utf-8')
+
+    state = ensure_state(project_root)
+    set_checkpoint(state, 'build_config', True, phase='build-config')
+    if (project_root / 'feature-list.json').exists():
+        set_checkpoint(state, 'build_init', True)
+    save_state(project_root, state)
+
     print(path)
 
 

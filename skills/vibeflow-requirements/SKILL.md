@@ -25,7 +25,7 @@ description: "SRS 文档不存在且无设计文档时使用 — 通过结构化
 4. **编写需求** — 应用 EARS 模板，分配 ID，编写验收标准
 5. **验证 SRS** — 检查 8 项质量属性，检测反模式，验证可测试性
 6. **展示并审批 SRS** — 非简单项目逐节审批
-7. **保存 SRS 文档** — `docs/plans/YYYY-MM-DD-<topic>-srs.md` 并提交
+7. **保存需求文档** — `docs/changes/<change-id>/requirements.md` 并提交
 8. **过渡到设计** — 调用 `vibeflow-design`（含 UCD 内联，如需）
 
 **终止状态是进入 vibeflow-design。** 不要调用其他阶段。
@@ -33,7 +33,7 @@ description: "SRS 文档不存在且无设计文档时使用 — 通过结构化
 ## 步骤 1：探索上下文
 
 1. 通读用户提供的需求文档 / 想法描述
-2. 阅读 `.vibeflow/think-output.md` 获取问题定义和边界
+2. 运行 `python scripts/get-vibeflow-paths.py --json`，读取 `docs/changes/<change-id>/context.md` 获取问题定义和边界
 3. 阅读 `.vibeflow/workflow.yaml` 了解所选模板的严格度级别
 4. 探索已有代码 / 项目将要构建或集成的仓库
 5. 识别初始约束：技术栈、平台、集成、法规
@@ -188,7 +188,7 @@ description: "SRS 文档不存在且无设计文档时使用 — 通过结构化
 
 ## 步骤 7：保存 SRS 文档
 
-将审批通过的 SRS 保存到 `docs/plans/YYYY-MM-DD-<topic>-srs.md`。
+将审批通过的 SRS 保存到 `docs/changes/<change-id>/requirements.md`。
 
 ### 模板使用
 
@@ -234,4 +234,4 @@ SRS 文档保存并提交后：
 
 **调用者：** vibeflow-router（requirements 阶段）
 **链接到：** vibeflow-design（SRS 审批后）
-**产出：** `docs/plans/YYYY-MM-DD-<topic>-srs.md`
+**产出：** `docs/changes/<change-id>/requirements.md`

@@ -81,7 +81,7 @@
 ### 决策流程图
 
 ```
-START: 阅读think-output.md
+START: 阅读 context.md
   |
   v
 速度是首要考虑吗？
@@ -115,7 +115,7 @@ START: 阅读think-output.md
 
 在最终确定模板推荐之前，与用户确认：
 
-1. "推荐的是[recommended template]正确吗？您说这是一个[from think-output的简要描述]。"
+1. "推荐的是[recommended template]正确吗？您说这是一个[from context.md 的简要描述]。"
 
 2. "这些因素中有改变决定的吗？"（展示关键决策因素）
 

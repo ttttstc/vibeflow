@@ -49,10 +49,12 @@ VibeFlow 对外暴露两种开发模式：
 ### 步骤2：注入会话上下文
 
 读取以下文件并格式化摘要：
-1. **`.vibeflow/phase-history.json`** — 已完成阶段历史
-2. **`.vibeflow/work-config.json`** — 当前工作配置
-3. **`.vibeflow/feature-list.json`** — 功能清单和状态
-4. **`VIBEFLOW-DESIGN.md`**（如存在）— 项目设计文档
+1. **`.vibeflow/state.json`** — 当前阶段、模式、活跃工作包
+2. **`.vibeflow/phase-history.json`** — 已完成阶段历史
+3. **`.vibeflow/work-config.json`** — 当前工作配置
+4. **`feature-list.json`** — 功能清单和状态
+5. 运行 **`python scripts/get-vibeflow-paths.py --json`** — 解析当前工作包产物路径
+6. **`VIBEFLOW-DESIGN.md`**（如存在）— 项目设计文档
 
 ```
 === Session Context ===
@@ -66,7 +68,7 @@ Pending: <from work-config.json>
 ### 步骤3：检查增量
 
 ```bash
-cat .vibeflow/increment-queue.txt 2>/dev/null || echo "No pending increments"
+cat .vibeflow/increments/queue.json 2>/dev/null || echo "No pending increments"
 ```
 如有待处理增量，先处理。
 
@@ -82,53 +84,53 @@ cat .vibeflow/increment-queue.txt 2>/dev/null || echo "No pending increments"
 
 | 阶段 | Skill / 脚本 | 关键产出物 |
 |------|-------------|-----------|
-| `quick` | `skills/vibeflow-quick/SKILL.md` | `.vibeflow/quick-config.json` + `docs/quick-design.md` |
+| `quick` | `skills/vibeflow-quick/SKILL.md` | `.vibeflow/state.json`（`mode=quick`）+ `docs/changes/<change-id>/design.md` |
 | `increment` | `scripts/increment-handler.py` | 更新 feature-list.json |
-| `think` | `skills/vibeflow-think/SKILL.md` | `.vibeflow/think-output.md` |
+| `think` | `skills/vibeflow-think/SKILL.md` | `docs/changes/<change-id>/context.md` |
 | `template-selection` | `scripts/new-vibeflow-config.py` + `scripts/new-vibeflow-work-config.py` | `.vibeflow/workflow.yaml` |
-| `plan` | `skills/vibeflow-plan/SKILL.md` | `.vibeflow/plan.md` + `.vibeflow/plan-value-review.md` |
-| `requirements` | `skills/vibeflow-requirements/SKILL.md` | `docs/plans/*-srs.md` |
-| `design` | `skills/vibeflow-design/SKILL.md` | `docs/plans/*-design.md`（含 UCD 内联）+ `.vibeflow/plan-eng-review.md` + `.vibeflow/plan-design-review.md` |
+| `plan` | `skills/vibeflow-plan/SKILL.md` | `docs/changes/<change-id>/proposal.md` |
+| `requirements` | `skills/vibeflow-requirements/SKILL.md` | `docs/changes/<change-id>/requirements.md` |
+| `design` | `skills/vibeflow-design/SKILL.md` | `docs/changes/<change-id>/design.md` + `docs/changes/<change-id>/design-review.md` |
 | `build-init` | `skills/vibeflow-build-init/SKILL.md` | 项目脚手架 |
 | `build-config` | `scripts/new-vibeflow-work-config.py` | `.vibeflow/work-config.json` |
 | `build-work` | `skills/vibeflow-build-work/SKILL.md` | 已实现功能 |
-| `review` | `skills/vibeflow-review/SKILL.md` | `.vibeflow/review-report.md` |
-| `test-system` | `skills/vibeflow-test-system/SKILL.md` | `.vibeflow/test-results/` |
-| `test-qa` | `skills/vibeflow-test-qa/SKILL.md` | `.vibeflow/qa-report.md` |
+| `review` | `skills/vibeflow-review/SKILL.md` | `docs/changes/<change-id>/verification/review.md` |
+| `test-system` | `skills/vibeflow-test-system/SKILL.md` | `docs/changes/<change-id>/verification/system-test.md` |
+| `test-qa` | `skills/vibeflow-test-qa/SKILL.md` | `docs/changes/<change-id>/verification/qa.md` |
 | `ship` | `skills/vibeflow-ship/SKILL.md` | `RELEASE_NOTES.md` |
-| `reflect` | `skills/vibeflow-reflect/SKILL.md` | `.vibeflow/retro-*.md` |
+| `reflect` | `skills/vibeflow-reflect/SKILL.md` | `.vibeflow/logs/retro-*.md` |
 | `done` | — | 完成摘要 |
 
 **详细阶段说明**（完整文档见 `references/`）：
 
 ### 阶段：`increment`
 **条件**：有待处理的增量请求。
-**操作**：读取 `scripts/increment-handler.py` 获取协议，按 FIFO 处理每个增量，更新 feature-list.json 并记录到 phase-history.json。
+**操作**：读取 `scripts/increment-handler.py` 获取协议，按 FIFO 处理每个增量，更新 feature-list.json，并同步 `.vibeflow/increments/history.json` 与 `.vibeflow/phase-history.json`。
 
 ### 阶段：`think`
 **条件**：需要探索、问题分解或初始概念分析。
-**操作**：使用 `skills/vibeflow-think/SKILL.md`，输出到 `.vibeflow/think-output.md`。
+**操作**：使用 `skills/vibeflow-think/SKILL.md`，输出到 `docs/changes/<change-id>/context.md`，并同步 `.vibeflow/state.json`。
 
 ### 阶段：`template-selection`
 **条件**：Think 阶段完成，需选择模板。
 **操作**：
-1. 阅读 `.vibeflow/think-output.md` 和 `feature-list.json`
+1. 阅读 `docs/changes/<change-id>/context.md` 和 `feature-list.json`
 2. 参考 `references/template-guide.md` 推荐模板
 3. 用户确认后运行：`python scripts/new-vibeflow-config.py --template <template>`，然后 `scripts/new-vibeflow-work-config.py`
 
 ### 阶段：`plan`
 **条件**：模板已选定，需进行价值评估。
-**操作**：使用 `skills/vibeflow-plan/SKILL.md`，执行 CEO 价值评估（调用 `vibeflow-plan-value-review`），产出 `.vibeflow/plan-value-review.md`。
-价值审查失败则项目终止；通过后写入 `.vibeflow/plan.md`，进入 requirements。
+**操作**：使用 `skills/vibeflow-plan/SKILL.md`，执行 CEO 价值评估（调用 `vibeflow-plan-value-review`），将结论收敛到 `docs/changes/<change-id>/proposal.md`。
+价值审查失败则项目终止；通过后更新 `.vibeflow/state.json`，进入 requirements。
 **注意**：eng review 和 design review 在 design 阶段末尾执行（有具体 design doc 可审时才做评审）。
 
 ### 阶段：`requirements`
 **条件**：计划已批准，开始需求收集。
-**操作**：使用 `skills/vibeflow-requirements/SKILL.md`，输出 `docs/plans/*-srs.md`，更新 feature-list.json。
+**操作**：使用 `skills/vibeflow-requirements/SKILL.md`，输出 `docs/changes/<change-id>/requirements.md`，更新 feature-list.json。
 
 ### 阶段：`design`
 **条件**：需求已完成，开始技术设计。
-**操作**：使用 `skills/vibeflow-design/SKILL.md`，输出 `docs/plans/*-design.md`。含内置步骤：UCD（如需）→ 用户审批 → AI eng review → AI design review → scope decision。
+**操作**：使用 `skills/vibeflow-design/SKILL.md`，输出 `docs/changes/<change-id>/design.md`。含内置步骤：UCD（如需）→ 用户审批 → AI eng review → AI design review → scope decision，并把评审结论汇总到 `docs/changes/<change-id>/design-review.md`。
 **说明**：UCD（视觉风格指南）已并入 design 阶段。如 SRS 有 UI 需求且无现有 UCD 文档，design 阶段内生成；无 UI 需求时跳过。
 
 ### 阶段：`build-init`
@@ -145,15 +147,15 @@ cat .vibeflow/increment-queue.txt 2>/dev/null || echo "No pending increments"
 
 ### 阶段：`review`
 **条件**：功能实现完成，需代码审查。
-**操作**：使用 `skills/vibeflow-review/SKILL.md`，输出 `.vibeflow/review-report.md`。审查失败则路由回 `build-work`。
+**操作**：使用 `skills/vibeflow-review/SKILL.md`，输出 `docs/changes/<change-id>/verification/review.md`。审查失败则路由回 `build-work`。
 
 ### 阶段：`test-system`
 **条件**：审查通过，需系统测试。
-**操作**：使用 `skills/vibeflow-test-system/SKILL.md`，输出 `.vibeflow/test-results/`。
+**操作**：使用 `skills/vibeflow-test-system/SKILL.md`，输出 `docs/changes/<change-id>/verification/system-test.md`。
 
 ### 阶段：`test-qa`
 **条件**：系统测试通过，需 QA 验证。
-**操作**：使用 `skills/vibeflow-test-qa/SKILL.md`，输出 `.vibeflow/qa-report.md`。
+**操作**：使用 `skills/vibeflow-test-qa/SKILL.md`，输出 `docs/changes/<change-id>/verification/qa.md`。
 
 ### 阶段：`ship`
 **条件**：所有测试通过，部署就绪。
@@ -161,7 +163,7 @@ cat .vibeflow/increment-queue.txt 2>/dev/null || echo "No pending increments"
 
 ### 阶段：`reflect`
 **条件**：项目交付完成，需回顾。
-**操作**：使用 `skills/vibeflow-reflect/SKILL.md`，输出 `.vibeflow/retro-*.md`。
+**操作**：使用 `skills/vibeflow-reflect/SKILL.md`，输出 `.vibeflow/logs/retro-*.md`。
 
 ### 阶段：`done`
 **条件**：所有阶段完成。

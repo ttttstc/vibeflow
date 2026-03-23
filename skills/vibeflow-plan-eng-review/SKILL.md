@@ -151,7 +151,11 @@ When evaluating architecture, think "boring by default." When reviewing tests, t
 Check for existing design documents:
 ```bash
 BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null | tr '/' '-' || echo 'no-branch')
-DESIGN=$(ls -t docs/plans/*-$BRANCH-design-*.md 2>/dev/null | head -1)
+DESIGN=""
+if [ -f .vibeflow/state.json ]; then
+  DESIGN=$(python scripts/get-vibeflow-paths.py --json | python -c "import json,sys; print(json.load(sys.stdin)['artifacts']['design'])")
+fi
+[ -z "$DESIGN" ] && DESIGN=$(ls -t docs/plans/*-$BRANCH-design-*.md 2>/dev/null | head -1)
 [ -z "$DESIGN" ] && DESIGN=$(ls -t docs/plans/*-design-*.md 2>/dev/null | head -1)
 [ -n "$DESIGN" ] && echo "Design doc found: $DESIGN" || echo "No design doc found"
 ```
@@ -315,9 +319,9 @@ Use AskUserQuestion with only the applicable options:
 ## Unresolved decisions
 If the user does not respond to an AskUserQuestion or interrupts to move on, note which decisions were left unresolved. At the end of the review, list these as "Unresolved decisions that may bite you later" — never silently default to an option.
 
-## 输出到 .vibeflow/plan-eng-review.md
+## 输出到 `docs/changes/<change-id>/design-review.md`
 
-完成所有评审后，将评审结论写入 `.vibeflow/plan-eng-review.md`：
+完成所有评审后，将评审结论写入 `docs/changes/<change-id>/design-review.md` 的 `## Engineering Review` 小节：
 
 ```markdown
 # Plan Engineering Review — 执行层面审查结论
@@ -368,7 +372,7 @@ If the user does not respond to an AskUserQuestion or interrupts to move on, not
 ## 集成
 
 **调用者：** vibeflow-design（design 阶段 Step 5.1，用户审批之后执行）
-**依赖：** `docs/plans/*-design.md`（设计文档）、`.vibeflow/workflow.yaml`、`.vibeflow/think-output.md`
-**产出：** `.vibeflow/plan-eng-review.md`
+**依赖：** `docs/changes/<change-id>/design.md`（设计文档）、`.vibeflow/workflow.yaml`、`docs/changes/<change-id>/context.md`
+**产出：** `docs/changes/<change-id>/design-review.md`（Engineering Review 小节）
 **Gate：** 评审中发现的严重问题（critical）需要处理后才能进入 scope decision
 **链接到：** vibeflow-plan-design-review（design 阶段 Step 5.2） → scope decision

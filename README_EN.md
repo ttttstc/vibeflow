@@ -58,7 +58,7 @@ curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/install.sh | 
 
 **Requirements-Driven, Not Code-Driven.** Write the SRS first, then the technical design, then the code. Every feature implementation traces back to a specific requirement.
 
-**Files as State.** All workflow state persists in repository files (`.vibeflow/`, `docs/plans/`). Close the session, switch machines, even switch AIs — project state is fully preserved.
+**Files as State.** All workflow state persists in repository files (`.vibeflow/`, `docs/changes/`, `feature-list.json`). Close the session, switch machines, even switch AIs — project state is fully preserved.
 
 **Deterministic Routing.** `get-vibeflow-phase.py` computes the current phase by checking file existence. 16 phase states, strict elif chain, zero ambiguity.
 
@@ -104,7 +104,7 @@ Build-init ── Build-config ── Build-work
 
 **Goal**: Define the problem, understand boundaries, scan opportunities, select workflow template.
 
-- Produces `.vibeflow/think-output.md`
+- Produces `docs/changes/<change-id>/context.md`
 - Optional: Run `vibeflow-office-hours` first to validate if the idea is worth pursuing (YC Office Hours style)
 - Recommends and confirms template (prototype / web-standard / api-standard / enterprise)
 
@@ -120,7 +120,7 @@ Build-init ── Build-config ── Build-work
 
 **Goal**: Write Software Requirements Specification (SRS), aligned with ISO/IEC/IEEE 29148.
 
-- Produces `docs/plans/*-srs.md`
+- Produces `docs/changes/<change-id>/requirements.md`
 - Confirmed with user line by line; each requirement must be testable
 
 ### Design
@@ -136,16 +136,16 @@ This is the most complex phase in the framework:
 | 2. Explore Context | Built-in | Context document |
 | 3. Propose Approaches | Built-in | Approach comparison |
 | 4. User Section-by-Section Approval | Built-in | User sign-off |
-| 5. **AI Deep Review** | `vibeflow-plan-eng-review` + `vibeflow-plan-design-review` | `.vibeflow/plan-eng-review.md` + `.vibeflow/plan-design-review.md` |
+| 5. **AI Deep Review** | `vibeflow-plan-eng-review` + `vibeflow-plan-design-review` | `docs/changes/<change-id>/design-review.md` |
 | 6. **Scope Decision** | Built-in | Expand / Hold / Reduce |
-| 7. Write Design Document | Built-in | `docs/plans/*-design.md` |
+| 7. Write Design Document | Built-in | `docs/changes/<change-id>/design.md` |
 | 8. Transition to Initialization | Built-in | — |
 
 ### Build-init
 
 **Goal**: Initialize build artifacts.
 
-- `feature-list.json`, `task-progress.md`, `RELEASE_NOTES.md`
+- `feature-list.json`, `.vibeflow/logs/session-log.md`, `RELEASE_NOTES.md`
 - Generates `.vibeflow/work-config.json` (quality thresholds)
 
 ### Build-config
@@ -190,7 +190,7 @@ Pick Feature → TDD Red-Green-Refactor → Quality Gates
 
 **Goal**: Browser-driven QA verification (UI projects only).
 
-- Only runs when template requires UI and `qa-report.md` doesn't exist
+- Only runs when the workflow requires UI QA and `docs/changes/<change-id>/verification/qa.md` does not exist
 
 ### Ship
 
@@ -203,7 +203,7 @@ Pick Feature → TDD Red-Green-Refactor → Quality Gates
 
 **Goal**: Review this iteration and produce improvement suggestions for the next cycle.
 
-- Produces `.vibeflow/retro-YYYY-MM-DD.md`
+- Produces `.vibeflow/logs/retro-YYYY-MM-DD.md`
 - Optional (`reflect_required()` detection)
 
 ---
@@ -351,26 +351,25 @@ Four static templates control workflow strictness:
 
 | File | Purpose |
 |---|---|
-| `think-output.md` | Think output: problem statement, boundaries, template recommendation |
+| `state.json` | Central workflow state: phase, mode, active change package |
 | `workflow.yaml` | Active workflow config (copied from template) |
 | `work-config.json` | Build config: enabled steps, quality thresholds |
 | `plan-value-review.md` | Plan output: CEO value review conclusion |
-| `plan-eng-review.md` | Design output: engineering review conclusion |
-| `plan-design-review.md` | Design output: design review conclusion |
-| `review-report.md` | Global code review report |
-| `qa-report.md` | QA test report |
+| `design-review.md` | Design output: engineering review + design review conclusions |
+| `verification/review.md` | Global code review report |
+| `verification/qa.md` | QA test report |
 | `retro-YYYY-MM-DD.md` | Iteration retrospective |
 
 ### Delivery Artifacts
 
 | File | Purpose |
 |---|---|
-| `docs/plans/*-srs.md` | Software Requirements Specification |
-| `docs/plans/*-design.md` | Technical design document (with inline UCD chapter) |
-| `docs/plans/*-st-report.md` | System test report |
+| `docs/changes/<change-id>/requirements.md` | Software Requirements Specification |
+| `docs/changes/<change-id>/design.md` | Technical design document (with UCD-related content) |
+| `docs/changes/<change-id>/verification/system-test.md` | System test report |
 | `docs/test-cases/feature-*.md` | Feature test case documents |
 | `feature-list.json` | Feature inventory (single source of truth during Build) |
-| `task-progress.md` | Task progress log |
+| `.vibeflow/logs/session-log.md` | Task progress log |
 | `RELEASE_NOTES.md` | Release notes |
 
 ---

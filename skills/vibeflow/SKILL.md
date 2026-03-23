@@ -45,8 +45,8 @@ VibeFlow是一个严谨的软件开发框架，强调在构建之前思考、在
 
 | 阶段 | 目的 | 关键产出物 |
 |------|------|-----------|
-| 1. Think（思考） | 定义问题、边界和机会 | `.vibeflow/think-output.md` |
-| 2. Plan（计划） | 选择模板、界定功能范围、获得批准 | `docs/plans/*-srs.md`、`*-design.md` |
+| 1. Think（思考） | 定义问题、边界和机会 | `docs/changes/<change-id>/context.md` |
+| 2. Plan（计划） | 选择模板、界定功能范围、获得批准 | `docs/changes/<change-id>/proposal.md`、`requirements.md`、`design.md` |
 | 3. Build（构建） | 通过TDD、质量关卡、规范审查实现功能 | `feature-list.json` |
 | 4. Review（审查） | 跨功能的整体变更分析 | 审查报告 |
 | 5. Test（测试） | 系统测试和QA验证 | 测试报告 |
@@ -162,7 +162,7 @@ cat feature-list.json
 
 **何时进入**：项目开始或面对不清晰的问题时。
 
-**关键产出物**：`.vibeflow/think-output.md`
+**关键产出物**：`docs/changes/<change-id>/context.md`
 
 **使用的技能**：
 - `vibeflow-think`
@@ -178,8 +178,8 @@ cat feature-list.json
 **何时进入**：Think阶段完成后。
 
 **关键产出物**：
-- `docs/plans/*-srs.md`（需求）
-- `docs/plans/*-design.md`（技术设计，含 UI/UX 章节）
+- `docs/changes/<change-id>/requirements.md`（需求）
+- `docs/changes/<change-id>/design.md`（技术设计，含 UI/UX 章节）
 
 **使用的技能**：
 - `vibeflow-plan-review` - 执行范围审查
@@ -336,7 +336,7 @@ VibeFlow支持四种工作流程模板。根据项目范围、团队规模和治
 
 **问题**：不定义问题就直接跳入代码会导致范围蔓延、优先级不清和返工。
 
-**预防**：在任何实现之前始终完成Think阶段。`.vibeflow/think-output.md`产物必须存在并经过审查。
+**预防**：在任何实现之前始终完成 Think 阶段。`docs/changes/<change-id>/context.md` 产物必须存在并经过审查。
 
 ---
 

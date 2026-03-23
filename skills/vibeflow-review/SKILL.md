@@ -34,8 +34,8 @@ Skill: vibeflow-guard
 
 ### 1. 准备
 - 读取 `feature-list.json` — 确认所有活跃功能为 passing
-- 读取 `task-progress.md` — 会话历史
-- 读取设计文档 — 架构和全局约束
+- 读取 `.vibeflow/logs/session-log.md` — 会话历史
+- 运行 `python scripts/get-vibeflow-paths.py --json`，读取设计文档 — 架构和全局约束
 - 运行 `git diff main...HEAD`（或对应基线分支）获取完整变更
 
 ### 2-4. 三维度并行审查
@@ -140,7 +140,7 @@ Skill: vibeflow-guard
 | # | 检查项 | 描述 |
 |---|--------|------|
 | C1 | **RELEASE_NOTES.md 完整** | 每个通过的功能都有对应变更记录 |
-| C2 | **task-progress.md 一致** | Current State 与 feature-list.json 功能计数一致 |
+| C2 | **session-log 一致** | Current State 与 feature-list.json 功能计数一致 |
 | C3 | **文档同步** | README / 使用说明反映当前功能集 |
 | C4 | **示例覆盖** | examples/ 目录覆盖关键功能用法 |
 | C5 | **文档陈旧性** | 代码变更涉及的 .md 文档是否同步更新 |
@@ -158,7 +158,7 @@ Skill: vibeflow-guard
 
 ### 5. 生成审查报告
 
-保存到 `.vibeflow/review-report.md`：
+保存到 `docs/changes/<change-id>/verification/review.md`：
 
 ```markdown
 # 全局变更审查报告
@@ -210,5 +210,5 @@ Skill: vibeflow-guard
 
 **调用者：** vibeflow-router 或 vibeflow-build-work（步骤 13 当无失败功能时）
 **依赖：** 所有活跃功能 passing
-**产出：** `.vibeflow/review-report.md`
+**产出：** `docs/changes/<change-id>/verification/review.md`
 **链接到：** vibeflow-test-system

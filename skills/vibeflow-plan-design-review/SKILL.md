@@ -136,7 +136,7 @@ Then read:
 - The plan file (current plan or branch diff)
 - CLAUDE.md — project conventions
 - DESIGN.md — if it exists, ALL design decisions calibrate against it
-- UCD file — if it exists (docs/plans/*-ucd.md)
+- UCD file — if it exists (`docs/changes/<change-id>/ucd.md`)
 - TODOS.md — any design-related TODOs this plan touches
 
 Map:
@@ -292,9 +292,9 @@ Then present options: **A)** Add to TODOS.md **B)** Skip — not valuable enough
 If all passes 8+: "Plan is design-complete."
 If any below 8: note what's unresolved and why (user chose to defer).
 
-## 输出到 .vibeflow/plan-design-review.md
+## 输出到 `docs/changes/<change-id>/design-review.md`
 
-完成所有评审后，将评审结论写入 `.vibeflow/plan-design-review.md`：
+完成所有评审后，将评审结论写入 `docs/changes/<change-id>/design-review.md` 的 `## Design Review` 小节：
 
 ```markdown
 # Plan Design Review — 设计师视角审查结论
@@ -337,7 +337,7 @@ If any below 8: note what's unresolved and why (user chose to defer).
 ## 集成
 
 **调用者：** vibeflow-design（design 阶段 Step 5.2，用户审批 + eng review 之后执行）
-**依赖：** `docs/plans/*-design.md`（设计文档）、`.vibeflow/workflow.yaml`、`.vibeflow/think-output.md`
-**产出：** `.vibeflow/plan-design-review.md`
+**依赖：** `docs/changes/<change-id>/design.md`（设计文档）、`.vibeflow/workflow.yaml`、`docs/changes/<change-id>/context.md`
+**产出：** `docs/changes/<change-id>/design-review.md`（Design Review 小节）
 **Gate：** 评审为设计建议性质，但发现的关键设计缺陷影响 scope decision
 **链接到：** scope decision（design 阶段 Step 6）

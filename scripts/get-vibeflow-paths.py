@@ -1,0 +1,49 @@
+#!/usr/bin/env python3
+import argparse
+import json
+from pathlib import Path
+
+from vibeflow_paths import load_state, path_contract
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--project-root", default=".")
+    parser.add_argument("--json", action="store_true", dest="as_json")
+    args = parser.parse_args()
+
+    project_root = Path(args.project_root).resolve()
+    state = load_state(project_root)
+    contract = path_contract(project_root, state)
+
+    result = {
+        "state": str(contract["state"]),
+        "workflow": str(contract["workflow"]),
+        "work_config": str(contract["work_config"]),
+        "feature_list": str(contract["feature_list"]),
+        "release_notes": str(contract["release_notes"]),
+        "phase_history": str(contract["phase_history"]),
+        "increment_queue": str(contract["increment_queue"]),
+        "increment_history": str(contract["increment_history"]),
+        "increment_requests_dir": str(contract["increment_requests_dir"]),
+        "session_log": str(contract["session_log"]),
+        "build_guide": str(contract["build_guide"]),
+        "services_guide": str(contract["services_guide"]),
+        "change_root": str(contract["change_root"]),
+        "artifacts": {k: str(v) for k, v in contract["artifacts"].items()},
+    }
+
+    if args.as_json:
+        print(json.dumps(result, indent=2, ensure_ascii=False))
+    else:
+        for key, value in result.items():
+            if isinstance(value, dict):
+                print(f"{key}:")
+                for subkey, subvalue in value.items():
+                    print(f"  {subkey}: {subvalue}")
+            else:
+                print(f"{key}: {value}")
+
+
+if __name__ == "__main__":
+    main()
