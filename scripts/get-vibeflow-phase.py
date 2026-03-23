@@ -105,8 +105,9 @@ def detect_phase(project_root: Path, verbose: bool = False) -> dict:
 
     if quick_config_path.exists() and not quick_design_path.exists():
         phase, reason = 'quick', 'docs/quick-design.md is missing.'
-    elif quick_config_path.exists() and quick_design_path.exists():
-        # Quick Mode: config + design exist → proceed to build-work (skip full Think/Plan/Requirements/Design)
+    elif quick_config_path.exists() and quick_design_path.exists() and not feature_list_path.exists():
+        # Quick Mode: config + design exist but build not started → build-work
+        # Once build-work creates feature-list.json, normal phase chain resumes
         phase, reason = 'build-work', 'Quick mode: quick-design complete, proceeding to build.'
     elif increment_path.exists():
         phase, reason = 'increment', '.vibeflow/increment-request.json exists.'

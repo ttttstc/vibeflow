@@ -172,21 +172,73 @@ description: Quick Mode for VibeFlow - fast development without formal design. U
 
 ## Step 3: Build
 
-### 3.1 初始化（如需要）
+### 3.1 初始化 build-work 需要的 artifacts
 
-如果 `.vibeflow/` 不存在：
+在开始实现之前，创建 build-work 期望的 artifacts：
+
+**创建目录结构：**
 ```bash
-mkdir -p .vibeflow
+mkdir -p .vibeflow docs/test-cases
 ```
 
-创建简化配置：
+**创建 feature-list.json：**
+从 `docs/quick-design.md` 提取功能列表：
+
+```bash
+cat > feature-list.json << 'EOF'
+{
+  "features": [
+    {
+      "id": "quick-feature-1",
+      "name": "Quick Mode Feature",
+      "status": "failing",
+      "priority": 1,
+      "verification_steps": ["实现功能", "运行测试", "验证通过"]
+    }
+  ],
+  "created_from": "quick-design.md",
+  "mode": "quick"
+}
+EOF
+```
+
+**创建 work-config.json：**
+```bash
+cat > .vibeflow/work-config.json << 'EOF'
+{
+  "mode": "quick",
+  "tdd": false,
+  "quality_gates": false,
+  "feature_st": true,
+  "spec_review": true,
+  "created_at": "DATE"
+}
+EOF
+```
+
+**创建 task-progress.md：**
+```bash
+cat > .vibeflow/task-progress.md << 'EOF'
+# Task Progress
+
+## Current State
+- Progress: 0/1 features
+- Current feature: None
+- Last completed: None
+
+## History
+EOF
+```
+
+**更新 quick-config.json：**
 ```bash
 cat > .vibeflow/quick-config.json << 'EOF'
 {
   "mode": "quick",
   "created_at": "DATE",
   "scope": "MINIMAL",
-  "design_doc": "docs/quick-design.md"
+  "design_doc": "docs/quick-design.md",
+  "build_artifacts": "ready"
 }
 EOF
 ```

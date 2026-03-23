@@ -270,10 +270,20 @@ Quality Gates 通过
 读取 `skills/vibeflow-spec-review/SKILL.md`，检查实现是否符合 SRS。
 
 ### Step 6: Persist
-1. Git commit（atomic commit，包含实现、测试、示例）
-2. 更新 `RELEASE_NOTES.md`
-3. 更新 `feature-list.json` 中该 feature 的 status 为 "passing"
-4. 更新 `task-progress.md` 的进度
+1. **不要直接 commit** — 并行模式下由 orchestrator 统一处理 git 操作
+2. 将实现结果写入 `.vibeflow/subagent-results/{feature_id}.json`：
+   ```json
+   {
+     "feature_id": "{id}",
+     "status": "passing" | "failing",
+     "implemented_files": ["file1.ts", "file2.ts"],
+     "summary": "{一句话总结}",
+     "error": "{失败原因，如有}"
+   }
+   ```
+3. 如实现完成但测试失败，status 仍为 "failing"
+
+**重要**：不要同时写入 `feature-list.json`、`task-progress.md`、`RELEASE_NOTES.md` 等共享文件，这些由 orchestrator 统一更新。
 
 ## 产出
 
@@ -305,14 +315,25 @@ RETRY: {是否可自动重试}
 ```markdown
 所有 Agent 完成后：
 
-1. 读取每个 Agent 返回的结果
+1. 读取 subagent 结果文件：
+   ls .vibeflow/subagent-results/*.json
 
-2. 更新 feature-list.json：
+2. 对于每个 PASS 的 feature：
+   a. git add {implemented_files}
+   b. git commit -m "feat({feature_id}): {summary}"
+   c. 获取 commit hash
+
+3. 更新 feature-list.json（统一操作，非并行）：
    - status = "passing"（如 PASS）
    - status = "failing" + last_error（如 FAIL）
    - completed_at = timestamp
+   - commit = hash（如 PASS）
 
-3. 生成汇总报告：
+4. 更新 task-progress.md（统一操作）
+
+5. 更新 RELEASE_NOTES.md（统一操作）
+
+6. 生成汇总报告：
    ```
    ═══════════════════════════════════
    Parallel Execution Results
@@ -327,7 +348,7 @@ RETRY: {是否可自动重试}
    ═══════════════════════════════════
    ```
 
-4. 如有失败：
+7. 如有失败：
    - 询问用户是否继续 Sequential 模式逐个修复
    - 或在下一个会话处理
 ```

@@ -81,7 +81,7 @@ function Install-Vibeflow {
 
         Write-Info "解压中..."
         Expand-Archive -Path $TempZip -DestinationPath $TempExtract -Force
-        $ExtractedRepo = Join-Path $TempExtract "vibeflow-feat-plan-value-review"
+        $ExtractedRepo = Join-Path $TempExtract "vibeflow-main"
 
         Move-Item -Path $ExtractedRepo -Destination $TargetDir -Force
         Write-Step "安装到: $TargetDir"
