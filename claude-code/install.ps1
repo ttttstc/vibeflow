@@ -17,6 +17,7 @@ $ErrorActionPreference = "Stop"
 
 $MarketplaceGitUrl = "https://github.com/ttttstc/vibeflow.git"
 $MarketplaceName = "vibeflow"
+$RepoName = "ttttstc/vibeflow"
 
 # =============================================================================
 # Paths
@@ -31,65 +32,54 @@ $KnownMarketplacesFile = Join-Path $ClaudePluginsDir "known_marketplaces.json"
 # Helper Functions
 # =============================================================================
 
-function Write-Info { param($Message) Write-Host "ℹ " -ForegroundColor Blue -NoNewline; Write-Host $Message }
-function Write-Success { param($Message) Write-Host "✓ " -ForegroundColor Green -NoNewline; Write-Host $Message }
-
-function Format-Json {
-    param([string]$json)
-    $indent = 0
-    $result = [System.Text.StringBuilder]::new()
-    $inString = $false
-    for ($i = 0; $i -lt $json.Length; $i++) {
-        $char = $json[$i]
-        switch ($char) {
-            '"'     { $inString = -not $inString; [void]$result.Append($char) }
-            '{'     { [void]$result.Append($char); if (-not $inString) { $indent++; [void]$result.Append("`n" + ('  ' * $indent)) } }
-            '}'     { if (-not $inString) { $indent--; [void]$result.Append("`n" + ('  ' * $indent)) }; [void]$result.Append($char) }
-            ','     { [void]$result.Append($char); if (-not $inString) { [void]$result.Append("`n" + ('  ' * $indent)) } }
-            ':'     { [void]$result.Append($char); if (-not $inString) { [void]$result.Append(' ') } }
-            '['     { [void]$result.Append($char); if (-not $inString) { $indent++; [void]$result.Append("`n" + ('  ' * $indent)) } }
-            ']'     { if (-not $inString) { $indent--; [void]$result.Append("`n" + ('  ' * $indent)) }; [void]$result.Append($char) }
-            default { [void]$result.Append($char) }
-        }
-    }
-    return $result.ToString()
-}
+function Write-Info { param($Message) Write-Host "INFO: $Message" }
+function Write-Success { param($Message) Write-Host "SUCCESS: $Message" }
+function Write-Err { param($Message) Write-Host "ERROR: $Message" -ForegroundColor Red }
 
 # =============================================================================
 # Pre-flight Check
 # =============================================================================
 
 if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
-    Write-Host "Error: git is not installed" -ForegroundColor Red
+    Write-Err "git is not installed"
     exit 1
 }
 
+Write-Info "Installing vibeflow marketplace..."
+
 # =============================================================================
-# Install
+# Clone or Update
 # =============================================================================
 
-Write-Info "Installing marketplace: $MarketplaceName"
-
-# Remove existing if present
-if (Test-Path $TargetDir) {
-    Write-Info "Removing existing installation..."
-    Remove-Item $TargetDir -Recurse -Force
-}
-
-# Clone repository
-Write-Info "Cloning from: $MarketplaceGitUrl"
 if (-not (Test-Path $MarketplacesDir)) {
     New-Item -ItemType Directory -Force -Path $MarketplacesDir | Out-Null
 }
 
-git clone --depth 1 $MarketplaceGitUrl $TargetDir
+if (Test-Path $TargetDir) {
+    Write-Info "Removing existing installation at $TargetDir..."
+    Remove-Item $TargetDir -Recurse -Force
+}
+
+Write-Info "Cloning from: $MarketplaceGitUrl"
+git clone --depth 1 $MarketplaceGitUrl $TargetDir 2>&1
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "Error: Failed to clone repository" -ForegroundColor Red
+    Write-Err "Failed to clone repository"
     exit 1
 }
 
-# Update known_marketplaces.json
+# Verify marketplace.json exists
+$MarketplaceJson = Join-Path $TargetDir ".claude-plugin\marketplace.json"
+if (-not (Test-Path $MarketplaceJson)) {
+    Write-Err "marketplace.json not found in cloned repository"
+    exit 1
+}
+
+# =============================================================================
+# Register in known_marketplaces.json
+# =============================================================================
+
 Write-Info "Registering marketplace..."
+
 if (-not (Test-Path $ClaudePluginsDir)) {
     New-Item -ItemType Directory -Force -Path $ClaudePluginsDir | Out-Null
 }
@@ -98,29 +88,47 @@ if (-not (Test-Path $KnownMarketplacesFile)) {
     [System.IO.File]::WriteAllText($KnownMarketplacesFile, '{}', (New-Object System.Text.UTF8Encoding($false)))
 }
 
-$json = Get-Content $KnownMarketplacesFile -Raw | ConvertFrom-Json
+$jsonContent = Get-Content $KnownMarketplacesFile -Raw
+$json = $jsonContent | ConvertFrom-Json
+
 $timestamp = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.000Z")
 
-$json | Add-Member -MemberType NoteProperty -Name $MarketplaceName -Value @{
-    source = @{ source = "github"; repo = "ttttstc/vibeflow" }
+# Add marketplace entry
+$marketplaceEntry = @{
+    source = @{
+        source = "github"
+        repo = $RepoName
+    }
     installLocation = $TargetDir
     lastUpdated = $timestamp
-} -Force
+}
+$json | Add-Member -MemberType NoteProperty -Name $MarketplaceName -Value $marketplaceEntry -Force
 
+# Write back with formatting
 $compact = $json | ConvertTo-Json -Depth 10 -Compress
-$formatted = Format-Json $compact
-[System.IO.File]::WriteAllText($KnownMarketplacesFile, $formatted, (New-Object System.Text.UTF8Encoding($false)))
+[System.IO.File]::WriteAllText($KnownMarketplacesFile, $compact, (New-Object System.Text.UTF8Encoding($false)))
+
+# =============================================================================
+# Verify
+# =============================================================================
+
+$verifyContent = Get-Content $KnownMarketplacesFile -Raw | ConvertFrom-Json
+if (-not $verifyContent.PSObject.Properties.Name.Contains($MarketplaceName)) {
+    Write-Err "Marketplace registration failed"
+    exit 1
+}
 
 # =============================================================================
 # Success
 # =============================================================================
 
 Write-Host ""
-Write-Host "✓ Marketplace installed successfully!" -ForegroundColor Green
+Write-Success "VibeFlow marketplace installed successfully!"
 Write-Host ""
-Write-Host "  Name: $MarketplaceName"
-Write-Host "  Path: $TargetDir"
+Write-Host "  Marketplace key: $MarketplaceName"
+Write-Host "  Install path:    $TargetDir"
+Write-Host "  Git repo:       $MarketplaceGitUrl"
 Write-Host ""
-Write-Host "To install plugins, use Claude Code:" -ForegroundColor White -BackgroundColor DarkBlue
-Write-Host "  /plugin install vibeflow@$MarketplaceName"
+Write-Host "To activate the plugin, run in Claude Code:"
+Write-Host "  /plugin install vibeflow@vibeflow"
 Write-Host ""
