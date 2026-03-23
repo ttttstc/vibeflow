@@ -135,8 +135,16 @@ Write-Host ""
 Write-Host "  Marketplace key: $MarketplaceName" -ForegroundColor White
 Write-Host "  Install path:    $TargetDir" -ForegroundColor White
 Write-Host ""
-Write-Host "NEXT STEPS:" -ForegroundColor Cyan
-Write-Host "  1. Close this window" -ForegroundColor White
-Write-Host "  2. Open Claude Code" -ForegroundColor White
-Write-Host "  3. Run: /plugin install vibeflow@vibeflow" -ForegroundColor White
+
+# Try to find and signal Claude Code to reload plugins
+$claudeProcesses = Get-Process -Name "claude" -ErrorAction SilentlyContinue
+if ($claudeProcesses) {
+    Write-Host "Detected running Claude Code instance(s)." -ForegroundColor Cyan
+    Write-Host "Please restart Claude Code (close and reopen) for changes to take effect." -ForegroundColor Yellow
+    Write-Host "Then run: /plugin install vibeflow@vibeflow" -ForegroundColor White
+} else {
+    Write-Host "NEXT STEP:" -ForegroundColor Cyan
+    Write-Host "  1. Open Claude Code" -ForegroundColor White
+    Write-Host "  2. Run: /plugin install vibeflow@vibeflow" -ForegroundColor White
+}
 Write-Host ""
