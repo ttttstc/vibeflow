@@ -3,33 +3,48 @@
   "features": [
     {
       "id": 1,
+      "category": "api",
       "title": "Normalize priority aliases",
+      "description": "Normalize loose priority aliases into the canonical API priority values.",
       "status": "passing",
       "priority": "high",
       "ui": false,
       "dependencies": [],
+      "autopilot_commands": [
+        "python -m pytest tests/test_workflow.py -q"
+      ],
       "verification_steps": [
         "Run unit tests covering alias normalization"
       ]
     },
     {
       "id": 2,
+      "category": "api",
       "title": "Summarize normalized work items",
+      "description": "Aggregate normalized work items into a stable summary response.",
       "status": "passing",
       "priority": "high",
       "ui": false,
       "dependencies": [1],
+      "autopilot_commands": [
+        "python -m pytest tests/test_system_flow.py -q"
+      ],
       "verification_steps": [
         "Run unit and system tests covering summary output"
       ]
     },
     {
       "id": 3,
+      "category": "delivery",
       "title": "Publish runnable example and delivery artifacts",
+      "description": "Ship an example entrypoint and the supporting delivery artifacts for the change package.",
       "status": "passing",
       "priority": "medium",
       "ui": false,
       "dependencies": [1, 2],
+      "autopilot_commands": [
+        "python examples/basic_usage.py"
+      ],
       "verification_steps": [
         "Run example script and verify output shape",
         "Confirm release notes and retrospective exist"

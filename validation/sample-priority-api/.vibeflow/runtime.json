@@ -1,0 +1,14 @@
+{
+  "run_id": "",
+  "status": "completed",
+  "current_phase": "done",
+  "current_action": "Workflow completed",
+  "friendly_message": "这轮样例 workflow 已经收口完成。",
+  "last_heartbeat_at": "",
+  "stop_reason": "",
+  "step_count": 0,
+  "attempts": {},
+  "events": [],
+  "phase_runs": [],
+  "feature_runs": []
+}

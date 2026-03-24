@@ -29,6 +29,8 @@ from vibeflow_paths import (  # noqa: E402
     increment_requests_dir,
     load_state,
     mark_quick_approved,
+    default_runtime,
+    save_runtime,
     save_state,
     session_log_path,
     set_checkpoint,
@@ -297,6 +299,7 @@ def main():
         existing_state["current_phase"] = "think"
 
     save_state(project_root, existing_state)
+    save_runtime(project_root, default_runtime())
 
     print(f"Migrated project: {project_root}")
     print(f"Active change: {change_id}")

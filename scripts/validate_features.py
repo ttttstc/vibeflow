@@ -23,8 +23,9 @@ import json
 import sys
 
 
-REQUIRED_FIELDS = {"id", "category", "title", "description", "priority", "status", "verification_steps"}
-VALID_STATUSES = {"failing", "passing"}
+REQUIRED_FIELDS = {"id", "title", "priority", "status", "verification_steps"}
+OPTIONAL_RECOMMENDED_FIELDS = {"category", "description"}
+VALID_STATUSES = {"todo", "queued", "ready", "running", "blocked", "failing", "passing", "skipped"}
 VALID_PRIORITIES = {"high", "medium", "low"}
 VALID_LANGUAGES = {"python", "java", "javascript", "typescript", "c", "cpp", "c++"}
 QUALITY_GATE_KEYS = {"line_coverage_min", "branch_coverage_min", "mutation_score_min"}
@@ -210,6 +211,10 @@ def validate(path: str) -> tuple[list[str], list[str]]:
         missing = REQUIRED_FIELDS - set(feat.keys())
         if missing:
             errors.append(f"{prefix}: missing fields: {missing}")
+
+        recommended_missing = OPTIONAL_RECOMMENDED_FIELDS - set(feat.keys())
+        if recommended_missing:
+            warnings.append(f"{prefix} (id={feat.get('id', '?')}): recommended fields missing: {recommended_missing}")
 
         # Check ID uniqueness
         fid = feat.get("id")

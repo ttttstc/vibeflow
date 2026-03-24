@@ -79,13 +79,32 @@ If Claude Code shows the VibeFlow entry flow, the plugin is loaded and ready.
 
 **Requirements-Driven, Not Code-Driven.** Write the SRS first, then the technical design, then the code. Every feature implementation traces back to a specific requirement.
 
-**Files as State.** All workflow state persists in repository files (`.vibeflow/`, `docs/changes/`, `feature-list.json`). Close the session, switch machines, even switch AIs — project state is fully preserved.
+**Files as State.** All workflow state persists in repository files (`.vibeflow/state.json`, `.vibeflow/runtime.json`, `docs/changes/`, `feature-list.json`). Close the session, switch machines, even switch AIs — project state is fully preserved.
 
 **Deterministic Routing.** `get-vibeflow-phase.py` computes the current phase by checking file existence. 16 phase states, strict elif chain, zero ambiguity.
 
 **Template-Controlled Strictness.** Four static templates (prototype → enterprise) control which stages are mandatory and quality gate thresholds. Choose once, applied globally.
 
-**Single-Feature Cycle.** Build phase processes one feature at a time. Each feature must complete the full TDD → Quality → Feature-ST → Spec-Review pipeline before it's considered done.
+**Dependency-Aware Build.** Build still keeps feature-level discipline, but independent features can now run in parallel without breaking dependency order.
+
+---
+
+## Automation and Dashboard
+
+Once Design is locked, VibeFlow can now take over the back half of delivery:
+
+- `python scripts/run-vibeflow-autopilot.py --project-root <repo>`
+  Automatically advances from the current phase until `done`, a blocker, or a manual checkpoint.
+- `python scripts/run-vibeflow-build-work.py --project-root <repo> --max-workers 4`
+  Runs Build-Work directly with dependency-aware parallel execution.
+- `python scripts/run-vibeflow-dashboard.py --project-root <repo>`
+  Starts the local live dashboard for phases, features, artifacts, and timeline events.
+
+If you only want the current state once, print a dashboard snapshot:
+
+```bash
+python scripts/run-vibeflow-dashboard.py --project-root <repo> --snapshot-json
+```
 
 ---
 
@@ -167,6 +186,7 @@ This is the most complex phase in the framework:
 **Goal**: Initialize build artifacts.
 
 - `feature-list.json` — the feature inventory and build source of truth
+- `.vibeflow/runtime.json` — the live runtime overlay used by autopilot and the dashboard
 - `.vibeflow/logs/session-log.md` — the human-readable progress log
 - `RELEASE_NOTES.md` — the release-facing output file
 - Generates `.vibeflow/work-config.json` — the active build rules and quality thresholds
@@ -180,7 +200,7 @@ This is the most complex phase in the framework:
 
 ### Build-work
 
-**Goal**: Implement features one at a time, each through the complete quality pipeline.
+**Goal**: Implement features through the complete quality pipeline, either serially or in dependency-aware parallel lanes.
 
 ```
 Pick Feature → TDD Red-Green-Refactor → Quality Gates
@@ -365,13 +385,14 @@ Four static templates control workflow strictness:
 | File | Purpose |
 |---|---|
 | `state.json` | Central workflow state: phase, mode, active change package; this is the primary routing anchor |
+| `runtime.json` | Live runtime overlay: current autopilot action, friendly guidance, recent events, and heartbeat; the dashboard reads this directly |
 | `workflow.yaml` | Active workflow config copied from a template; decides which stages are required |
 | `work-config.json` | Build config: enabled steps and quality thresholds; Build enforces this file |
-| `plan-value-review.md` | Plan output: CEO value review conclusion; used to decide whether the work is worth doing |
-| `design-review.md` | Design output: engineering review + design review conclusions; used to close design risks |
-| `verification/review.md` | Global code review report; focuses on cross-feature issues |
-| `verification/qa.md` | QA test report; mainly relevant when UI is involved |
-| `retro-YYYY-MM-DD.md` | Iteration retrospective; feeds the next cycle |
+| `phase-history.json` | Phase progression history; records routing changes, increments, and automation events |
+| `logs/session-log.md` | Human-readable process log; useful for understanding what just happened |
+| `increments/queue.json` | Increment request queue; stages additional changes outside the active package |
+| `increments/requests/*.json` | Increment request details; records add/modify/deprecate/doc update actions |
+| `logs/retro-YYYY-MM-DD.md` | Iteration retrospective; feeds the next cycle |
 
 ### Delivery Artifacts
 
@@ -388,7 +409,7 @@ Four static templates control workflow strictness:
 | `docs/changes/<change-id>/verification/system-test.md` | System test report; records integration and end-to-end verification |
 | `docs/changes/<change-id>/verification/qa.md` | QA report; records browser and interaction verification results |
 | `docs/test-cases/feature-*.md` | Feature test case documents; executable cases for feature-level acceptance |
-| `feature-list.json` | Feature inventory; the single source of truth during Build |
+| `feature-list.json` | Feature inventory; the single source of truth during Build, including dependencies, status, verification steps, and `autopilot_commands` |
 | `.vibeflow/logs/session-log.md` | Task progress log; useful for humans, no longer the state authority |
 | `RELEASE_NOTES.md` | Release notes; a delivery output, not a routing signal |
 
@@ -428,8 +449,13 @@ vibeflow/
 │   └── vibeflow-reflect/             # Reflection
 ├── scripts/                         # Python scripts
 │   ├── get-vibeflow-phase.py        # Phase detection (16-state router)
+│   ├── run-vibeflow-autopilot.py    # Auto-drives Build → Review → Test → Ship → Reflect
+│   ├── run-vibeflow-build-work.py   # Build-Work executor with dependency-aware parallelism
+│   ├── run-vibeflow-dashboard.py    # Local live dashboard
 │   ├── new-vibeflow-config.py       # Workflow config generation
-│   └── new-vibeflow-work-config.py  # Build config generation
+│   ├── new-vibeflow-work-config.py  # Build config generation
+│   ├── vibeflow_automation.py       # autopilot / build orchestration core
+│   └── vibeflow_dashboard.py        # dashboard snapshot + SSE server
 ├── templates/                       # Static workflow templates
 │   ├── prototype.yaml
 │   ├── web-standard.yaml
