@@ -12,9 +12,9 @@ Stop letting AI "just start coding" — VibeFlow provides file-driven determinis
 
 ---
 
-## Three Installation Methods
+## Install
 
-### Method 1: Claude Code Marketplace (Recommended)
+### Claude Code One-Liner (Recommended)
 
 ```bash
 # macOS / Linux
@@ -27,17 +27,38 @@ irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.
 /plugin install vibeflow@vibeflow
 ```
 
-### Method 2: Shell Script (Manual)
+### Claude Code Prompt
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/install.sh | bash
+If you want Claude Code to handle the setup for you, paste this:
+
+```text
+Install VibeFlow into Claude Code for me.
+
+Requirements:
+1. Prefer the official install script first:
+   /sh curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.sh | bash
+2. If that fails, install the repo into the Claude Code marketplace directory manually.
+3. After installation, run:
+   /plugin install vibeflow@vibeflow
+4. Then tell me:
+   - whether installation succeeded
+   - where the plugin was installed
+   - which command I should run next to start using VibeFlow
 ```
 
-### Method 3: OpenCode
+### Windows Launcher
+
+```powershell
+irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/vibeflow-launcher.ps1 | iex
+```
+
+### Verify Installation
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/install.sh | bash
+/vibeflow
 ```
+
+If Claude Code shows the VibeFlow entry flow, the plugin is loaded and ready.
 
 ---
 
@@ -104,7 +125,7 @@ Build-init ── Build-config ── Build-work
 
 **Goal**: Define the problem, understand boundaries, scan opportunities, select workflow template.
 
-- Produces `docs/changes/<change-id>/context.md`
+- Produces `docs/changes/<change-id>/context.md` — the starting brief for this work package: problem, scope, goal, and constraints
 - Optional: Run `vibeflow-office-hours` first to validate if the idea is worth pursuing (YC Office Hours style)
 - Recommends and confirms template (prototype / web-standard / api-standard / enterprise)
 
@@ -120,7 +141,7 @@ Build-init ── Build-config ── Build-work
 
 **Goal**: Write Software Requirements Specification (SRS), aligned with ISO/IEC/IEEE 29148.
 
-- Produces `docs/changes/<change-id>/requirements.md`
+- Produces `docs/changes/<change-id>/requirements.md` — the formal requirement baseline that design and testing must follow
 - Confirmed with user line by line; each requirement must be testable
 
 ### Design
@@ -136,17 +157,19 @@ This is the most complex phase in the framework:
 | 2. Explore Context | Built-in | Context document |
 | 3. Propose Approaches | Built-in | Approach comparison |
 | 4. User Section-by-Section Approval | Built-in | User sign-off |
-| 5. **AI Deep Review** | `vibeflow-plan-eng-review` + `vibeflow-plan-design-review` | `docs/changes/<change-id>/design-review.md` |
+| 5. **AI Deep Review** | `vibeflow-plan-eng-review` + `vibeflow-plan-design-review` | `docs/changes/<change-id>/design-review.md` (engineering + design review outcomes) |
 | 6. **Scope Decision** | Built-in | Expand / Hold / Reduce |
-| 7. Write Design Document | Built-in | `docs/changes/<change-id>/design.md` |
+| 7. Write Design Document | Built-in | `docs/changes/<change-id>/design.md` (implementation approach, integration points, validation plan) |
 | 8. Transition to Initialization | Built-in | — |
 
 ### Build-init
 
 **Goal**: Initialize build artifacts.
 
-- `feature-list.json`, `.vibeflow/logs/session-log.md`, `RELEASE_NOTES.md`
-- Generates `.vibeflow/work-config.json` (quality thresholds)
+- `feature-list.json` — the feature inventory and build source of truth
+- `.vibeflow/logs/session-log.md` — the human-readable progress log
+- `RELEASE_NOTES.md` — the release-facing output file
+- Generates `.vibeflow/work-config.json` — the active build rules and quality thresholds
 
 ### Build-config
 
@@ -203,7 +226,7 @@ Pick Feature → TDD Red-Green-Refactor → Quality Gates
 
 **Goal**: Review this iteration and produce improvement suggestions for the next cycle.
 
-- Produces `.vibeflow/logs/retro-YYYY-MM-DD.md`
+- Produces `.vibeflow/logs/retro-YYYY-MM-DD.md` — the retrospective record for what worked, what broke, and what to change next
 - Optional (`reflect_required()` detection)
 
 ---
@@ -335,42 +358,39 @@ Four static templates control workflow strictness:
 
 ---
 
-## Installation Method Comparison
-
-| Method | Best For | Automation | Plugin Registration |
-|---|---|---|---|
-| Claude Code Marketplace | Claude Code users | High (one command) | Auto-registered |
-| Shell Script | Users who manage plugins manually | High | Manual |
-| OpenCode | OpenCode users | High | Manual |
-
----
-
 ## Project State Files
 
 ### Runtime State (`.vibeflow/`)
 
 | File | Purpose |
 |---|---|
-| `state.json` | Central workflow state: phase, mode, active change package |
-| `workflow.yaml` | Active workflow config (copied from template) |
-| `work-config.json` | Build config: enabled steps, quality thresholds |
-| `plan-value-review.md` | Plan output: CEO value review conclusion |
-| `design-review.md` | Design output: engineering review + design review conclusions |
-| `verification/review.md` | Global code review report |
-| `verification/qa.md` | QA test report |
-| `retro-YYYY-MM-DD.md` | Iteration retrospective |
+| `state.json` | Central workflow state: phase, mode, active change package; this is the primary routing anchor |
+| `workflow.yaml` | Active workflow config copied from a template; decides which stages are required |
+| `work-config.json` | Build config: enabled steps and quality thresholds; Build enforces this file |
+| `plan-value-review.md` | Plan output: CEO value review conclusion; used to decide whether the work is worth doing |
+| `design-review.md` | Design output: engineering review + design review conclusions; used to close design risks |
+| `verification/review.md` | Global code review report; focuses on cross-feature issues |
+| `verification/qa.md` | QA test report; mainly relevant when UI is involved |
+| `retro-YYYY-MM-DD.md` | Iteration retrospective; feeds the next cycle |
 
 ### Delivery Artifacts
 
 | File | Purpose |
 |---|---|
-| `docs/changes/<change-id>/requirements.md` | Software Requirements Specification |
-| `docs/changes/<change-id>/design.md` | Technical design document (with UCD-related content) |
-| `docs/changes/<change-id>/verification/system-test.md` | System test report |
-| `docs/test-cases/feature-*.md` | Feature test case documents |
-| `feature-list.json` | Feature inventory (single source of truth during Build) |
-| `.vibeflow/logs/session-log.md` | Task progress log |
-| `RELEASE_NOTES.md` | Release notes |
+| `docs/changes/<change-id>/context.md` | Problem context document; explains why this work starts and what it is bounded by |
+| `docs/changes/<change-id>/proposal.md` | Proposal document; records scope, value, and whether the work should proceed |
+| `docs/changes/<change-id>/requirements.md` | Software Requirements Specification; the baseline for implementation and acceptance |
+| `docs/changes/<change-id>/ucd.md` | UX/UCD document; only appears when UI design is in scope |
+| `docs/changes/<change-id>/design.md` | Technical design document; explains implementation, integration points, and validation |
+| `docs/changes/<change-id>/design-review.md` | Design review outcome; captures engineering and design review feedback |
+| `docs/changes/<change-id>/tasks.md` | Execution checklist; turns the design into implementable and verifiable tasks |
+| `docs/changes/<change-id>/verification/review.md` | Review report; records cross-feature review conclusions |
+| `docs/changes/<change-id>/verification/system-test.md` | System test report; records integration and end-to-end verification |
+| `docs/changes/<change-id>/verification/qa.md` | QA report; records browser and interaction verification results |
+| `docs/test-cases/feature-*.md` | Feature test case documents; executable cases for feature-level acceptance |
+| `feature-list.json` | Feature inventory; the single source of truth during Build |
+| `.vibeflow/logs/session-log.md` | Task progress log; useful for humans, no longer the state authority |
+| `RELEASE_NOTES.md` | Release notes; a delivery output, not a routing signal |
 
 ---
 
