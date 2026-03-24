@@ -4,19 +4,25 @@
 
 A target project is expected to accumulate these artifacts over time:
 
-- `.vibeflow/think-output.md`
+- `.vibeflow/state.json`
 - `.vibeflow/workflow.yaml`
 - `.vibeflow/work-config.json`
-- `.vibeflow/plan-review.md`
-- `.vibeflow/review-report.md`
-- `.vibeflow/qa-report.md` when UI applies
-- `.vibeflow/retro-YYYY-MM-DD.md`
-- `docs/plans/*-srs.md`
-- `docs/plans/*-ucd.md` when UI applies
-- `docs/plans/*-design.md`
-- `docs/plans/*-st-report.md`
+- `.vibeflow/guides/build.md`
+- `.vibeflow/guides/services.md` when services apply
+- `.vibeflow/logs/session-log.md`
+- `.vibeflow/logs/retro-YYYY-MM-DD.md`
+- `.vibeflow/increments/queue.json`
+- `docs/changes/<change-id>/context.md`
+- `docs/changes/<change-id>/proposal.md`
+- `docs/changes/<change-id>/requirements.md`
+- `docs/changes/<change-id>/ucd.md` when UI applies
+- `docs/changes/<change-id>/design.md`
+- `docs/changes/<change-id>/design-review.md`
+- `docs/changes/<change-id>/tasks.md`
+- `docs/changes/<change-id>/verification/review.md`
+- `docs/changes/<change-id>/verification/system-test.md`
+- `docs/changes/<change-id>/verification/qa.md` when UI applies
 - `feature-list.json`
-- `task-progress.md`
 - `RELEASE_NOTES.md`
 
 ## 2. Workflow Templates
@@ -53,9 +59,8 @@ Possible phases:
 - `increment`
 - `think`
 - `template-selection`
-- `plan-review`
+- `plan`
 - `requirements`
-- `ucd`
 - `design`
 - `build-init`
 - `build-config`
@@ -73,12 +78,9 @@ Possible phases:
 flowchart TD
     A[Think Output Missing] --> B[Think]
     B --> C[Workflow Template Selection]
-    C --> D[Plan Review]
+    C --> D[Plan]
     D --> E[Requirements]
-    E --> F{UI Needed?}
-    F -- Yes --> G[UCD]
-    F -- No --> H[Design]
-    G --> H
+    E --> H[Design]
     H --> I[Build Init]
     I --> J[Generate Work Config]
     J --> K[Build Work]

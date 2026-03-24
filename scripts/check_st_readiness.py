@@ -3,48 +3,70 @@
 Check system testing readiness for a vibeflow project.
 
 Verifies:
-- feature-list.json exists and all features are "passing"
-- SRS document exists in docs/plans/
-- Design document exists in docs/plans/
+- feature-list.json exists and all active features are "passing"
+- requirements and design artifacts exist
+- UI projects have either a dedicated UCD artifact or an inlined design artifact
+
+The script understands both the legacy docs/plans layout and the v2
+docs/changes/<change-id>/ layout.
 
 Usage:
     python check_st_readiness.py <path/to/feature-list.json>
-
-Exit codes:
-    0 — ready for system testing (all features passing, docs present)
-    1 — not ready (failing features or missing docs)
+    python check_st_readiness.py --project-root <path/to/project>
 """
 
+from __future__ import annotations
+
 import argparse
-import glob
 import json
-import os
 import sys
+from pathlib import Path
 
 
-def check_st_readiness(path: str) -> dict:
-    """
-    Check whether the project is ready for system testing.
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
 
-    Args:
-        path: Path to feature-list.json
+from vibeflow_paths import load_state, path_contract, state_path  # noqa: E402
 
-    Returns:
-        dict with keys:
-            ready: bool
-            total_features: int
-            passing_features: int
-            failing_features: int
-            failing_ids: list[int]
-            srs_found: bool
-            srs_path: str or None
-            design_found: bool
-            design_path: str or None
-            ucd_found: bool
-            ucd_path: str or None
-            has_ui_features: bool
-            issues: list[str]
-    """
+
+def latest_matching_file(base: Path, pattern: str) -> Path | None:
+    if not base.exists():
+        return None
+    matches = sorted(base.glob(pattern), key=lambda item: item.stat().st_mtime, reverse=True)
+    return matches[0] if matches else None
+
+
+def resolve_paths(project_root: Path) -> dict:
+    if state_path(project_root).exists():
+        state = load_state(project_root)
+        contract = path_contract(project_root, state)
+        artifacts = contract["artifacts"]
+        requirements = artifacts["requirements"]
+        design = artifacts["design"]
+        ucd = artifacts["ucd"] if artifacts["ucd"].exists() else design
+        return {
+            "requirements": requirements,
+            "design": design,
+            "ucd": ucd,
+            "layout": "v2",
+            "change_root": contract["change_root"],
+        }
+
+    plans_dir = project_root / "docs" / "plans"
+    requirements = latest_matching_file(plans_dir, "*-srs.md")
+    design = latest_matching_file(plans_dir, "*-design.md")
+    ucd = latest_matching_file(plans_dir, "*-ucd.md")
+    return {
+        "requirements": requirements,
+        "design": design,
+        "ucd": ucd,
+        "layout": "legacy",
+        "change_root": plans_dir,
+    }
+
+
+def check_st_readiness(feature_list_path: Path) -> dict:
     result = {
         "ready": False,
         "total_features": 0,
@@ -62,14 +84,13 @@ def check_st_readiness(path: str) -> dict:
         "issues": [],
     }
 
-    # Load feature-list.json
-    with open(path, "r", encoding="utf-8") as f:
-        data = json.load(f)
+    if not feature_list_path.exists():
+        raise FileNotFoundError(feature_list_path)
 
+    data = json.loads(feature_list_path.read_text(encoding="utf-8"))
     features = data.get("features", [])
-
-    # Separate deprecated from active features
     active_features = []
+
     for feat in features:
         if feat.get("deprecated", False):
             result["deprecated_features"] += 1
@@ -77,60 +98,56 @@ def check_st_readiness(path: str) -> dict:
             active_features.append(feat)
 
     result["total_features"] = len(active_features)
-
-    if len(active_features) == 0:
+    if not active_features:
         result["issues"].append("No active features defined in feature-list.json")
         return result
 
-    # Check feature statuses (only active features)
     for feat in active_features:
-        status = feat.get("status", "failing")
         feat_id = feat.get("id", "?")
-        if status == "passing":
+        if feat.get("status") == "passing":
             result["passing_features"] += 1
         else:
             result["failing_features"] += 1
             result["failing_ids"].append(feat_id)
-        if feat.get("ui", False):
+        if feat.get("ui") is True:
             result["has_ui_features"] = True
 
     if result["failing_features"] > 0:
         result["issues"].append(
-            f"{result['failing_features']} feature(s) still failing: "
-            f"{result['failing_ids']}"
+            f"{result['failing_features']} feature(s) still failing: {result['failing_ids']}"
         )
 
-    # Check docs/plans/ for SRS and design docs
-    base_dir = os.path.dirname(os.path.abspath(path))
-    plans_dir = os.path.join(base_dir, "docs", "plans")
+    project_root = feature_list_path.resolve().parent
+    resolved = resolve_paths(project_root)
+    requirements = resolved["requirements"]
+    design = resolved["design"]
+    ucd = resolved["ucd"]
 
-    # SRS doc
-    srs_matches = glob.glob(os.path.join(plans_dir, "*-srs.md"))
-    if srs_matches:
+    if requirements and requirements.exists():
         result["srs_found"] = True
-        result["srs_path"] = srs_matches[0]
+        result["srs_path"] = str(requirements)
     else:
-        result["issues"].append("SRS document not found (docs/plans/*-srs.md)")
+        expected = "docs/changes/<change-id>/requirements.md" if resolved["layout"] == "v2" else "docs/plans/*-srs.md"
+        result["issues"].append(f"Requirements document not found ({expected})")
 
-    # Design doc
-    design_matches = glob.glob(os.path.join(plans_dir, "*-design.md"))
-    if design_matches:
+    if design and design.exists():
         result["design_found"] = True
-        result["design_path"] = design_matches[0]
+        result["design_path"] = str(design)
     else:
-        result["issues"].append("Design document not found (docs/plans/*-design.md)")
+        expected = "docs/changes/<change-id>/design.md" if resolved["layout"] == "v2" else "docs/plans/*-design.md"
+        result["issues"].append(f"Design document not found ({expected})")
 
-    # UCD doc (optional — only required if UI features exist)
-    ucd_matches = glob.glob(os.path.join(plans_dir, "*-ucd.md"))
-    if ucd_matches:
+    if ucd and ucd.exists():
         result["ucd_found"] = True
-        result["ucd_path"] = ucd_matches[0]
+        result["ucd_path"] = str(ucd)
     elif result["has_ui_features"]:
-        result["issues"].append(
-            "UI features exist but UCD document not found (docs/plans/*-ucd.md)"
-        )
+        if resolved["layout"] == "v2" and design and design.exists():
+            result["ucd_found"] = True
+            result["ucd_path"] = str(design)
+        else:
+            expected = "docs/changes/<change-id>/ucd.md or inlined design.md" if resolved["layout"] == "v2" else "docs/plans/*-ucd.md"
+            result["issues"].append(f"UI features exist but UCD document not found ({expected})")
 
-    # Check ST test case coverage (warning, not blocking)
     features_with_st_cases = 0
     features_without_st_cases = []
     for feat in active_features:
@@ -140,47 +157,46 @@ def check_st_readiness(path: str) -> dict:
             features_without_st_cases.append(feat.get("id", "?"))
     result["st_case_coverage"] = features_with_st_cases
     result["st_case_missing"] = features_without_st_cases
+    result["test_cases_dir_found"] = (project_root / "docs" / "test-cases").is_dir()
 
-    # Check docs/test-cases/ directory exists
-    test_cases_dir = os.path.join(base_dir, "docs", "test-cases")
-    result["test_cases_dir_found"] = os.path.isdir(test_cases_dir)
-
-    # Determine readiness (based on active features only)
     result["ready"] = (
         result["failing_features"] == 0
         and result["srs_found"]
         and result["design_found"]
         and result["total_features"] > 0
+        and (not result["has_ui_features"] or result["ucd_found"])
     )
-
-    # Note: deprecated features are excluded from readiness checks
-
     return result
 
 
 def main():
     parser = argparse.ArgumentParser(description="Check system testing readiness")
-    parser.add_argument("path", help="Path to feature-list.json")
+    parser.add_argument("path", nargs="?", help="Path to feature-list.json")
+    parser.add_argument("--project-root", default=None, help="Project root; feature-list.json will be resolved under it")
     args = parser.parse_args()
 
+    if args.project_root:
+        feature_list_path = Path(args.project_root).resolve() / "feature-list.json"
+    elif args.path:
+        feature_list_path = Path(args.path).resolve()
+    else:
+        parser.error("either <path> or --project-root is required")
+
     try:
-        result = check_st_readiness(args.path)
-    except (json.JSONDecodeError, FileNotFoundError) as e:
-        print(f"ERROR: Cannot read feature-list.json: {e}")
+        result = check_st_readiness(feature_list_path)
+    except (json.JSONDecodeError, FileNotFoundError) as exc:
+        print(f"ERROR: Cannot read feature-list.json: {exc}")
         sys.exit(1)
 
-    # Print summary
     print(f"Active features: {result['passing_features']}/{result['total_features']} passing")
     if result["deprecated_features"] > 0:
         print(f"Deprecated: {result['deprecated_features']} (excluded from checks)")
     if result["failing_features"] > 0:
         print(f"Failing: {result['failing_ids']}")
-    print(f"SRS: {'found' if result['srs_found'] else 'MISSING'}")
+    print(f"Requirements: {'found' if result['srs_found'] else 'MISSING'}")
     print(f"Design: {'found' if result['design_found'] else 'MISSING'}")
     if result["has_ui_features"]:
         print(f"UCD: {'found' if result['ucd_found'] else 'MISSING (UI features exist)'}")
-
-    # ST test case coverage (warning) — only if st_case_coverage was computed
     if "st_case_coverage" in result:
         if result["st_case_missing"]:
             print(f"ST test cases: {result['st_case_coverage']}/{result['total_features']} features covered")
@@ -191,11 +207,11 @@ def main():
     if result["ready"]:
         print("\nREADY for system testing.")
         sys.exit(0)
-    else:
-        print(f"\nNOT READY — {len(result['issues'])} issue(s):")
-        for issue in result["issues"]:
-            print(f"  - {issue}")
-        sys.exit(1)
+
+    print(f"\nNOT READY — {len(result['issues'])} issue(s):")
+    for issue in result["issues"]:
+        print(f"  - {issue}")
+    sys.exit(1)
 
 
 if __name__ == "__main__":

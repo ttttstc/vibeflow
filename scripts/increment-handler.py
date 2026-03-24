@@ -1,145 +1,217 @@
 #!/usr/bin/env python3
 """
-VibeFlow Increment Handler — 处理增量请求协议。
+VibeFlow Increment Handler.
 
-增量处理流程：
-1. 读取 .vibeflow/increment-queue.txt 获取待处理增量列表
-2. 对每个增量：
-   a. 读取 .vibeflow/increment-request-{id}.json 获取增量详情
-   b. 验证增量目标（哪个功能/阶段）
-   c. 将增量应用到适当的产物（SRS/Design/UCD/feature-list）
-   d. 更新 feature-list.json 以反映更改的范围
-   e. 将增量记录到 .vibeflow/phase-history.json
-3. 完成后清空 increment-queue.txt 或标记已处理
+Supports both:
+- legacy increment layout under .vibeflow/
+- v2 increment layout under .vibeflow/increments/
 
-增量类型：
-- add_feature:     在 feature-list.json 中追加新功能
-- modify_feature:  修改现有功能的描述/优先级/依赖
-- deprecate_feature: 将功能标记为 deprecated
-- update_doc:      更新 SRS/Design/UCD 文档中的需求
-
-Usage:
-    python scripts/increment-handler.py [--project-root <path>]
-
-Exit codes:
-    0 — 所有增量处理成功
-    1 — 处理失败（见错误信息）
+The handler keeps feature-list.json as the build source of truth, but routes all
+newly written increment metadata to the v2 layout.
 """
+
+from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
 from datetime import datetime
 from pathlib import Path
 
 
-INCREMENT_QUEUE_FILE = ".vibeflow/increment-queue.txt"
-PHASE_HISTORY_FILE = ".vibeflow/phase-history.json"
+SCRIPT_DIR = Path(__file__).resolve().parent
+if str(SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIR))
+
+from vibeflow_paths import (  # noqa: E402
+    append_phase_history,
+    ensure_state,
+    increment_history_path,
+    increment_queue_path,
+    increment_requests_dir,
+    load_state,
+    path_contract,
+    save_state,
+    set_checkpoint,
+    state_path,
+)
+
+
 FEATURE_LIST_FILE = "feature-list.json"
+LEGACY_QUEUE_FILE = ".vibeflow/increment-queue.txt"
+LEGACY_ROOT_REQUEST = ".vibeflow/increment-request.json"
+LEGACY_REQUEST_PATTERNS = [
+    ".vibeflow/increment-request-{id}.json",
+    ".vibeflow/increment-{id}.json",
+    ".vibeflow/increment_request_{id}.json",
+]
+CHECKPOINT_ORDER = [
+    "think",
+    "plan",
+    "requirements",
+    "design",
+    "build_init",
+    "build_config",
+    "build_work",
+    "review",
+    "test_system",
+    "test_qa",
+    "ship",
+    "reflect",
+]
 
 
-def read_queue(project_root: Path) -> list[str]:
-    """读取增量队列，返回增量 ID 列表。"""
-    queue_path = project_root / INCREMENT_QUEUE_FILE
-    if not queue_path.exists():
-        return []
-    with open(queue_path, "r", encoding="utf-8") as f:
-        lines = [l.strip() for l in f if l.strip() and not l.startswith("#")]
-    return lines
+def load_json(path: Path, default):
+    if not path.exists():
+        return default
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
-def write_queue(project_root: Path, ids: list[str]) -> None:
-    """写回增量队列（处理完成后调用，清除已处理的 ID）。"""
-    queue_path = project_root / INCREMENT_QUEUE_FILE
-    with open(queue_path, "w", encoding="utf-8") as f:
-        f.write("# VibeFlow Increment Queue\n")
-        for rid in ids:
-            f.write(f"{rid}\n")
+def save_json(path: Path, data) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
-def load_increment_request(project_root: Path, inc_id: str) -> dict:
-    """加载单个增量请求文件。"""
-    # 尝试多种命名格式
-    for basename in [
-        f"increment-request-{inc_id}.json",
-        f"increment-{inc_id}.json",
-        f"increment_request_{inc_id}.json",
-    ]:
-        path = project_root / ".vibeflow" / basename
-        if path.exists():
-            with open(path, "r", encoding="utf-8") as f:
-                return json.load(f)
+def normalize_queue_item(item, fallback_id: str | None = None) -> dict:
+    if isinstance(item, str):
+        return {"id": item}
+    if isinstance(item, dict):
+        normalized = dict(item)
+        if "id" not in normalized:
+            normalized["id"] = fallback_id or f"increment-{datetime.now().strftime('%H%M%S')}"
+        return normalized
+    return {"id": fallback_id or f"increment-{datetime.now().strftime('%H%M%S')}"}
+
+
+def read_queue(project_root: Path) -> list[dict]:
+    queue_path = increment_queue_path(project_root)
+    if queue_path.exists():
+        payload = load_json(queue_path, {"items": []})
+        if isinstance(payload, dict):
+            items = payload.get("items", [])
+        elif isinstance(payload, list):
+            items = payload
+        else:
+            items = []
+        return [normalize_queue_item(item) for item in items]
+
+    legacy_queue = project_root / LEGACY_QUEUE_FILE
+    if legacy_queue.exists():
+        items = []
+        for line in legacy_queue.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if line and not line.startswith("#"):
+                items.append({"id": line})
+        return items
+
+    legacy_root_request = project_root / LEGACY_ROOT_REQUEST
+    if legacy_root_request.exists():
+        return [{"id": "legacy-root"}]
+
+    return []
+
+
+def write_queue(project_root: Path, items: list[dict]) -> None:
+    normalized = [normalize_queue_item(item) for item in items]
+    save_json(increment_queue_path(project_root), {"items": normalized})
+
+
+def load_increment_request(project_root: Path, item: dict) -> tuple[str, dict]:
+    inc_id = item.get("id", "unknown")
+    requests_dir = increment_requests_dir(project_root)
+    request_path = requests_dir / f"{inc_id}.json"
+    if request_path.exists():
+        data = load_json(request_path, {})
+        if isinstance(data, dict):
+            data.setdefault("id", inc_id)
+            return inc_id, data
+
+    if inc_id == "legacy-root":
+        legacy_root = project_root / LEGACY_ROOT_REQUEST
+        if legacy_root.exists():
+            data = load_json(legacy_root, {})
+            if isinstance(data, dict):
+                data.setdefault("id", inc_id)
+                return inc_id, data
+
+    for pattern in LEGACY_REQUEST_PATTERNS:
+        candidate = project_root / pattern.format(id=inc_id)
+        if candidate.exists():
+            data = load_json(candidate, {})
+            if isinstance(data, dict):
+                data.setdefault("id", inc_id)
+                return inc_id, data
+
+    if "request" in item and isinstance(item["request"], dict):
+        data = dict(item["request"])
+        data.setdefault("id", inc_id)
+        return inc_id, data
+
     raise FileNotFoundError(f"Increment request file not found for id: {inc_id}")
 
 
-def load_phase_history(project_root: Path) -> list[dict]:
-    """加载 phase history 列表。"""
-    hist_path = project_root / PHASE_HISTORY_FILE
-    if not hist_path.exists():
-        return []
-    with open(hist_path, "r", encoding="utf-8") as f:
-        return json.load(f)
-
-
-def save_phase_history(project_root: Path, history: list[dict]) -> None:
-    """保存 phase history。"""
-    hist_path = project_root / PHASE_HISTORY_FILE
-    with open(hist_path, "w", encoding="utf-8") as f:
-        json.dump(history, f, indent=2, ensure_ascii=False)
-
-
 def load_feature_list(project_root: Path) -> dict:
-    """加载 feature-list.json。"""
-    fl_path = project_root / FEATURE_LIST_FILE
-    if not fl_path.exists():
-        raise FileNotFoundError(f"feature-list.json not found at {fl_path}")
-    with open(fl_path, "r", encoding="utf-8") as f:
-        return json.load(f)
+    path = project_root / FEATURE_LIST_FILE
+    if not path.exists():
+        raise FileNotFoundError(f"feature-list.json not found at {path}")
+    return load_json(path, {})
 
 
 def save_feature_list(project_root: Path, data: dict) -> None:
-    """保存 feature-list.json。"""
-    fl_path = project_root / FEATURE_LIST_FILE
-    with open(fl_path, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
+    save_json(project_root / FEATURE_LIST_FILE, data)
+
+
+def next_feature_id(fl: dict) -> int:
+    return max([feat.get("id", 0) for feat in fl.get("features", [])], default=0) + 1
+
+
+def mark_feature_for_rework(feature: dict) -> None:
+    if not feature.get("deprecated"):
+        feature["status"] = "failing"
 
 
 def process_add_feature(inc: dict, fl: dict) -> str:
-    """处理 add_feature 增量：追加新功能到 feature-list.json。"""
-    new_id = max([f["id"] for f in fl.get("features", [])], default=0) + 1
+    new_id = inc.get("feature_id") or next_feature_id(fl)
     new_feature = {
         "id": new_id,
         "title": inc.get("title", f"New feature {new_id}"),
         "description": inc.get("description", ""),
         "priority": inc.get("priority", "medium"),
-        "status": "failing",
+        "status": inc.get("status", "failing"),
         "dependencies": inc.get("dependencies", []),
         "verification_steps": inc.get("verification_steps", []),
     }
-    if inc.get("ui"):
-        new_feature["ui"] = inc["ui"]
-    if inc.get("wave"):
-        new_feature["wave"] = inc["wave"]
-
+    for optional_key in ("ui", "wave", "st_case_path", "owner", "tags"):
+        if optional_key in inc:
+            new_feature[optional_key] = inc[optional_key]
     fl.setdefault("features", []).append(new_feature)
     return f"Added feature #{new_id}: {new_feature['title']}"
 
 
 def process_modify_feature(inc: dict, fl: dict) -> str:
-    """处理 modify_feature 增量：修改现有功能。"""
     target_id = inc.get("feature_id")
     for feat in fl.get("features", []):
         if feat.get("id") == target_id:
-            for key in ["title", "description", "priority", "dependencies", "verification_steps"]:
+            for key in [
+                "title",
+                "description",
+                "priority",
+                "dependencies",
+                "verification_steps",
+                "ui",
+                "wave",
+                "st_case_path",
+                "owner",
+                "tags",
+            ]:
                 if key in inc:
                     feat[key] = inc[key]
+            mark_feature_for_rework(feat)
             return f"Modified feature #{target_id}"
     return f"WARNING: feature #{target_id} not found, nothing modified"
 
 
 def process_deprecate_feature(inc: dict, fl: dict) -> str:
-    """处理 deprecate_feature 增量：标记功能为 deprecated。"""
     target_id = inc.get("feature_id")
     for feat in fl.get("features", []):
         if feat.get("id") == target_id:
@@ -149,88 +221,155 @@ def process_deprecate_feature(inc: dict, fl: dict) -> str:
     return f"WARNING: feature #{target_id} not found"
 
 
-def process_update_doc(inc: dict, project_root: Path) -> str:
-    """处理 update_doc 增量：更新 SRS/Design/UCD 文档。"""
-    doc_type = inc.get("doc_type")  # "srs", "design", "ucd"
-    doc_path = project_root / "docs" / "plans"
+def latest_matching_file(base: Path, pattern: str) -> Path | None:
+    if not base.exists():
+        return None
+    matches = sorted(base.glob(pattern), key=lambda item: item.stat().st_mtime, reverse=True)
+    return matches[0] if matches else None
 
-    if doc_type == "srs":
-        matches = list(doc_path.glob("*-srs.md"))
-    elif doc_type == "design":
-        matches = list(doc_path.glob("*-design.md"))
-    elif doc_type == "ucd":
-        matches = list(doc_path.glob("*-ucd.md"))
-    else:
+
+def resolve_doc_target(project_root: Path, doc_type: str) -> Path | None:
+    normalized = doc_type.lower()
+
+    if state_path(project_root).exists():
+        state = load_state(project_root)
+        contract = path_contract(project_root, state)
+        artifact_map = {
+            "proposal": contract["artifacts"]["plan"],
+            "plan": contract["artifacts"]["plan"],
+            "requirements": contract["artifacts"]["requirements"],
+            "srs": contract["artifacts"]["requirements"],
+            "ucd": contract["artifacts"]["ucd"],
+            "design": contract["artifacts"]["design"],
+            "design_review": contract["artifacts"]["design_review"],
+            "tasks": contract["artifacts"]["tasks"],
+            "review": contract["artifacts"]["review"],
+            "system_test": contract["artifacts"]["system_test"],
+            "st": contract["artifacts"]["system_test"],
+            "qa": contract["artifacts"]["qa"],
+        }
+        if normalized in artifact_map:
+            return artifact_map[normalized]
+
+    plans_dir = project_root / "docs" / "plans"
+    legacy_patterns = {
+        "requirements": "*-srs.md",
+        "srs": "*-srs.md",
+        "design": "*-design.md",
+        "ucd": "*-ucd.md",
+        "st": "*-st-report.md",
+        "system_test": "*-st-report.md",
+    }
+    pattern = legacy_patterns.get(normalized)
+    if pattern:
+        return latest_matching_file(plans_dir, pattern)
+    return None
+
+
+def process_update_doc(inc: dict, project_root: Path) -> str:
+    doc_type = inc.get("doc_type", "")
+    target = resolve_doc_target(project_root, doc_type)
+    if target is None:
         return f"Unknown doc_type: {doc_type}"
 
-    if not matches:
-        return f"No {doc_type} document found in docs/plans/"
-    # 更新最新的文档
-    target = sorted(matches)[-1]
-    original_content = target.read_text(encoding="utf-8")
-    patch = inc.get("patch", "")
-    new_content = original_content + f"\n\n## 增量更新 ({datetime.now().strftime('%Y-%m-%d')})\n\n{patch}\n"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    original_content = target.read_text(encoding="utf-8") if target.exists() else f"# {doc_type.upper()}\n"
+    patch = inc.get("patch") or inc.get("content") or inc.get("description") or ""
+    title = inc.get("title") or inc.get("reason") or "Increment update"
+    stamp = datetime.now().strftime("%Y-%m-%d")
+    new_content = (
+        f"{original_content.rstrip()}\n\n"
+        f"## Increment Update ({stamp})\n\n"
+        f"### {title}\n\n"
+        f"{patch.strip()}\n"
+    )
     target.write_text(new_content, encoding="utf-8")
-    return f"Updated {target.name}"
+    return f"Updated {target}"
+
+
+def append_increment_history(project_root: Path, entry: dict) -> None:
+    history_path = increment_history_path(project_root)
+    history = load_json(history_path, [])
+    history.append(entry)
+    save_json(history_path, history)
+    append_phase_history(project_root, entry)
+
+
+def reset_downstream_checkpoints(state: dict, start_key: str) -> None:
+    if start_key not in CHECKPOINT_ORDER:
+        return
+    start = CHECKPOINT_ORDER.index(start_key)
+    for key in CHECKPOINT_ORDER[start:]:
+        set_checkpoint(state, key, False)
+
+
+def update_state_after_increment(project_root: Path, inc: dict, result: str) -> None:
+    if not state_path(project_root).exists():
+        return
+
+    state = load_state(project_root)
+    inc_type = inc.get("type")
+    doc_type = str(inc.get("doc_type", "")).lower()
+    next_phase = state.get("current_phase", "increment")
+
+    if inc_type in {"add_feature", "modify_feature", "deprecate_feature"}:
+        reset_downstream_checkpoints(state, "build_work")
+        next_phase = "build-work"
+    elif inc_type == "update_doc":
+        if doc_type in {"proposal", "plan"}:
+            reset_downstream_checkpoints(state, "plan")
+            next_phase = "plan"
+        elif doc_type in {"requirements", "srs"}:
+            reset_downstream_checkpoints(state, "requirements")
+            next_phase = "requirements"
+        elif doc_type in {"design", "ucd", "design_review"}:
+            reset_downstream_checkpoints(state, "design")
+            next_phase = "design"
+        elif doc_type in {"review"}:
+            reset_downstream_checkpoints(state, "review")
+            next_phase = "review"
+        elif doc_type in {"system_test", "st"}:
+            reset_downstream_checkpoints(state, "test_system")
+            next_phase = "test-system"
+        elif doc_type in {"qa"}:
+            reset_downstream_checkpoints(state, "test_qa")
+            next_phase = "test-qa"
+
+    state["current_phase"] = next_phase
+    save_state(project_root, state)
 
 
 def record_increment(project_root: Path, inc_id: str, inc: dict, result: str) -> None:
-    """将增量记录到 phase-history.json。"""
-    history = load_phase_history(project_root)
-    history.append({
+    entry = {
         "timestamp": datetime.now().isoformat(),
         "increment_id": inc_id,
         "type": inc.get("type"),
         "scope": inc.get("scope"),
         "reason": inc.get("reason"),
         "result": result,
-    })
-    save_phase_history(project_root, history)
+    }
+    append_increment_history(project_root, entry)
 
 
-def process_increment(project_root: Path, inc_id: str, dry_run: bool = False) -> tuple[bool, str]:
-    """
-    处理单个增量请求。
-
-    Args:
-        project_root: 项目根目录
-        inc_id: 增量 ID
-        dry_run: 如果为 True，仅验证和报告，不修改任何文件
-
-    Returns:
-        (success, message)
-    """
+def process_increment(project_root: Path, item: dict, dry_run: bool = False) -> tuple[bool, str]:
     try:
-        inc = load_increment_request(project_root, inc_id)
-    except FileNotFoundError as e:
-        return False, str(e)
+        inc_id, inc = load_increment_request(project_root, item)
+    except FileNotFoundError as exc:
+        return False, str(exc)
 
     inc_type = inc.get("type")
-    scope = inc.get("scope", "")
-
-    # 加载 feature-list（如果需要修改）
     fl = None
-    if inc_type in ("add_feature", "modify_feature", "deprecate_feature"):
+    if inc_type in {"add_feature", "modify_feature", "deprecate_feature"}:
         try:
             fl = load_feature_list(project_root)
         except FileNotFoundError:
             return False, "feature-list.json not found"
 
-    # 执行增量（dry-run 模式下仅模拟，不修改对象）
     if dry_run:
-        if inc_type == "add_feature":
-            result = "[dry-run] Would add feature"
-        elif inc_type == "modify_feature":
-            result = "[dry-run] Would modify feature"
-        elif inc_type == "deprecate_feature":
-            result = "[dry-run] Would deprecate feature"
-        elif inc_type == "update_doc":
-            result = "[dry-run] Would update doc"
-        else:
-            result = f"[dry-run] Unknown increment type: {inc_type}"
-        return True, result
+        if inc_type in {"add_feature", "modify_feature", "deprecate_feature", "update_doc"}:
+            return True, f"[dry-run] Would process {inc_type}"
+        return True, f"[dry-run] Unknown increment type: {inc_type}"
 
-    # 真实执行
     if inc_type == "add_feature":
         result = process_add_feature(inc, fl)
     elif inc_type == "modify_feature":
@@ -240,76 +379,75 @@ def process_increment(project_root: Path, inc_id: str, dry_run: bool = False) ->
     elif inc_type == "update_doc":
         result = process_update_doc(inc, project_root)
     else:
-        result = f"Unknown increment type: {inc_type}"
+        return False, f"Unknown increment type: {inc_type}"
 
-    # 保存 feature-list
     if fl is not None:
         save_feature_list(project_root, fl)
 
-    # 记录到历史
+    update_state_after_increment(project_root, inc, result)
     record_increment(project_root, inc_id, inc, result)
-
     return True, result
+
+
+def migrate_legacy_queue_if_needed(project_root: Path) -> None:
+    queue_path = increment_queue_path(project_root)
+    if queue_path.exists():
+        return
+    legacy_queue = project_root / LEGACY_QUEUE_FILE
+    if not legacy_queue.exists():
+        return
+    items = read_queue(project_root)
+    write_queue(project_root, items)
 
 
 def main():
     parser = argparse.ArgumentParser(description="VibeFlow Increment Handler")
-    parser.add_argument(
-        "--project-root",
-        default=".",
-        help="Path to project root (default: current directory)",
-    )
-    parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="Show what would be done without making changes",
-    )
+    parser.add_argument("--project-root", default=".", help="Path to project root (default: current directory)")
+    parser.add_argument("--dry-run", action="store_true", help="Show what would be done without making changes")
     args = parser.parse_args()
 
     project_root = Path(args.project_root).resolve()
+    ensure_state(project_root)
+    migrate_legacy_queue_if_needed(project_root)
 
-    # 读取队列
-    queue_ids = read_queue(project_root)
-    if not queue_ids:
+    queue_items = read_queue(project_root)
+    if not queue_items:
         print("Increment queue is empty — nothing to process.")
         sys.exit(0)
 
-    dry_run = args.dry_run
-    if dry_run:
-        print(f"[dry-run] Would process {len(queue_ids)} increment(s) — no changes will be made")
+    if args.dry_run:
+        print(f"[dry-run] Would process {len(queue_items)} increment(s) — no changes will be made")
 
-    processed = []
+    processed_ids = []
     failed = []
 
-    for inc_id in queue_ids:
-        print(f"\n[{inc_id}] {'[dry-run] would process' if dry_run else 'Processing'}...")
-        success, msg = process_increment(project_root, inc_id, dry_run=dry_run)
-        print(f"  -> {msg}")
+    for item in queue_items:
+        inc_id = normalize_queue_item(item).get("id", "unknown")
+        print(f"\n[{inc_id}] {'[dry-run] would process' if args.dry_run else 'Processing'}...")
+        success, message = process_increment(project_root, item, dry_run=args.dry_run)
+        print(f"  -> {message}")
         if success:
-            processed.append(inc_id)
+            processed_ids.append(inc_id)
         else:
-            failed.append((inc_id, msg))
+            failed.append((inc_id, message))
 
-    # 清除已处理的 ID（保留失败的用于重试）
-    # 清除已处理的 ID（dry-run 模式下跳过，不修改队列）
-    if dry_run:
-        remaining = queue_ids  # 全部保留
+    if args.dry_run:
+        remaining = queue_items
     else:
-        remaining = [i for i in queue_ids if i not in processed]
+        remaining = [item for item in queue_items if normalize_queue_item(item).get("id") not in processed_ids]
         write_queue(project_root, remaining)
 
-    # 摘要
-    print(f"\nDone: {len(processed)} succeeded, {len(failed)} failed.")
-    if dry_run:
+    print(f"\nDone: {len(processed_ids)} succeeded, {len(failed)} failed.")
+    if args.dry_run:
         print("[dry-run] Queue unchanged.")
     if failed:
         print("\nFailed:")
-        for inc_id, msg in failed:
-            print(f"  [{inc_id}] {msg}")
+        for inc_id, message in failed:
+            print(f"  [{inc_id}] {message}")
         sys.exit(1)
-    else:
-        print("All increments processed successfully." if not dry_run else "Dry-run complete.")
-        sys.exit(0)
+
+    print("All increments processed successfully." if not args.dry_run else "Dry-run complete.")
+    sys.exit(0)
 
 
 if __name__ == "__main__":

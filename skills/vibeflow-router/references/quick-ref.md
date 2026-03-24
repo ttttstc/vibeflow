@@ -7,8 +7,8 @@
 - [ ] 运行`python scripts/get-vibeflow-phase.py`
 - [ ] 读取`.vibeflow/phase-history.json`
 - [ ] 读取`.vibeflow/work-config.json`
-- [ ] 读取`.vibeflow/feature-list.json`
-- [ ] 检查`.vibeflow/increment-queue.txt`
+- [ ] 读取`feature-list.json`
+- [ ] 检查`.vibeflow/increments/queue.json`
 - [ ] 注入会话上下文摘要
 - [ ] 如果存在，处理增量
 - [ ] 路由到适当的阶段处理器
@@ -39,8 +39,8 @@ done --> (generate summary)
 |------|------|
 | `.vibeflow/phase-history.json` | 阶段完成审计跟踪 |
 | `.vibeflow/work-config.json` | 当前工作配置 |
-| `.vibeflow/feature-list.json` | 功能清单和状态 |
-| `.vibeflow/increment-queue.txt` | 待处理的增量更改 |
+| `feature-list.json` | 功能清单和状态 |
+| `.vibeflow/increments/queue.json` | 待处理的增量更改 |
 | `.vibeflow/workflow.yaml` | 批准的项目计划 |
 | `.vibeflow/hooks/session-start.ps1` | Windows会话开始钩子 |
 | `.vibeflow/hooks/session-start.sh` | Unix会话开始钩子 |

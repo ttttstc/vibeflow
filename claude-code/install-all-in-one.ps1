@@ -64,7 +64,7 @@ try {
     New-Item -ItemType Directory -Force -Path $TempExtract | Out-Null
 
     Expand-Archive -Path $TempZip -DestinationPath $TempExtract -Force
-    $ExtractedRepo = Join-Path $TempExtract "vibeflow-feat-plan-value-review"
+    $ExtractedRepo = Join-Path $TempExtract "vibeflow-main"
 
     Move-Item -Path $ExtractedRepo -Destination $TargetDir -Force
     Write-Host "  安装到: $TargetDir" -ForegroundColor Green

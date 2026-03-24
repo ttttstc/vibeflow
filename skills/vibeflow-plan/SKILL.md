@@ -40,14 +40,17 @@ Skill: vibeflow-plan-value-review
 
 ### 1.2 提取价值审查结论
 
-保存到 `.vibeflow/plan-value-review.md`：
+先运行 `python scripts/get-vibeflow-paths.py --json` 获取当前工作包路径，再将结论收敛到 `docs/changes/<change-id>/proposal.md`：
 
 ```markdown
-# Plan Value Review — 商业价值评估
+# Proposal
 
 **日期**：YYYY-MM-DD
 **审查分支**：[branch-name]
 **审查模式**：[EXPANSION / SELECTIVE / HOLD / REDUCTION]
+
+## Summary
+[这次工作包要解决什么，为什么值得做]
 
 ## 价值评估结论
 
@@ -84,12 +87,12 @@ Skill: vibeflow-plan-value-review
 
 **如果拒绝**：标记项目为 `terminated` 状态（更新 `phase-history.json`），阶段结束。
 
-### 1.5 写入 plan.md 完成标记
+### 1.5 写入 proposal 完成标记
 
-价值评审通过后，写入 `.vibeflow/plan.md`：
+价值评审通过后，将通过结论写入 `docs/changes/<change-id>/proposal.md` 的最终版本，并同步 `.vibeflow/state.json`：
 
 ```markdown
-# Plan 完成
+## Approval
 
 **日期**：YYYY-MM-DD
 **价值审查**：通过（模式：XXX）
@@ -98,7 +101,7 @@ Skill: vibeflow-plan-value-review
 **说明**：eng/design review 在 design 阶段末尾执行（见 vibeflow-design）
 ```
 
-此文件的存在即标记 Plan 阶段完成，触发 phase detector 进入 requirements。
+`proposal.md` 存在且 `.vibeflow/state.json` 中 `checkpoints.plan=true` 时，触发 phase detector 进入 requirements。
 
 ---
 
@@ -106,8 +109,7 @@ Skill: vibeflow-plan-value-review
 
 | 文件 | 内容 | 必须存在才进入 requirements |
 |------|------|--------------------------|
-| `.vibeflow/plan-value-review.md` | CEO 价值评估结论 | ✅ |
-| `.vibeflow/plan.md` | Plan 阶段完成标记（价值评审通过后写入） | ✅ |
+| `docs/changes/<change-id>/proposal.md` | 价值评估结论 + Plan 完成标记 | ✅ |
 
 ## 记录到 phase-history
 
@@ -139,9 +141,8 @@ Skill: vibeflow-plan-value-review
 ## 集成
 
 **调用者：** vibeflow-router（plan 阶段）
-**依赖：** `.vibeflow/think-output.md`、`.vibeflow/workflow.yaml`
+**依赖：** `docs/changes/<change-id>/context.md`、`.vibeflow/workflow.yaml`
 **产出：**
-- `.vibeflow/plan-value-review.md`（CEO 价值审查）
-- `.vibeflow/plan.md`（阶段完成标记，价值评审通过后写入）
+- `docs/changes/<change-id>/proposal.md`（CEO 价值审查 + 阶段完成标记）
 **Gate：** 价值审查失败 = 项目终止；价值评审通过 = 进入 requirements
 **链接到：** vibeflow-requirements（通过时）/ 项目终止（拒绝时）

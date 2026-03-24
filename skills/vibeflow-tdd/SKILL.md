@@ -111,10 +111,10 @@ low_value_count / total_assertion_count <= 0.20
 - PID：如 `PID: 12345`
 - 就绪信号：如 `Server ready`
 
-**env-guide.md 同步规则** — 实现或修改服务后：
-1. 比较实际启动命令和端口与 env-guide.md
-2. 如有差异：更新 env-guide.md
-3. 在同一次 git 提交中包含 env-guide.md 变更
+**services.md 同步规则** — 实现或修改服务后：
+1. 比较实际启动命令和端口与 `.vibeflow/guides/services.md`
+2. 如有差异：更新 `.vibeflow/guides/services.md`
+3. 在同一次 git 提交中包含 services guide 变更
 
 ## 步骤 3：TDD Refactor
 

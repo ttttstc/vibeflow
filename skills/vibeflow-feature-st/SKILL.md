@@ -18,13 +18,13 @@ TDD（vibeflow-tdd）已从内部验证了实现。此技能从**外部**验证 
 
 **规则：** 如果一个测试用例需要阅读源代码才能确定预期结果，它不是黑盒测试 — 仅使用 SRS 规格重写。
 
-## 服务生命周期（通过 env-guide.md）
+## 服务生命周期（通过 `.vibeflow/guides/services.md`）
 
 ### 启动（首个测试用例前）
-1. 读取 `env-guide.md` — 定位"启动所有服务"章节
+1. 读取 `.vibeflow/guides/services.md` — 定位"启动所有服务"章节
 2. 检查服务是否已运行：运行健康检查
-3. 如未运行：执行启动命令，捕获输出，提取 PID 和端口，记录到 `task-progress.md`
-4. 启动失败则诊断根因，修正后更新 env-guide.md
+3. 如未运行：执行启动命令，捕获输出，提取 PID 和端口，记录到 `.vibeflow/logs/session-log.md`
+4. 启动失败则诊断根因，修正后更新 `.vibeflow/guides/services.md`
 
 ### 清理（所有测试用例完成后）— 强制
 1. 停止服务：按 PID 杀进程（优先）或按端口杀（备选）
@@ -43,7 +43,7 @@ TDD（vibeflow-tdd）已从内部验证了实现。此技能从**外部**验证 
 - **功能对象** — feature-list.json 中的 ID、标题、描述、verification_steps、ui 标志、依赖、优先级
 - **SRS 章节** — 通过文档查找协议读取完整 FR-xxx
 - **设计章节** — 完整 §4.N
-- **计划文档** — `docs/plans/YYYY-MM-DD-<feature-name>.md`
+- **任务文档** — `docs/changes/<change-id>/tasks.md`
 - **UCD 章节**（仅 `"ui": true`）
 - **接口契约** — API 端点、CLI 命令、UI 入口点
 - **测试结果摘要** — 来自 TDD 和质量门禁

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Validate LLM-generated vibeflow-guide.md for structural completeness.
+Validate LLM-generated build guide for structural completeness.
 
 Checks that the guide contains all required workflow sections and critical
 rule keywords. This prevents the LLM from accidentally omitting essential
@@ -12,8 +12,8 @@ with "ui": true), additionally checks for Chrome DevTools MCP sections.
 Does NOT check exact content — only that required concepts are present.
 
 Usage:
-    python validate_guide.py <path/to/vibeflow-guide.md>
-    python validate_guide.py <path/to/vibeflow-guide.md> --feature-list <path/to/feature-list.json>
+    python validate_guide.py <path/to/build.md>
+    python validate_guide.py <path/to/build.md> --feature-list <path/to/feature-list.json>
 
 Exit codes:
     0 — all required sections present
@@ -54,7 +54,7 @@ REQUIRED_SECTIONS = [
     ("Examples",
      [r"example", r"examples/"]),
     ("Persist / save state / commit",
-     [r"persist", r"save.*state", r"git.*commit", r"task-progress"]),
+     [r"persist", r"save.*state", r"git.*commit", r"session-log"]),
     ("Critical Rules",
      [r"critical\s*rule", r"iron\s*rule", r"must\s*never"]),
     ("Real Test Convention",
@@ -85,7 +85,7 @@ def has_ui_features(feature_list_path: str) -> bool:
 
 def validate_guide(path: str, feature_list_path: str = None) -> list[str]:
     """
-    Validate that a vibeflow-guide.md contains all required sections.
+    Validate that a build guide contains all required sections.
 
     Args:
         path: Path to the guide markdown file
@@ -156,8 +156,8 @@ def _append_footer(path: str) -> None:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Validate LLM-generated vibeflow-guide.md")
-    parser.add_argument("guide_path", help="Path to vibeflow-guide.md")
+    parser = argparse.ArgumentParser(description="Validate LLM-generated build guide")
+    parser.add_argument("guide_path", help="Path to build.md")
     parser.add_argument("--feature-list", default=None,
                         help="Path to feature-list.json; enables Chrome DevTools section "
                              "checks when UI features are present")

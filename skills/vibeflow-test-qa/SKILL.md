@@ -13,7 +13,7 @@ description: "系统测试通过后且工作流要求 UI QA 时使用 — 运行
 
 - `.vibeflow/workflow.yaml` 中 QA 标记为 required
 - 项目包含 `"ui": true` 的功能
-- 系统测试已通过（`docs/plans/*-st-report.md` 存在）
+- 系统测试已通过（`docs/changes/<change-id>/verification/system-test.md` 存在）
 
 **如工作流标记 QA 为可选且无 UI 功能**：跳过此阶段，直接进入 `vibeflow-ship`。
 
@@ -21,9 +21,10 @@ description: "系统测试通过后且工作流要求 UI QA 时使用 — 运行
 
 ### 1. 准备环境
 
-- 读取 `docs/plans/*-st-report.md` — 系统测试结果和已知问题
-- 读取 UCD 风格指南 `docs/plans/*-ucd.md` — 视觉基准
-- 启动服务（使用 env-guide.md）
+- 运行 `python scripts/get-vibeflow-paths.py --json`
+- 读取 `docs/changes/<change-id>/verification/system-test.md` — 系统测试结果和已知问题
+- 读取 UCD 风格指南 `docs/changes/<change-id>/ucd.md`（如存在）或 `design.md` 中的 UI/UX 章节 — 视觉基准
+- 启动服务（使用 `.vibeflow/guides/services.md`）
 - 验证应用在浏览器中可达
 
 ### 2. 视觉走查
@@ -81,7 +82,7 @@ description: "系统测试通过后且工作流要求 UI QA 时使用 — 运行
 
 ### 6. 生成 QA 报告
 
-保存到 `.vibeflow/qa-report.md`：
+保存到 `docs/changes/<change-id>/verification/qa.md`：
 
 ```markdown
 # QA 验证报告
@@ -123,9 +124,9 @@ description: "系统测试通过后且工作流要求 UI QA 时使用 — 运行
 
 ### 8. 清理与过渡
 
-- 停止服务（env-guide.md）
+- 停止服务（`.vibeflow/guides/services.md`）
 - Git 提交 QA 报告
-- 更新 task-progress.md
+- 更新 `.vibeflow/logs/session-log.md`
 
 QA 通过后进入 `vibeflow-ship`。
 
@@ -133,5 +134,5 @@ QA 通过后进入 `vibeflow-ship`。
 
 **调用者：** vibeflow-router 或 vibeflow-test-system
 **依赖：** 系统测试通过、UCD 文档存在
-**产出：** `.vibeflow/qa-report.md`
+**产出：** `docs/changes/<change-id>/verification/qa.md`
 **链接到：** vibeflow-ship
