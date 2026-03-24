@@ -125,7 +125,7 @@ def default_state(project_root: Path, topic: str | None = None) -> dict:
             "promotion_reason": "",
         },
         "autopilot": {
-            "enabled": False,
+            "enabled": True,
             "max_steps": 20,
             "max_retries_per_phase": 0,
             "parallel_build": True,

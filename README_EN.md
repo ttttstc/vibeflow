@@ -91,10 +91,15 @@ If Claude Code shows the VibeFlow entry flow, the plugin is loaded and ready.
 
 ## Automation and Dashboard
 
-Once Design is locked, VibeFlow can now take over the back half of delivery:
+Once Design is locked, the Claude Code plugin has one default behavior:
+
+- **reaching `build-init` enters the implementation loop**
+  The router keeps advancing `build-init -> build-config -> build-work -> review -> test -> ship -> reflect` until `done`, a blocker, or a manual checkpoint.
+
+For command-line runs, CI, or dashboard-driven automation, the script entrypoint for that same loop is:
 
 - `python scripts/run-vibeflow-autopilot.py --project-root <repo>`
-  Automatically advances from the current phase until `done`, a blocker, or a manual checkpoint.
+  Runs the same implementation loop from the current phase until `done`, a blocker, or a manual checkpoint.
 - `python scripts/run-vibeflow-build-work.py --project-root <repo> --max-workers 4`
   Runs Build-Work directly with dependency-aware parallel execution.
 - `python scripts/run-vibeflow-dashboard.py --project-root <repo>`
@@ -183,7 +188,7 @@ This is the most complex phase in the framework:
 
 ### Build-init
 
-**Goal**: Initialize build artifacts.
+**Goal**: Enter the implementation handoff and prepare the build artifacts.
 
 - `feature-list.json` — the feature inventory and build source of truth
 - `.vibeflow/runtime.json` — the live runtime overlay used by autopilot and the dashboard
@@ -193,7 +198,7 @@ This is the most complex phase in the framework:
 
 ### Build-config
 
-**Goal**: Configure implementation details for each feature.
+**Goal**: Configure implementation details for each feature as part of the implementation loop.
 
 - Assigns phase (design/develop/test) to each feature
 - Confirms external dependencies and delivery order
@@ -201,6 +206,8 @@ This is the most complex phase in the framework:
 ### Build-work
 
 **Goal**: Implement features through the complete quality pipeline, either serially or in dependency-aware parallel lanes.
+
+In Claude Code plugin mode, Build is no longer a sequence of manual stops. Once `build-init` begins, the implementation loop keeps running through Build, Review, Test, Ship, and Reflect unless it hits a blocker or a manual gate.
 
 ```
 Pick Feature → TDD Red-Green-Refactor → Quality Gates
@@ -385,7 +392,7 @@ Four static templates control workflow strictness:
 | File | Purpose |
 |---|---|
 | `state.json` | Central workflow state: phase, mode, active change package; this is the primary routing anchor |
-| `runtime.json` | Live runtime overlay: current autopilot action, friendly guidance, recent events, and heartbeat; the dashboard reads this directly |
+| `runtime.json` | Live runtime overlay: current implementation-loop action, friendly guidance, recent events, and heartbeat; the dashboard reads this directly |
 | `workflow.yaml` | Active workflow config copied from a template; decides which stages are required |
 | `work-config.json` | Build config: enabled steps and quality thresholds; Build enforces this file |
 | `phase-history.json` | Phase progression history; records routing changes, increments, and automation events |
@@ -409,7 +416,7 @@ Four static templates control workflow strictness:
 | `docs/changes/<change-id>/verification/system-test.md` | System test report; records integration and end-to-end verification |
 | `docs/changes/<change-id>/verification/qa.md` | QA report; records browser and interaction verification results |
 | `docs/test-cases/feature-*.md` | Feature test case documents; executable cases for feature-level acceptance |
-| `feature-list.json` | Feature inventory; the single source of truth during Build, including dependencies, status, verification steps, and `autopilot_commands` |
+| `feature-list.json` | Feature inventory; the single source of truth during Build, including dependencies, status, verification steps, and automation commands |
 | `.vibeflow/logs/session-log.md` | Task progress log; useful for humans, no longer the state authority |
 | `RELEASE_NOTES.md` | Release notes; a delivery output, not a routing signal |
 
@@ -449,12 +456,12 @@ vibeflow/
 │   └── vibeflow-reflect/             # Reflection
 ├── scripts/                         # Python scripts
 │   ├── get-vibeflow-phase.py        # Phase detection (16-state router)
-│   ├── run-vibeflow-autopilot.py    # Auto-drives Build → Review → Test → Ship → Reflect
+│   ├── run-vibeflow-autopilot.py    # Command-line entrypoint for the implementation loop
 │   ├── run-vibeflow-build-work.py   # Build-Work executor with dependency-aware parallelism
 │   ├── run-vibeflow-dashboard.py    # Local live dashboard
 │   ├── new-vibeflow-config.py       # Workflow config generation
 │   ├── new-vibeflow-work-config.py  # Build config generation
-│   ├── vibeflow_automation.py       # autopilot / build orchestration core
+│   ├── vibeflow_automation.py       # implementation-loop / build orchestration core
 │   └── vibeflow_dashboard.py        # dashboard snapshot + SSE server
 ├── templates/                       # Static workflow templates
 │   ├── prototype.yaml

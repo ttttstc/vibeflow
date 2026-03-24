@@ -90,8 +90,9 @@ VibeFlow是一个严谨的软件开发框架，强调在构建之前思考、在
 ### 步骤3：初始化Build阶段
 
 ```
-使用vibeflow-build-init来脚手架化实现产物。
-然后使用vibeflow-router开始功能工作。
+Design 确认后进入 Build。
+在 Claude Code 插件里，Build 的默认路径不是逐段手动推进，而是从 build-init 开始自动进入实施闭环。
+只有在调试单个子阶段时，才单独调用 vibeflow-build-init 或 vibeflow-build-work。
 ```
 
 ---
@@ -198,13 +199,18 @@ cat feature-list.json
 
 ### 阶段3：Build（构建）
 
-**目的**：通过严格流程一次实现一个功能：TDD、质量关卡、功能验收和规范审查。
+**目的**：从 `build-init` 起默认自动接管后半程实施闭环。
 
 **何时进入**：Plan阶段批准后。
 
 **关键产出物**：`feature-list.json`
 
-**使用的技能**：
+**默认执行方式**：
+- 进入 `build-init` 后，不再逐段停顿等待用户
+- router 会持续执行 `build-init -> build-config -> build-work -> review -> test -> ship -> reflect`
+- 直到 `done`、阻塞、或需要人工确认
+
+**子技能（默认作为内部子步骤 / fallback）**：
 - `vibeflow-build-init` - 初始化构建产物（运行一次）
 - `vibeflow-build-work` - 编排功能流程
 - `vibeflow-tdd` - 红-绿-重构循环
@@ -214,7 +220,7 @@ cat feature-list.json
 
 **并行执行**：Quality Gates 通过后，Feature-ST 和 Spec-Review 通过 Agent 工具并行执行。
 
-**退出标准**：`feature-list.json`中的所有功能标记为完成并通过。
+**退出标准**：`feature-list.json`中的所有功能标记为完成并通过，然后自动继续进入 Review/Test/Ship/Reflect。
 
 ---
 

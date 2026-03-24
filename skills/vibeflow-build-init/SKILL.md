@@ -7,6 +7,8 @@ description: "设计文档存在但 feature-list.json 尚未创建时使用 — 
 
 在 SRS 和设计均审批通过后运行一次。搭建所有持久化工件，将需求分解为可验证的功能，准备项目进入迭代构建。
 
+在 Claude Code 插件的默认路径中，本 skill 是 **Build 自动实施闭环的第一个内部子步骤**，不是用户需要手动停留的长期阶段。
+
 **启动宣告：** "正在使用 vibeflow-build-init 初始化项目。"
 
 ## 输入文档
@@ -158,7 +160,7 @@ python scripts/new-vibeflow-work-config.py --project-root .
 ```
 
 ### 15. 进入构建
-进入 `vibeflow-build-work` 开始第一个功能。
+不要在这里停下来等待下一条用户指令。完成初始化后立即重新检测 phase，继续 Build 自动实施闭环；仅在调试或恢复时，才手动转入 `vibeflow-build-work`。
 
 ## 生成的持久化工件
 
@@ -174,7 +176,7 @@ python scripts/new-vibeflow-work-config.py --project-root .
 
 ## 集成
 
-**调用者：** vibeflow-router 或 vibeflow-design（步骤 6）
+**调用者：** vibeflow-router 的实施自动闭环，或调试/恢复场景下的手动调用
 **读取：** `docs/changes/<change-id>/requirements.md` + `docs/changes/<change-id>/design.md` + `.vibeflow/workflow.yaml`
-**链接到：** vibeflow-build-work（初始化完成后）
+**链接到：** Build 自动实施闭环（默认） / `vibeflow-build-work`（手动 fallback）
 **产出：** feature-list.json + 上述所有工件

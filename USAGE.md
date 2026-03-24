@@ -96,6 +96,12 @@ flowchart TD
     R --> S[Done]
 ```
 
+In Claude Code plugin mode, reaching `build-init` is the handoff point into the implementation loop. The router should keep advancing Build, Review, Test, Ship, and Reflect without waiting for a new user prompt between each subphase. For CLI runs, the script entrypoint of that same loop is:
+
+```bash
+python scripts/run-vibeflow-autopilot.py --project-root <target-project>
+```
+
 ## 5. Example Validation
 
 The repository includes an independent sample project:
