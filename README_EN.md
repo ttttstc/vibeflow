@@ -13,6 +13,29 @@ VibeFlow gives it a delivery system with **file-based state, deterministic routi
 
 > Think of it as guardrails, a map, and a memory system for AI-driven software delivery.
 
+## Flow At A Glance
+
+```mermaid
+flowchart LR
+    A["Start"] --> B{"Pick a mode"}
+    B -->|Complex work| C["Full Mode"]
+    B -->|Small change| D["Quick Mode"]
+    C --> C1["Think"]
+    C1 --> C2["Plan"]
+    C2 --> C3["Requirements"]
+    C3 --> C4["Design"]
+    C4 --> E["Build"]
+    D --> D1["Quick"]
+    D1 --> E["Build"]
+    E --> F["Review"]
+    F --> G["Test"]
+    G --> H["Ship?"]
+    H --> I["Reflect?"]
+```
+
+Use Full Mode when the work is fuzzy, risky, or broad.  
+Use Quick Mode when the change is small, easy to verify, and easy to roll back.
+
 ## Why It Exists
 
 Without a real workflow, AI coding usually looks like this:

@@ -11,6 +11,29 @@ VibeFlow 给它一套可恢复、可追踪、可测试的交付流程：**文件
 
 > 你可以把它理解成：给 AI 配上路线图、安全带和刹车系统。
 
+## 一眼看懂流程
+
+```mermaid
+flowchart LR
+    A["开始"] --> B{"选择模式"}
+    B -->|复杂任务| C["Full Mode"]
+    B -->|小改动| D["Quick Mode"]
+    C --> C1["Think"]
+    C1 --> C2["Plan"]
+    C2 --> C3["Requirements"]
+    C3 --> C4["Design"]
+    C4 --> E["Build"]
+    D --> D1["Quick"]
+    D1 --> E["Build"]
+    E --> F["Review"]
+    F --> G["Test"]
+    G --> H["Ship?"]
+    H --> I["Reflect?"]
+```
+
+想法很多、风险不明、边界不清的时候走 Full。  
+改动很小、很好验证、回滚也简单的时候走 Quick。
+
 ## 为什么会有它
 
 没有流程的 AI 编程，常见结局通常长这样：
