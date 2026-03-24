@@ -18,6 +18,39 @@ from datetime import datetime
 from pathlib import Path
 
 
+QUICK_ALLOWED_CATEGORIES = {
+    "bugfix",
+    "hotfix",
+    "small-change",
+    "config",
+    "docs",
+    "tests",
+    "dependency",
+}
+
+QUICK_BLOCKING_RISK_FLAGS = {
+    "core-logic",
+    "payment",
+    "auth",
+    "data",
+    "external-api",
+    "security",
+    "multi-service",
+    "multi-database",
+    "ui-redesign",
+    "migration",
+    "new-feature",
+    "architecture",
+}
+
+DEFAULT_QUICK_PROMOTION_RULES = [
+    "scope grows beyond a small bounded change",
+    "risk touches auth, payment, security, or data migration",
+    "work spans multiple services, databases, or ownership boundaries",
+    "design decisions are no longer obvious",
+]
+
+
 def slugify(value: str) -> str:
     cleaned = []
     previous_dash = False
@@ -77,6 +110,19 @@ def default_state(project_root: Path, topic: str | None = None) -> dict:
             "test_qa": False,
             "ship": False,
             "reflect": False,
+        },
+        "quick_meta": {
+            "decision": "pending",
+            "category": "",
+            "scope": "",
+            "touchpoints": [],
+            "risk_flags": [],
+            "validation_plan": "",
+            "rollback_plan": "",
+            "promote_to_full_if": list(DEFAULT_QUICK_PROMOTION_RULES),
+            "rejected_reasons": [],
+            "promoted_from_quick": False,
+            "promotion_reason": "",
         },
     }
 
@@ -199,8 +245,10 @@ def load_state(project_root: Path) -> dict:
         return default_state(project_root)
     data = json.loads(path.read_text(encoding="utf-8"))
     merged = default_state(project_root)
-    merged.update({k: v for k, v in data.items() if k not in {"active_change", "artifacts", "checkpoints"}})
-    for key in ("active_change", "artifacts", "checkpoints"):
+    merged.update(
+        {k: v for k, v in data.items() if k not in {"active_change", "artifacts", "checkpoints", "quick_meta"}}
+    )
+    for key in ("active_change", "artifacts", "checkpoints", "quick_meta"):
         if key in data and isinstance(data[key], dict):
             merged[key].update(data[key])
     return merged
@@ -230,6 +278,140 @@ def set_checkpoint(state: dict, key: str, done: bool = True, phase: str | None =
     state.setdefault("checkpoints", {})[key] = done
     if phase is not None:
         state["current_phase"] = phase
+
+
+def quick_meta(state: dict) -> dict:
+    meta = deepcopy(default_state(Path("."))["quick_meta"])
+    loaded = state.get("quick_meta") or {}
+    if isinstance(loaded, dict):
+        meta.update(loaded)
+    return meta
+
+
+def quick_eligibility_issues(state: dict) -> list[str]:
+    meta = quick_meta(state)
+    issues: list[str] = []
+
+    category = str(meta.get("category") or "").strip().lower()
+    if not category:
+        issues.append("quick_meta.category is required.")
+    elif category not in QUICK_ALLOWED_CATEGORIES:
+        issues.append(f"category '{category}' is not eligible for Quick Mode.")
+
+    scope = str(meta.get("scope") or "").strip()
+    if not scope:
+        issues.append("quick_meta.scope is required.")
+
+    touchpoints = meta.get("touchpoints") or []
+    if not isinstance(touchpoints, list) or not [item for item in touchpoints if str(item).strip()]:
+        issues.append("quick_meta.touchpoints must list the affected files or modules.")
+
+    validation_plan = str(meta.get("validation_plan") or "").strip()
+    if not validation_plan:
+        issues.append("quick_meta.validation_plan is required.")
+
+    rollback_plan = str(meta.get("rollback_plan") or "").strip()
+    if not rollback_plan:
+        issues.append("quick_meta.rollback_plan is required.")
+
+    risk_flags = meta.get("risk_flags") or []
+    normalized_flags = {str(flag).strip().lower() for flag in risk_flags if str(flag).strip()}
+    blocked_flags = sorted(normalized_flags & QUICK_BLOCKING_RISK_FLAGS)
+    if blocked_flags:
+        issues.append(f"risk flags require Full Mode: {', '.join(blocked_flags)}.")
+
+    decision = str(meta.get("decision") or "pending").strip().lower()
+    if decision == "rejected":
+        rejected = meta.get("rejected_reasons") or []
+        suffix = f" Reasons: {'; '.join(str(item) for item in rejected if str(item).strip())}" if rejected else ""
+        issues.append(f"Quick Mode was rejected.{suffix}".strip())
+
+    return issues
+
+
+def quick_required_artifacts(project_root: Path, state: dict) -> dict[str, Path]:
+    contract = path_contract(project_root, state)
+    return {
+        "design": contract["artifacts"]["design"],
+        "tasks": contract["artifacts"]["tasks"],
+    }
+
+
+def quick_readiness_issues(project_root: Path, state: dict) -> list[str]:
+    issues = quick_eligibility_issues(state)
+    if not checkpoint_done(state, "quick_ready"):
+        issues.append("quick_ready checkpoint is not set.")
+
+    meta = quick_meta(state)
+    if str(meta.get("decision") or "pending").strip().lower() != "approved":
+        issues.append("quick_meta.decision must be 'approved' before Quick Mode can build.")
+
+    for artifact_name, artifact_path in quick_required_artifacts(project_root, state).items():
+        if not artifact_path.exists():
+            issues.append(f"Quick Mode requires {artifact_name} artifact: {artifact_path}.")
+
+    return issues
+
+
+def mark_quick_approved(
+    state: dict,
+    *,
+    category: str,
+    scope: str,
+    touchpoints: list[str],
+    validation_plan: str,
+    rollback_plan: str,
+    risk_flags: list[str] | None = None,
+    promote_to_full_if: list[str] | None = None,
+) -> None:
+    meta = quick_meta(state)
+    meta.update(
+        {
+            "decision": "approved",
+            "category": category,
+            "scope": scope,
+            "touchpoints": touchpoints,
+            "risk_flags": risk_flags or [],
+            "validation_plan": validation_plan,
+            "rollback_plan": rollback_plan,
+            "promote_to_full_if": promote_to_full_if or list(DEFAULT_QUICK_PROMOTION_RULES),
+            "rejected_reasons": [],
+        }
+    )
+    state["quick_meta"] = meta
+
+
+def promote_quick_to_full(state: dict, reason: str = "", project_root: Path | None = None) -> None:
+    state["mode"] = "full"
+    state["current_phase"] = "think"
+    set_checkpoint(state, "quick_ready", False)
+
+    meta = quick_meta(state)
+    meta["decision"] = "promoted"
+    meta["promoted_from_quick"] = True
+    meta["promotion_reason"] = reason
+    state["quick_meta"] = meta
+
+    for checkpoint in (
+        "think",
+        "plan",
+        "requirements",
+        "design",
+        "build_init",
+        "build_config",
+        "build_work",
+        "review",
+        "test_system",
+        "test_qa",
+        "ship",
+        "reflect",
+    ):
+        set_checkpoint(state, checkpoint, False)
+
+    if project_root is not None:
+        for artifact in (feature_list_path(project_root), work_config_path(project_root)):
+            if artifact.exists():
+                artifact.unlink()
 
 
 def update_active_change(state: dict, change_id: str) -> None:

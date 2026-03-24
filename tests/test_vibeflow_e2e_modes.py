@@ -264,8 +264,19 @@ class TestVibeFlowModeE2E:
 
         state = update_state(
             project_root,
-            lambda data: data["checkpoints"].__setitem__("quick_ready", True),
+            lambda data: data["quick_meta"].update(
+                {
+                    "decision": "approved",
+                    "category": "bugfix",
+                    "scope": "Fix a small bounded issue.",
+                    "touchpoints": ["src/quick_mode_project.py"],
+                    "validation_plan": "Run the targeted quick-mode checks.",
+                    "rollback_plan": "Revert the single quick-mode commit.",
+                }
+            ),
         )
+        state["checkpoints"]["quick_ready"] = True
+        write_json(project_root / ".vibeflow" / "state.json", state)
         write_text(project_root / state["artifacts"]["design"], "# Quick Design\n\nMinimal plan.\n")
         write_text(project_root / state["artifacts"]["tasks"], "# Tasks\n\n- Implement flow\n")
         create_feature_list(project_root, "todo")

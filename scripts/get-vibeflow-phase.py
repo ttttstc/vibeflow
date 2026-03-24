@@ -14,6 +14,8 @@ from vibeflow_paths import (  # noqa: E402
     increment_queue_path,
     load_state,
     path_contract,
+    quick_meta,
+    quick_readiness_issues,
     state_path,
     workflow_path,
 )
@@ -220,9 +222,17 @@ def state_based_detect_phase(project_root: Path, verbose: bool = False) -> dict:
     _reflect_req = reflect_required(workflow_path_obj)
     is_quick_mode = state.get("mode") == "quick"
     pending_increment = increment_pending(project_root)
+    quick_issues = quick_readiness_issues(project_root, state) if is_quick_mode else []
+    quick_state_meta = quick_meta(state) if is_quick_mode else {}
 
     checks = []
-    checks.append(("quick", is_quick_mode and not checkpoint_done(state, "quick_ready"), f'mode={state.get("mode")}, quick_ready={checkpoint_done(state, "quick_ready")}'))
+    checks.append(
+        (
+            "quick",
+            is_quick_mode and bool(quick_issues),
+            f"mode={state.get('mode')}, quick_issues={'; '.join(quick_issues) if quick_issues else 'none'}",
+        )
+    )
     checks.append(("increment", pending_increment, "increment queue " + ("pending" if pending_increment else "empty")))
     checks.append(("think", not checkpoint_done(state, "think") or not artifacts["think"].exists(), f'checkpoint={checkpoint_done(state, "think")}, artifact={"exists" if artifacts["think"].exists() else "missing"}'))
     checks.append(("template-selection", not workflow_path_obj.exists(), "workflow " + ("missing" if not workflow_path_obj.exists() else "exists")))
@@ -241,8 +251,12 @@ def state_based_detect_phase(project_root: Path, verbose: bool = False) -> dict:
     phase = "done"
     reason = "All detectable phases completed."
 
-    if is_quick_mode and not checkpoint_done(state, "quick_ready"):
-        phase, reason = "quick", "Quick mode is active and minimal design is not complete."
+    if is_quick_mode and quick_issues:
+        phase = "quick"
+        promote_hint = ""
+        if quick_state_meta.get("decision") in {"rejected", "promoted"} or any("Full Mode" in issue for issue in quick_issues):
+            promote_hint = " Run scripts/promote-vibeflow-quick.py to switch back to the Full Mode flow."
+        reason = f"Quick mode is not ready: {' '.join(quick_issues)}{promote_hint}".strip()
     elif pending_increment:
         phase, reason = "increment", "Increment queue has pending items."
     elif is_quick_mode:

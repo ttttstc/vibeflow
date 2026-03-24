@@ -27,9 +27,22 @@ VibeFlow 对外暴露两种开发模式：
 
 ### Quick Mode（快速开发）
 
-跳过 Think/Plan/Requirements/Design，保留最简设计文档后直接 Build。
+压缩前置分析，保留最小设计和任务清单，通过 Quick 准入校验后直接进入 Build。
 
-**适用**：Bug fix、小改动、配置更新
+**适用**：Bug fix、小改动、配置更新、测试/文档修补
+
+**最低要求**：
+- `.vibeflow/state.json` 中 `mode=quick`
+- `quick_meta.decision=approved`
+- `checkpoints.quick_ready=true`
+- `docs/changes/<change-id>/design.md`
+- `docs/changes/<change-id>/tasks.md`
+
+**不适用**：
+- 新功能
+- 认证、支付、安全、数据迁移
+- 多服务、多数据库、架构变更
+- UI 重设计
 
 **入口**：`/vibeflow-quick`
 
@@ -84,7 +97,7 @@ cat .vibeflow/increments/queue.json 2>/dev/null || echo "No pending increments"
 
 | 阶段 | Skill / 脚本 | 关键产出物 |
 |------|-------------|-----------|
-| `quick` | `skills/vibeflow-quick/SKILL.md` | `.vibeflow/state.json`（`mode=quick`）+ `docs/changes/<change-id>/design.md` |
+| `quick` | `skills/vibeflow-quick/SKILL.md` | `.vibeflow/state.json`（含 `quick_meta`）+ `docs/changes/<change-id>/design.md` + `tasks.md` |
 | `increment` | `scripts/increment-handler.py` | 更新 feature-list.json |
 | `think` | `skills/vibeflow-think/SKILL.md` | `docs/changes/<change-id>/context.md` |
 | `template-selection` | `scripts/new-vibeflow-config.py` + `scripts/new-vibeflow-work-config.py` | `.vibeflow/workflow.yaml` |

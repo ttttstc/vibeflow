@@ -28,6 +28,7 @@ from vibeflow_paths import (  # noqa: E402
     increment_queue_path,
     increment_requests_dir,
     load_state,
+    mark_quick_approved,
     save_state,
     session_log_path,
     set_checkpoint,
@@ -79,6 +80,14 @@ def write_combined_file(dst: Path, sections: list[tuple[str, Path | None]], forc
         content = src.read_text(encoding="utf-8").strip()
         content_parts.append(f"## {title}\n\n{content}")
     dst.write_text("\n\n".join(content_parts) + "\n", encoding="utf-8")
+    return True
+
+
+def write_text_if_missing(dst: Path, content: str, force: bool = False) -> bool:
+    if dst.exists() and not force:
+        return False
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    dst.write_text(content, encoding="utf-8")
     return True
 
 
@@ -184,12 +193,30 @@ def main():
 
     design_src = latest_matching_file(plans_dir, "*-design.md")
     quick_design_src = project_root / "docs" / "quick-design.md"
+    legacy_quick_detected = design_src is None and quick_design_src.exists()
     if design_src and copy_if_exists(design_src, change_root / "design.md", force=args.force):
         migrated.append(("design", change_root / "design.md"))
-    elif quick_design_src.exists() and copy_if_exists(quick_design_src, change_root / "design.md", force=args.force):
+    elif legacy_quick_detected and copy_if_exists(quick_design_src, change_root / "design.md", force=args.force):
         migrated.append(("design", change_root / "design.md"))
+
+    if legacy_quick_detected:
         existing_state["mode"] = "quick"
         existing_state["checkpoints"]["quick_ready"] = True
+        mark_quick_approved(
+            existing_state,
+            category="small-change",
+            scope="Migrated from legacy Quick Mode artifact.",
+            touchpoints=["legacy-quick-mode"],
+            validation_plan="Re-run the original targeted quick checks after migration.",
+            rollback_plan="Restore the legacy quick artifact or revert the migrated quick change.",
+        )
+        tasks_target = change_root / "tasks.md"
+        if write_text_if_missing(
+            tasks_target,
+            "# Tasks\n\n- Reconfirm the migrated quick scope.\n- Implement or continue the bounded quick change.\n- Run the targeted quick validation plan.\n- Ship or promote to Full Mode if scope expands.\n",
+            force=args.force,
+        ):
+            migrated.append(("tasks", tasks_target))
 
     if write_combined_file(
         change_root / "design-review.md",

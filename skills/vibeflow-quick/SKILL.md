@@ -1,385 +1,197 @@
 ---
 name: vibeflow-quick
-description: Quick Mode for VibeFlow - fast development without formal design. Use when user runs /vibeflow-quick or selects Quick Mode.
+description: Quick Mode for VibeFlow. Use when the work is small, bounded, low-risk, and easy to verify or roll back.
 ---
 
 # VibeFlow Quick Mode
 
-快速开发模式：跳过完整的设计流程，直接进入构建。
+Quick Mode 是“小改动快速交付模式”，不是“低质量模式”。
 
-## 何时使用 Quick Mode
+它会：
+- 压缩前置分析
+- 保留最小设计和任务清单
+- 保留 Review 和 Test
+- 在风险超出边界时，强制升级到 Full Mode
 
-当用户：
-- 运行 `/vibeflow-quick`
-- 在 `/vibeflow` 意图确认中选择"快速任务"
+## 适用场景
 
-## Quick Mode Eligibility
+适合：
+- bug fix / hot fix
+- 小范围现有功能修正
+- 配置更新
+- 文档、测试、脚手架修补
+- 小型依赖升级，且无重大 API 变化
 
-**⚠️ 风险检查：在继续之前确认**
+不适合：
+- 新功能开发
+- 架构调整
+- 多服务或多数据库变更
+- UI 方案需要重新设计
+- 权限、安全、支付、认证、数据迁移
+- 范围不明确、回滚不明确
 
-以下情况**适合** Quick Mode：
-- [ ] Bug fix 或 hot fix
-- [ ] 单文件或少数文件修改
-- [ ] 配置文件更新
-- [ ] CLI 工具添加
-- [ ] 测试文件编写
-- [ ] 文档更新
-- [ ] 依赖版本升级（无重大 API 变更）
+如果不确定，进入 Full Mode。
 
-以下情况**不适合** Quick Mode，请使用 Full Mode（`/vibeflow`）：
-- [ ] 新功能开发
-- [ ] 架构变更
-- [ ] 多服务/多数据库变更
-- [ ] 需要 UI/UX 设计的工作
-- [ ] 首次引入新框架/库
-- [ ] 涉及重要系统的变更（支付、认证等）
-- [ ] 需要迁移或数据变更
+## Quick Mode 最小契约
 
-**如果不确定，选择 Full Mode。**
+Quick Mode 在进入 Build 之前，必须同时满足：
 
----
+1. `.vibeflow/state.json`
+   - `mode = "quick"`
+   - `checkpoints.quick_ready = true`
+   - `quick_meta.decision = "approved"`
+
+2. `quick_meta` 至少写清：
+   - `category`
+   - `scope`
+   - `touchpoints`
+   - `validation_plan`
+   - `rollback_plan`
+   - `risk_flags`
+   - `promote_to_full_if`
+
+3. 最小产物存在：
+   - `docs/changes/<change-id>/design.md`
+   - `docs/changes/<change-id>/tasks.md`
 
 ## Quick Mode 流程
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│  Step 1: 快速评估（3-5 个问题）                              │
-│  · 确认改动范围                                             │
-│  · 确认不影响重要系统                                       │
-│  · 确认有基本测试思路                                       │
-└─────────────────────────────────────────────────────────────┘
-                           │
-                           ▼
-┌─────────────────────────────────────────────────────────────┐
-│  Step 2: 最小化设计                                        │
-│  · 生成 docs/changes/<change-id>/design.md（1-2 页）        │
-│  · 用户确认后再继续                                         │
-└─────────────────────────────────────────────────────────────┘
-                           │
-                           ▼
-┌─────────────────────────────────────────────────────────────┐
-│  Step 3: Build                                           │
-│  · Build-init（简化）                                       │
-│  · Build-work（直接实现）                                    │
-└─────────────────────────────────────────────────────────────┘
-                           │
-                           ▼
-┌─────────────────────────────────────────────────────────────┐
-│  Step 4: Review（简化版）                                  │
-│  · 功能正确性检查                                          │
-│  · 安全风险检查                                            │
-│  · 跳过架构审查                                            │
-└─────────────────────────────────────────────────────────────┘
-                           │
-                           ▼
-┌─────────────────────────────────────────────────────────────┐
-│  Step 5: Test（冒烟测试）                                   │
-│  · 快速功能验证                                            │
-│  · 跳过完整 NFR                                           │
-└─────────────────────────────────────────────────────────────┘
-                           │
-                           ▼
-┌─────────────────────────────────────────────────────────────┐
-│  Step 6: Ship（可选）                                      │
-│  · 如果用户要求                                            │
-└─────────────────────────────────────────────────────────────┘
+```text
+Quick Assessment
+  -> Minimal Design
+  -> Build
+  -> Review
+  -> Test
+  -> Ship? / Reflect?
 ```
 
----
+## 第一步：快速准入评估
 
-## Step 1: 快速评估
-
-运行以下评估：
-
-### 问题 1：改动范围
-
-请简要描述你要做的改动（1-3 句话）：
-
-```
-回答：___
-```
-
-### 问题 2：影响范围
-
-这个改动会影响哪些文件/模块？
-
-```
-回答：___
-```
-
-### 问题 3：测试计划
-
-你打算如何验证这个改动正常工作？
-
-```
-回答：___
-```
-
-### 问题 4：回滚方案
-
-如果这个改动出问题，最简单的回滚方式是什么？
-
-```
-回答：___
-```
-
-### 问题 5：风险确认
-
-这个改动涉及以下哪些？（选择所有适用的）
-- [ ] 核心业务逻辑
-- [ ] 支付/财务相关
-- [ ] 用户认证/授权
-- [ ] 数据存储/数据库
-- [ ] 外部 API 集成
-- [ ] 安全相关
-- [ ] 以上都不是
-
----
-
-## Step 2: 最小化设计
-
-先运行 `python scripts/get-vibeflow-paths.py --json`，基于快速评估生成 `docs/changes/<change-id>/design.md`：
-
-```markdown
-# Quick Design: [改动名称]
-
-## 概述
-[1-2 句话描述改动]
-
-## 改动范围
-- 文件：
-- 模块：
-
-## 实现思路
-[简述实现方案，1-3 点]
-
-## 验证方式
-[如何验证改动正常]
-
-## 回滚方案
-[最简单的回滚方式]
-```
-
-### 用户确认
-
-请确认以上设计是否符合你的预期：
-
-```
-[确认] / [需要修改]
-```
-
----
-
-## Step 3: Build
-
-### 3.1 初始化 build-work 需要的 artifacts
-
-在开始实现之前，创建 build-work 期望的 artifacts：
-
-**创建目录结构：**
-```bash
-mkdir -p .vibeflow docs/test-cases
-```
-
-**创建 feature-list.json：**
-从 `docs/changes/<change-id>/design.md` 提取功能列表：
+先运行：
 
 ```bash
-cat > feature-list.json << 'EOF'
-{
-  "features": [
-    {
-      "id": "quick-feature-1",
-      "name": "Quick Mode Feature",
-      "status": "failing",
-      "priority": 1,
-      "verification_steps": ["实现功能", "运行测试", "验证通过"]
-    }
-  ],
-"created_from": "docs/changes/<change-id>/design.md",
-"mode": "quick"
-}
-EOF
+python scripts/get-vibeflow-paths.py --json
 ```
 
-**创建 work-config.json：**
-```bash
-cat > .vibeflow/work-config.json << 'EOF'
+然后把这次改动压缩成一组最小结论：
+
+- 这次属于什么类型：`bugfix / small-change / config / docs / tests / dependency`
+- 范围有多大
+- 会碰到哪些文件或模块
+- 怎么验证
+- 怎么回滚
+- 有哪些风险标记
+
+风险标记里，只要出现下面任意一类，就不应该继续走 Quick：
+
+- `core-logic`
+- `payment`
+- `auth`
+- `data`
+- `external-api`
+- `security`
+- `multi-service`
+- `multi-database`
+- `ui-redesign`
+- `migration`
+- `new-feature`
+- `architecture`
+
+## 第二步：写入 Quick 状态
+
+在 `.vibeflow/state.json` 里补齐 `quick_meta`，推荐结构：
+
+```json
 {
   "mode": "quick",
-  "tdd": false,
-  "quality_gates": false,
-  "feature_st": true,
-  "spec_review": true,
-  "created_at": "DATE"
-}
-EOF
-```
-
-**创建 `.vibeflow/logs/session-log.md`：**
-```bash
-cat > .vibeflow/logs/session-log.md << 'EOF'
-# Session Log
-
-## Current State
-- Progress: 0/1 features
-- Current feature: None
-- Last completed: None
-
-## History
-EOF
-```
-
-**更新 `.vibeflow/state.json`：**
-```bash
-cat > .vibeflow/state.json << 'EOF'
-{
-  "mode": "quick",
-  "current_phase": "build-work",
+  "quick_meta": {
+    "decision": "approved",
+    "category": "bugfix",
+    "scope": "Fix a small bounded issue in one module.",
+    "touchpoints": ["src/example.py"],
+    "risk_flags": [],
+    "validation_plan": "Run the targeted regression test.",
+    "rollback_plan": "Revert the single quick-mode commit.",
+    "promote_to_full_if": [
+      "scope grows beyond a small bounded change",
+      "risk touches auth, payment, security, or data migration",
+      "work spans multiple services, databases, or ownership boundaries",
+      "design decisions are no longer obvious"
+    ]
+  },
   "checkpoints": {
     "quick_ready": true
   }
 }
-EOF
 ```
 
-### 3.2 功能实现
+如果 Quick 不合适，就把：
 
-根据 `docs/changes/<change-id>/design.md` 直接实现：
+- `quick_meta.decision = "rejected"`
+- `quick_meta.rejected_reasons = [...]`
 
-1. 按设计文档实现改动
-2. 编写基本测试
-3. 确保代码可运行
+此时路由会停留在 `quick` 阶段，并提示升级到 Full Mode。
 
-### 3.3 更新状态
+## 第三步：最小设计
 
-```bash
-cat > .vibeflow/phase-history.json << 'EOF'
-[
-  {
-    "phase": "quick-assessment",
-    "completed_at": "DATE"
-  },
-  {
-    "phase": "quick",
-    "completed_at": "DATE"
-  },
-  {
-    "phase": "build-work",
-    "status": "in_progress",
-    "started_at": "DATE"
-  }
-]
-EOF
+写：
+
+- `docs/changes/<change-id>/design.md`
+- `docs/changes/<change-id>/tasks.md`
+
+`design.md` 至少写清：
+- 这次改什么
+- 改到哪里
+- 怎么验证
+- 怎么回滚
+
+`tasks.md` 至少写清：
+- 实现步骤
+- 验证步骤
+- 收尾步骤
+
+## 第四步：进入 Build
+
+Quick Mode 不再手工硬写一堆旧状态文件。
+
+进入 Build 前，优先使用现有脚本和既有约定：
+
+- `feature-list.json` 继续作为 Build 的事实来源
+- `.vibeflow/work-config.json` 继续由脚本生成
+- `docs/changes/<change-id>/design.md` 和 `tasks.md` 作为 Quick 输入
+
+Quick 就绪后，路由会直接进入：
+
+```text
+build-work -> review -> test-system -> ship? -> reflect?
 ```
-
----
-
-## Step 4: Review（简化版）
-
-### 重点检查
-
-| 检查项 | 说明 |
-|--------|------|
-| 功能正确性 | 改动是否按设计实现？ |
-| 安全风险 | 是否有 SQL注入、XSS、敏感信息暴露等？ |
-| 代码质量 | 是否有明显的坏味道或问题？ |
-
-### 不检查（跳过）
-
-- 架构一致性（Quick Mode 跳过）
-- 性能优化（Quick Mode 跳过）
-- 长期可维护性（Quick Mode 跳过）
-
-### Review 输出
-
-```markdown
-# Quick Review Report
-
-## 功能正确性
-✅/⚠️ [状态]
-
-## 安全风险
-✅/⚠️ [状态]
-[问题列表，如有问题]
-
-## 代码质量
-✅/⚠️ [状态]
-[问题列表，如有问题]
-
-## 结论
-- [ ] 通过，可以继续
-- [ ] 需要修复后继续
-```
-
----
-
-## Step 5: Test（冒烟测试）
-
-### 冒烟测试内容
-
-1. **功能测试**：核心功能是否正常工作
-2. **编译/语法检查**：代码是否可运行
-3. **基本断言**：关键逻辑是否有明显错误
-
-### 跳过
-
-- 完整集成测试（Full Mode 才做）
-- NFR 验证（性能、压力测试等）
-- 探索性测试
-
-### Test 输出
-
-```markdown
-# Quick Test Report
-
-## 冒烟测试结果
-- [ ] 功能测试通过
-- [ ] 编译/语法检查通过
-- [ ] 基本断言通过
-
-## 结论
-- [ ] 通过，可以发布
-- [ ] 需要修复后继续
-```
-
----
-
-## Step 6: Ship（可选）
-
-如果用户要求发布：
-
-```bash
-# 创建 commit
-git add -A
-git commit -m "quick: [改动描述]"
-
-# 生成发布说明
-cat > RELEASE_NOTES.md << 'EOF'
-# Release Notes - [日期]
-
-## Quick Mode Changes
-- [改动 1]
-- [改动 2]
-EOF
-```
-
----
 
 ## 升级到 Full Mode
 
-如果在 Quick Mode 过程中发现复杂度超出预期：
+如果在 Quick 过程中发现复杂度超出预期，不要硬撑。
 
-1. 停止当前 Quick Mode
-2. 创建新的 `/vibeflow` 会话
-3. 选择 Full Mode
-4. 将 Quick Mode 的产出作为参考
+直接执行：
 
----
+```bash
+python scripts/promote-vibeflow-quick.py --reason "Scope is no longer safe for Quick Mode."
+```
+
+这个脚本会：
+- 把 `mode` 改成 `full`
+- 清掉 `quick_ready`
+- 保留现有 `design.md` 作为草稿
+- 把路由切回 Full Mode 的最早缺失阶段
+
+通常会回到：
+- `think`
+- 或 `plan / requirements / design`
+
+具体取决于哪些 Full 产物还没补齐。
 
 ## 硬规则
 
-1. **Eligibility 诚实**：如果改动涉及重要系统，强制使用 Full Mode
-2. **最小化设计不可跳过**：即使 Quick Mode 也必须有 `docs/changes/<change-id>/design.md`
-3. **Review 简化但不全跳过**：安全和功能正确性必须检查
-4. **产出同步**：所有产物必须写入文件，不留在记忆中
+1. Quick 只适合小范围、低风险、可快速回滚的工作。
+2. `design.md` 和 `tasks.md` 不能省。
+3. Review 和 Test 不能省。
+4. 只要风险碰到核心链路，必须升级到 Full。
+5. 所有结论必须写进文件，不留在聊天记忆里。
