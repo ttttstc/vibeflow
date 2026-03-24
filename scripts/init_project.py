@@ -356,6 +356,7 @@ def main():
         "new-vibeflow-config.py",
         "get-vibeflow-paths.py",
         "vibeflow_paths.py",
+        "promote-vibeflow-quick.py",
         "validate_st_cases.py",
         "validate_increment_request.py",
         "check_st_readiness.py",

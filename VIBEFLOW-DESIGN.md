@@ -79,6 +79,7 @@ scripts/
   vibeflow_paths.py
   increment-handler.py
   migrate-vibeflow-v2.py
+  promote-vibeflow-quick.py
   new-vibeflow-config.py
   new-vibeflow-work-config.py
   test-vibeflow-setup.py
@@ -125,6 +126,7 @@ Detected phases:
 ### VibeFlow State (`.vibeflow/`)
 
 - `.vibeflow/state.json` — Workflow state, current phase, active change, artifact map
+- `.vibeflow/state.json.quick_meta` — Quick Mode eligibility, risk, validation, rollback, promotion rules
 - `.vibeflow/workflow.yaml` — Workflow config (from template)
 - `.vibeflow/work-config.json` — Build config (quality gates, enabled steps)
 - `.vibeflow/guides/build.md` — Build session guide

@@ -20,7 +20,13 @@ VibeFlow是一个结构化的七阶段工作流程，用于有目的性地、有
 - 测试文件编写
 - 文档更新
 
-**跳过**：Think、Plan、Requirements、Design（但保留最简设计文档）
+**关键约束**：
+- 只适合小范围、低风险、可快速回滚的工作
+- 需要在 `.vibeflow/state.json` 中写明 `quick_meta`
+- 需要最小产物：`docs/changes/<change-id>/design.md` 和 `tasks.md`
+- 仍然必须经过 Review 和 Test
+
+**压缩**：前置分析大幅压缩，但不是“无设计直冲代码”
 
 **入口**：`/vibeflow-quick`
 
@@ -51,7 +57,7 @@ VibeFlow是一个严谨的软件开发框架，强调在构建之前思考、在
 | 4. Review（审查） | 跨功能的整体变更分析 | 审查报告 |
 | 5. Test（测试） | 系统测试和QA验证 | 测试报告 |
 | 6. Ship（发布） | 准备和发布发布产物 | 发布产物 |
-| 7. Reflect（反思） | 回顾和下次迭代输入 | `docs/retrospectives/*` |
+| 7. Reflect（反思） | 回顾和下次迭代输入 | `.vibeflow/logs/retro-*.md` |
 
 ### 价值主张
 
