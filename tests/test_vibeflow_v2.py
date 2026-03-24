@@ -37,6 +37,11 @@ def write(path: Path, content: str) -> None:
     path.write_text(content, encoding="utf-8")
 
 
+def write_json(path: Path, data: object) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+
+
 def read_json(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
@@ -150,6 +155,11 @@ class TestVibeFlowV2:
         write(contract["workflow"], 'template: "prototype"\n')
         write(contract["artifacts"]["design"], "# Quick Design\n")
         write(contract["artifacts"]["tasks"], "# Tasks\n")
+        write_json(
+            tmp_path / "feature-list.json",
+            {"features": [{"id": 1, "title": "Quick change", "status": "passing"}]},
+        )
+        write(tmp_path / ".vibeflow" / "work-config.json", '{"steps":["quick"]}\n')
 
         output = subprocess.run(
             [
@@ -171,9 +181,26 @@ class TestVibeFlowV2:
         assert promoted_state["mode"] == "full"
         assert promoted_state["quick_meta"]["promoted_from_quick"] is True
         assert promoted_state["quick_meta"]["promotion_reason"] == "Scope is no longer safe for Quick Mode."
+        assert promoted_state["checkpoints"]["build_init"] is False
+        assert promoted_state["checkpoints"]["build_config"] is False
+        assert promoted_state["checkpoints"]["build_work"] is False
+        assert not (tmp_path / "feature-list.json").exists()
+        assert not (tmp_path / ".vibeflow" / "work-config.json").exists()
 
         result = detect_phase(tmp_path)
         assert result["phase"] == "think"
+
+        promoted_state["checkpoints"]["think"] = True
+        promoted_state["checkpoints"]["plan"] = True
+        promoted_state["checkpoints"]["requirements"] = True
+        promoted_state["checkpoints"]["design"] = True
+        save_state(tmp_path, promoted_state)
+        write(contract["artifacts"]["think"], "# Context\n")
+        write(contract["artifacts"]["plan"], "# Proposal\n")
+        write(contract["artifacts"]["requirements"], "# Requirements\n")
+        write(contract["artifacts"]["design"], "# Design\n")
+        write(contract["artifacts"]["design_review"], "# Design Review\n")
+        assert detect_phase(tmp_path)["phase"] == "build-init"
 
     def test_migrate_legacy_quick_mode_populates_quick_meta(self, tmp_path):
         project_root = tmp_path / "legacy-quick"
@@ -201,6 +228,23 @@ class TestVibeFlowV2:
 
         result = detect_phase(project_root)
         assert result["phase"] == "build-work"
+
+        original_argv = sys.argv[:]
+        try:
+            sys.argv = [
+                "migrate-vibeflow-v2.py",
+                "--project-root",
+                str(project_root),
+            ]
+            migrate_module.main()
+        finally:
+            sys.argv = original_argv
+
+        rerun_state = read_json(project_root / ".vibeflow" / "state.json")
+        assert rerun_state["mode"] == "quick"
+        assert rerun_state["quick_meta"]["decision"] == "approved"
+        assert rerun_state["quick_meta"]["category"] == "small-change"
+        assert (project_root / rerun_state["artifacts"]["tasks"]).exists()
 
     def test_v2_increment_queue_json_triggers_increment(self, tmp_path):
         state = default_state(tmp_path, topic="increment")

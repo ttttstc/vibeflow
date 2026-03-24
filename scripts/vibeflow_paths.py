@@ -381,7 +381,7 @@ def mark_quick_approved(
     state["quick_meta"] = meta
 
 
-def promote_quick_to_full(state: dict, reason: str = "") -> None:
+def promote_quick_to_full(state: dict, reason: str = "", project_root: Path | None = None) -> None:
     state["mode"] = "full"
     state["current_phase"] = "think"
     set_checkpoint(state, "quick_ready", False)
@@ -392,8 +392,26 @@ def promote_quick_to_full(state: dict, reason: str = "") -> None:
     meta["promotion_reason"] = reason
     state["quick_meta"] = meta
 
-    for checkpoint in ("think", "plan", "requirements", "design", "review", "test_system", "test_qa", "ship", "reflect"):
+    for checkpoint in (
+        "think",
+        "plan",
+        "requirements",
+        "design",
+        "build_init",
+        "build_config",
+        "build_work",
+        "review",
+        "test_system",
+        "test_qa",
+        "ship",
+        "reflect",
+    ):
         set_checkpoint(state, checkpoint, False)
+
+    if project_root is not None:
+        for artifact in (feature_list_path(project_root), work_config_path(project_root)):
+            if artifact.exists():
+                artifact.unlink()
 
 
 def update_active_change(state: dict, change_id: str) -> None:

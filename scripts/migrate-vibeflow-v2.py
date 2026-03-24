@@ -193,10 +193,13 @@ def main():
 
     design_src = latest_matching_file(plans_dir, "*-design.md")
     quick_design_src = project_root / "docs" / "quick-design.md"
+    legacy_quick_detected = design_src is None and quick_design_src.exists()
     if design_src and copy_if_exists(design_src, change_root / "design.md", force=args.force):
         migrated.append(("design", change_root / "design.md"))
-    elif quick_design_src.exists() and copy_if_exists(quick_design_src, change_root / "design.md", force=args.force):
+    elif legacy_quick_detected and copy_if_exists(quick_design_src, change_root / "design.md", force=args.force):
         migrated.append(("design", change_root / "design.md"))
+
+    if legacy_quick_detected:
         existing_state["mode"] = "quick"
         existing_state["checkpoints"]["quick_ready"] = True
         mark_quick_approved(

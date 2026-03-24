@@ -33,7 +33,7 @@ def main() -> None:
     if state.get("mode") != "quick":
         raise SystemExit("Current mode is not quick; no promotion needed.")
 
-    promote_quick_to_full(state, reason=args.reason)
+    promote_quick_to_full(state, reason=args.reason, project_root=project_root)
     save_state(project_root, state)
 
     payload = {
