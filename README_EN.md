@@ -4,11 +4,13 @@
 
 # VibeFlow
 
-**Make AI deliver software with engineering discipline, not random vibe coding.**
+**Make AI deliver not just code, but a shaped piece of software work.**
 
-VibeFlow is a structured delivery framework for Claude Code. It connects requirements, design, implementation, review, testing, release, and retrospectives into one recoverable workflow so AI can finish a real delivery cycle instead of just producing code.
+VibeFlow is a structured delivery framework for Claude Code. LLMs are brilliant improvisers; software delivery is a longer discipline. The hard part is not producing code, but carrying an idea cleanly through requirements, design, implementation, review, testing, release, and reflection until it becomes something shippable, traceable, and worth maintaining. VibeFlow gives that loop more form, memory, and finish, so the model behaves less like a lucky guesser and more like a disciplined engineering team.
 
-> Think first, then let the system carry the second half of the delivery loop.
+> “Well begun is half done.” — Aristotle
+>
+> First establish the form, then let the system carry the work to completion.
 
 ---
 
