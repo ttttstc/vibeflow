@@ -19,39 +19,32 @@ VibeFlow is a structured delivery framework for Claude Code. It connects require
 - [Common commands](README_EN.md#common-commands)
 - [Detailed usage guide](USAGE.md)
 - [Architecture](ARCHITECTURE.md)
+- [Deep Technical Architecture Overview](https://deepwiki.com/ttttstc/vibeflow/1-vibeflow-overview)
 - [Design contract and implementation notes](VIBEFLOW-DESIGN.md)
 
 ---
 
 ## Install
 
-### Claude Code One-Liner
+### One-Line Install
 
-Run this inside Claude Code:
+The default behavior installs the latest released version. To pin a version, add `VIBEFLOW_VERSION=v1.0.0`.
 
-```text
-/sh curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.sh | bash
-```
+| Platform | Install Command | After Install |
+|---|---|---|
+| macOS / Linux | `/sh curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.sh \| bash` | run `/plugin install vibeflow@vibeflow` |
+| Windows PowerShell | `irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.ps1 \| iex` | run `/plugin install vibeflow@vibeflow` |
 
-Then activate the plugin:
+Pinned version examples:
 
-```text
-/plugin install vibeflow@vibeflow
-```
-
-### Windows Launcher
-
-```powershell
-irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/vibeflow-launcher.ps1 | iex
-```
+| Platform | Version-Pinned Command |
+|---|---|
+| macOS / Linux | `/sh curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.sh \| VIBEFLOW_VERSION=v1.0.0 bash` |
+| Windows | `$env:VIBEFLOW_VERSION="v1.0.0"; irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.ps1 \| iex` |
 
 ### Verify Installation
 
-```text
-/vibeflow
-```
-
-If Claude Code shows the VibeFlow entry flow, the plugin is installed and ready.
+Run `/vibeflow` and confirm the VibeFlow entry flow appears.
 
 ### Mode Selection on First Run
 
@@ -62,37 +55,55 @@ If Claude Code shows the VibeFlow entry flow, the plugin is installed and ready.
 Recommended default:
 - use `Full Mode` unless the change is small, low-risk, and easy to roll back
 
-### Ask Claude Code to Install It for You
+### Ask AI to Install It for You
 
 If you want Claude Code to handle setup, paste this:
 
 ```text
-Install VibeFlow into Claude Code for me.
+Install VibeFlow for me.
 
 Requirements:
-1. Prefer the official install script:
-   /sh curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.sh | bash
-2. If that fails, install it manually into the Claude Code marketplace directory
-3. After installation, run:
+1. Choose the official install command based on the current OS:
+   - macOS / Linux:
+     /sh curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.sh | bash
+   - Windows:
+     irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.ps1 | iex
+2. If I give you a version number, install that version. Otherwise install the latest released version
+3. If that fails, install it manually into the Claude Code marketplace directory
+4. After installation, run:
    /plugin install vibeflow@vibeflow
-4. Then tell me:
+5. Then tell me:
    - whether installation succeeded
    - where it was installed
-   - which command I should run next
+   - how I should verify it
 ```
 
 ### Update and Uninstall
 
-Update:
+Update uses the same commands as install.
+
+macOS / Linux:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.sh | bash
+```
+
+Specific version on macOS / Linux:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.sh | VIBEFLOW_VERSION=v1.0.0 bash
 ```
 
 Windows PowerShell:
 
 ```powershell
 irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.ps1 | iex
+```
+
+Specific version on Windows:
+
+```powershell
+$env:VIBEFLOW_VERSION="v1.0.0"; irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.ps1 | iex
 ```
 
 After updating, restart Claude Code and run:

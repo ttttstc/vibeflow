@@ -4,10 +4,15 @@
 #
 # Usage:
 #   irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.ps1 | iex
+#   $env:VIBEFLOW_VERSION="v1.0.0"; irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.ps1 | iex
 #
 # After installation, use Claude Code to install plugins:
 #   /plugin install vibeflow@vibeflow
 #
+
+param(
+    [string]$Version = $env:VIBEFLOW_VERSION
+)
 
 $ErrorActionPreference = "Stop"
 
@@ -36,6 +41,43 @@ function Write-Info { param($Message) Write-Host "INFO: $Message" }
 function Write-Success { param($Message) Write-Host "SUCCESS: $Message" }
 function Write-Err { param($Message) Write-Host "ERROR: $Message" -ForegroundColor Red }
 
+function Normalize-Version {
+    param([string]$Value)
+
+    if ([string]::IsNullOrWhiteSpace($Value) -or $Value -eq "latest") {
+        return "latest"
+    }
+    if ($Value -match '^[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$') {
+        return "v$Value"
+    }
+    return $Value
+}
+
+function Resolve-LatestVersion {
+    try {
+        $release = Invoke-RestMethod -Uri "https://api.github.com/repos/$RepoName/releases/latest" -Headers @{ "User-Agent" = "vibeflow-installer/1.0" }
+        if ($release.tag_name) {
+            return [string]$release.tag_name
+        }
+    } catch {
+    }
+
+    if (Get-Command git -ErrorAction SilentlyContinue) {
+        try {
+            $latestTag = git ls-remote --tags --refs --sort=-v:refname $MarketplaceGitUrl 2>$null |
+                ForEach-Object { ($_ -split 'refs/tags/')[-1].Trim() } |
+                Where-Object { $_ -match '^(v)?[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$' } |
+                Select-Object -First 1
+            if ($latestTag) {
+                return [string]$latestTag
+            }
+        } catch {
+        }
+    }
+
+    return "main"
+}
+
 # =============================================================================
 # Pre-flight Check
 # =============================================================================
@@ -46,6 +88,15 @@ if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
 }
 
 Write-Info "Installing vibeflow marketplace..."
+
+$RequestedVersion = if ([string]::IsNullOrWhiteSpace($Version)) { "latest" } else { $Version }
+$ResolvedRef = Normalize-Version $Version
+if ($ResolvedRef -eq "latest") {
+    $ResolvedRef = Resolve-LatestVersion
+}
+
+Write-Info "Requested version: $RequestedVersion"
+Write-Info "Resolved ref: $ResolvedRef"
 
 # =============================================================================
 # Clone or Update
@@ -60,10 +111,10 @@ if (Test-Path $TargetDir) {
     Remove-Item $TargetDir -Recurse -Force
 }
 
-Write-Info "Cloning from: $MarketplaceGitUrl"
-git clone --depth 1 $MarketplaceGitUrl $TargetDir 2>&1
+Write-Info "Cloning from: $MarketplaceGitUrl ($ResolvedRef)"
+git clone --depth 1 --branch $ResolvedRef $MarketplaceGitUrl $TargetDir 2>&1
 if ($LASTEXITCODE -ne 0) {
-    Write-Err "Failed to clone repository"
+    Write-Err "Failed to clone repository for ref $ResolvedRef"
     exit 1
 }
 
@@ -128,6 +179,9 @@ Write-Host ""
 Write-Host "  Marketplace key: $MarketplaceName"
 Write-Host "  Install path:    $TargetDir"
 Write-Host "  Git repo:       $MarketplaceGitUrl"
+if (Test-Path (Join-Path $TargetDir "VERSION")) {
+    Write-Host "  Version:        $((Get-Content (Join-Path $TargetDir 'VERSION') -Raw).Trim())"
+}
 Write-Host ""
 Write-Host "To activate the plugin, run in Claude Code:"
 Write-Host "  /plugin install vibeflow@vibeflow"

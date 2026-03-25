@@ -6,6 +6,7 @@
 # 使用方法：复制以下命令，粘贴到 Claude Code 对话框运行：
 #
 #   /sh curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.sh | bash
+#   /sh curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.sh | VIBEFLOW_VERSION=v1.0.0 bash
 #
 # 安装后运行：
 #   /plugin install vibeflow@vibeflow
@@ -15,9 +16,9 @@
 set -euo pipefail
 
 MARKETPLACE_NAME="vibeflow"
-BRANCH="main"
 MARKETPLACE_GIT_URL="https://github.com/ttttstc/vibeflow.git"
 REPO_NAME="ttttstc/vibeflow"
+REQUESTED_VERSION="${1:-${VIBEFLOW_VERSION:-latest}}"
 
 CLAUDE_PLUGINS_DIR="${HOME}/.claude/plugins"
 MARKETPLACES_DIR="${CLAUDE_PLUGINS_DIR}/marketplaces"
@@ -34,7 +35,79 @@ info()    { echo -e "${CYAN}[INFO]${RESET} $*"; }
 success() { echo -e "${GREEN}[OK]${RESET} $*"; }
 error()   { echo -e "${RED}[ERROR]${RESET} $*" >&2; }
 
+normalize_requested_version() {
+  local value="${1:-latest}"
+  if [[ -z "$value" || "$value" == "latest" ]]; then
+    printf 'latest\n'
+    return 0
+  fi
+  if [[ "$value" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
+    printf 'v%s\n' "$value"
+    return 0
+  fi
+  printf '%s\n' "$value"
+}
+
+extract_tag_name_from_json() {
+  local json="${1:-}"
+  if [[ -z "$json" ]]; then
+    return 0
+  fi
+  if command -v jq >/dev/null 2>&1; then
+    printf '%s' "$json" | jq -r '.tag_name // empty'
+    return 0
+  fi
+  if command -v python3 >/dev/null 2>&1; then
+    python3 -c 'import json,sys; print(json.loads(sys.stdin.read()).get("tag_name",""))' <<<"$json" 2>/dev/null || true
+    return 0
+  fi
+  if command -v python >/dev/null 2>&1; then
+    python -c 'import json,sys; print(json.loads(sys.stdin.read()).get("tag_name",""))' <<<"$json" 2>/dev/null || true
+    return 0
+  fi
+  sed -nE 's/.*"tag_name"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/p' <<<"$json" | head -n 1
+}
+
+resolve_latest_version() {
+  local latest_tag=""
+  local release_json=""
+
+  if command -v curl >/dev/null 2>&1; then
+    release_json="$(curl -fsSL "https://api.github.com/repos/${REPO_NAME}/releases/latest" 2>/dev/null || true)"
+  elif command -v wget >/dev/null 2>&1; then
+    release_json="$(wget -qO- "https://api.github.com/repos/${REPO_NAME}/releases/latest" 2>/dev/null || true)"
+  fi
+
+  latest_tag="$(extract_tag_name_from_json "$release_json")"
+  if [[ -n "$latest_tag" && "$latest_tag" != "null" ]]; then
+    printf '%s\n' "$latest_tag"
+    return 0
+  fi
+
+  if command -v git >/dev/null 2>&1; then
+    latest_tag="$(git ls-remote --tags --refs --sort=-v:refname "$MARKETPLACE_GIT_URL" 2>/dev/null | awk -F/ '{print $3}' | grep -E '^(v)?[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$' | head -n 1 || true)"
+    if [[ -n "$latest_tag" ]]; then
+      printf '%s\n' "$latest_tag"
+      return 0
+    fi
+  fi
+
+  printf 'main\n'
+}
+
+is_version_ref() {
+  [[ "${1:-}" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]
+}
+
 info "开始安装 VibeFlow..."
+
+RESOLVED_REF="$(normalize_requested_version "$REQUESTED_VERSION")"
+if [[ "$RESOLVED_REF" == "latest" ]]; then
+  RESOLVED_REF="$(resolve_latest_version)"
+fi
+
+info "请求版本: ${REQUESTED_VERSION:-latest}"
+info "解析版本: ${RESOLVED_REF}"
 
 # 1. Create directories
 mkdir -p "$MARKETPLACES_DIR"
@@ -51,7 +124,7 @@ info "下载中..."
 
 download_ok=false
 if command -v git &>/dev/null; then
-  if git clone --depth 1 "$MARKETPLACE_GIT_URL" "$TARGET_DIR" 2>&1; then
+  if git clone --depth 1 --branch "$RESOLVED_REF" "$MARKETPLACE_GIT_URL" "$TARGET_DIR" 2>&1; then
     download_ok=true
     success "下载完成 (git)"
   fi
@@ -61,11 +134,15 @@ if [[ "$download_ok" != "true" ]]; then
   info "git 不可用，尝试 ZIP 下载..."
   TEMP_ZIP="/tmp/vibeflow-download.zip"
   TEMP_EXTRACT="/tmp/vibeflow-extract"
+  ARCHIVE_KIND="heads"
+  if is_version_ref "$RESOLVED_REF"; then
+    ARCHIVE_KIND="tags"
+  fi
 
   if command -v curl &>/dev/null; then
-    curl -fsSL "https://github.com/ttttstc/vibeflow/archive/refs/heads/${BRANCH}.zip" -o "$TEMP_ZIP" 2>&1
+    curl -fsSL "https://github.com/ttttstc/vibeflow/archive/refs/${ARCHIVE_KIND}/${RESOLVED_REF}.zip" -o "$TEMP_ZIP" 2>&1
   elif command -v wget &>/dev/null; then
-    wget -q "https://github.com/ttttstc/vibeflow/archive/refs/heads/${BRANCH}.zip" -O "$TEMP_ZIP" 2>&1
+    wget -q "https://github.com/ttttstc/vibeflow/archive/refs/${ARCHIVE_KIND}/${RESOLVED_REF}.zip" -O "$TEMP_ZIP" 2>&1
   else
     error "curl 和 wget 都不可用，无法下载"
     exit 1
@@ -181,6 +258,9 @@ echo -e "${GREEN}========================================${RESET}"
 echo -e "${GREEN}  安装完成！${RESET}"
 echo -e "${GREEN}========================================${RESET}"
 echo ""
+if [[ -f "${TARGET_DIR}/VERSION" ]]; then
+  echo -e "已安装版本：$(<"${TARGET_DIR}/VERSION")"
+fi
 echo -e "下一步（在 Claude Code 中运行）："
 echo -e "  ${CYAN}/plugin install vibeflow@vibeflow${RESET}"
 echo ""
