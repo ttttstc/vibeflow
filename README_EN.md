@@ -18,7 +18,6 @@ VibeFlow is a structured delivery framework for Claude Code. It connects require
 - [3-minute quick start](README_EN.md#3-minute-quick-start)
 - [Common commands](README_EN.md#common-commands)
 - [Detailed usage guide](USAGE.md)
-- [Architecture](ARCHITECTURE.md)
 - [Deep Technical Architecture Overview](https://deepwiki.com/ttttstc/vibeflow/1-vibeflow-overview)
 - [Design contract and implementation notes](VIBEFLOW-DESIGN.md)
 

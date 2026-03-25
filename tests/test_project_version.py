@@ -123,3 +123,12 @@ def test_readmes_do_not_include_codex_or_opencode_install_guidance():
         text = read_text(path)
         for marker in forbidden_markers:
             assert marker not in text, f"{path} should not reference {marker}"
+
+
+def test_readmes_navigation_prefers_deepwiki_over_local_architecture_link():
+    readmes = [REPO_ROOT / "README.md", REPO_ROOT / "README_EN.md"]
+
+    for path in readmes:
+        header_slice = "\n".join(read_text(path).splitlines()[:25])
+        assert "deepwiki.com/ttttstc/vibeflow/1-vibeflow-overview" in header_slice
+        assert "](ARCHITECTURE.md)" not in header_slice
