@@ -65,6 +65,51 @@ irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/vibeflow
 
 如果能看到 VibeFlow 入口说明，说明插件已经正常加载。
 
+### 更新 VibeFlow
+
+重新运行安装脚本即可覆盖旧版本：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.sh | bash
+```
+
+Windows PowerShell：
+
+```powershell
+irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.ps1 | iex
+```
+
+更新后建议：
+
+- 如果 Claude Code 正在运行，先重启 Claude Code
+- 然后重新执行 `/plugin install vibeflow@vibeflow`
+
+### 卸载 VibeFlow
+
+1. 关闭 Claude Code
+2. 删除 marketplace 目录
+
+macOS / Linux：
+
+```bash
+rm -rf ~/.claude/plugins/marketplaces/vibeflow
+```
+
+Windows PowerShell：
+
+```powershell
+Remove-Item "$env:USERPROFILE\\.claude\\plugins\\marketplaces\\vibeflow" -Recurse -Force
+```
+
+3. 从以下文件中删除 `vibeflow` 条目：
+
+- macOS / Linux：`~/.claude/plugins/known_marketplaces.json`
+- Windows：`%USERPROFILE%\\.claude\\plugins\\known_marketplaces.json`
+
+4. 重新打开 Claude Code
+
+如果你只是想临时停用插件，也可以保留文件不删，只移除 Claude Code 里的已加载插件条目。
+
 ---
 
 ## 为什么需要 VibeFlow

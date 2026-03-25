@@ -60,6 +60,51 @@ irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/vibeflow
 
 If Claude Code shows the VibeFlow entry flow, the plugin is loaded and ready.
 
+### Update VibeFlow
+
+Re-run the installer to replace the existing marketplace copy:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.sh | bash
+```
+
+Windows PowerShell:
+
+```powershell
+irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.ps1 | iex
+```
+
+After updating:
+
+- restart Claude Code if it is already running
+- then run `/plugin install vibeflow@vibeflow` again
+
+### Uninstall VibeFlow
+
+1. Close Claude Code
+2. Remove the marketplace directory
+
+macOS / Linux:
+
+```bash
+rm -rf ~/.claude/plugins/marketplaces/vibeflow
+```
+
+Windows PowerShell:
+
+```powershell
+Remove-Item "$env:USERPROFILE\\.claude\\plugins\\marketplaces\\vibeflow" -Recurse -Force
+```
+
+3. Remove the `vibeflow` entry from:
+
+- macOS / Linux: `~/.claude/plugins/known_marketplaces.json`
+- Windows: `%USERPROFILE%\\.claude\\plugins\\known_marketplaces.json`
+
+4. Re-open Claude Code
+
+If you only want to disable the plugin temporarily, keep the files and just remove the loaded plugin entry inside Claude Code.
+
 ---
 
 ## Why VibeFlow
