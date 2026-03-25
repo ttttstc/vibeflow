@@ -135,7 +135,7 @@ Short version:
 | Open the live dashboard | `/vibeflow-dashboard` |
 | Start dashboard from CLI | `python scripts/run-vibeflow-dashboard.py` |
 | Print one dashboard snapshot | `python scripts/run-vibeflow-dashboard.py --snapshot-json` |
-| Continue the post-build chain from CLI | `python scripts/run-vibeflow-autopilot.py --project-root <repo>` |
+| Continue the current workflow from CLI | `python scripts/run-vibeflow-autopilot.py --project-root <repo>` |
 
 ---
 

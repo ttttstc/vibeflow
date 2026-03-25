@@ -136,7 +136,7 @@ irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.
 | 打开本地 live 看板 | `/vibeflow-dashboard` |
 | 脚本方式启动看板 | `python scripts/run-vibeflow-dashboard.py` |
 | 脚本方式打印一次看板快照 | `python scripts/run-vibeflow-dashboard.py --snapshot-json` |
-| 脚本方式继续后半程自动链路 | `python scripts/run-vibeflow-autopilot.py --project-root <repo>` |
+| 脚本方式继续当前流程 | `python scripts/run-vibeflow-autopilot.py --project-root <repo>` |
 
 ---
 
