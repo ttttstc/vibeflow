@@ -1,4 +1,4 @@
-description: 从 Build 阶段开始自动推进实施闭环
+description: 从 Build 阶段开始自动继续后续链路
 ---
 先运行 `python scripts/get-vibeflow-phase.py --project-root . --json` 确认当前阶段。
 
@@ -12,7 +12,7 @@ description: 从 Build 阶段开始自动推进实施闭环
 - `ship`
 - `reflect`
 
-则不要逐段停下来等待用户确认，而是按 `skills/vibeflow-router/SKILL.md` 的“实施阶段自动接管规则”继续推进，直到：
+则不要逐段停下来等待用户确认，而是按 `skills/vibeflow-router/SKILL.md` 的“Build 后自动继续规则”继续推进，直到：
 - `done`
 - 阻塞
 - 需要人工确认

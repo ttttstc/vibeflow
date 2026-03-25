@@ -14,7 +14,7 @@ VibeFlow is a 7-phase workflow for iterative product delivery:
 3. Requirements
 4. Design
 
-**执行阶段（Automated via Build Handoff）：**
+**执行阶段（Automated via Build Continuation）：**
 5. Build
 6. Review
 7. Test
@@ -171,7 +171,7 @@ Template-derived build trimming writes `.vibeflow/work-config.json`.
 ### Core Layer
 
 - `vibeflow` — Framework entry point
-- `vibeflow-router` — Session router, file-driven phase dispatch, Build handoff into the implementation loop
+- `vibeflow-router` — Session router, file-driven phase dispatch, Build handoff into automatic continuation
 - `vibeflow-think` — Think phase: problem framing and template selection
 
 ### Exploratory Layer (Optional)

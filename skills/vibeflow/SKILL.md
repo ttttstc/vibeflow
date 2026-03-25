@@ -91,7 +91,7 @@ VibeFlow是一个严谨的软件开发框架，强调在构建之前思考、在
 
 ```
 Design 确认后进入 Build。
-在 Claude Code 插件里，Build 的默认路径不是逐段手动推进，而是从 build-init 开始自动进入实施闭环。
+在 Claude Code 插件里，Build 的默认路径不是逐段手动推进，而是从 build-init 开始自动继续后续链路。
 只有在调试单个子阶段时，才单独调用 vibeflow-build-init 或 vibeflow-build-work。
 ```
 
@@ -199,7 +199,7 @@ cat feature-list.json
 
 ### 阶段3：Build（构建）
 
-**目的**：从 `build-init` 起默认自动接管后半程实施闭环。
+**目的**：从 `build-init` 起默认自动接管后半程执行链路。
 
 **何时进入**：Plan阶段批准后。
 

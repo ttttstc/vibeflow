@@ -89,17 +89,17 @@ If Claude Code shows the VibeFlow entry flow, the plugin is loaded and ready.
 
 ---
 
-## Automation and Dashboard
+## Build Continuation and Dashboard
 
 Once Design is locked, the Claude Code plugin has one default behavior:
 
-- **reaching `build-init` enters the implementation loop**
+- **reaching `build-init` makes the system continue the delivery chain automatically**
   The router keeps advancing `build-init -> build-config -> build-work -> review -> test -> ship -> reflect` until `done`, a blocker, or a manual checkpoint.
 
-For command-line runs, CI, or dashboard-driven automation, the script entrypoint for that same loop is:
+For command-line runs, CI, or dashboard-driven automation, the script entrypoint for that same automatic chain is:
 
 - `python scripts/run-vibeflow-autopilot.py --project-root <repo>`
-  Runs the same implementation loop from the current phase until `done`, a blocker, or a manual checkpoint.
+  Runs the same automatic continuation from the current phase until `done`, a blocker, or a manual checkpoint.
 - `python scripts/run-vibeflow-build-work.py --project-root <repo> --max-workers 4`
   Runs Build-Work directly with dependency-aware parallel execution.
 - `python scripts/run-vibeflow-dashboard.py --project-root <repo>`
@@ -188,17 +188,17 @@ This is the most complex phase in the framework:
 
 ### Build-init
 
-**Goal**: Enter the implementation handoff and prepare the build artifacts.
+**Goal**: Enter the automatic implementation continuation and prepare the build artifacts.
 
 - `feature-list.json` — the feature inventory and build source of truth
-- `.vibeflow/runtime.json` — the live runtime overlay used by autopilot and the dashboard
+- `.vibeflow/runtime.json` — the live runtime overlay used by the automatic continuation and the dashboard
 - `.vibeflow/logs/session-log.md` — the human-readable progress log
 - `RELEASE_NOTES.md` — the release-facing output file
 - Generates `.vibeflow/work-config.json` — the active build rules and quality thresholds
 
 ### Build-config
 
-**Goal**: Configure implementation details for each feature as part of the implementation loop.
+**Goal**: Configure implementation details for each feature as part of the automatic continuation.
 
 - Assigns phase (design/develop/test) to each feature
 - Confirms external dependencies and delivery order
@@ -207,7 +207,7 @@ This is the most complex phase in the framework:
 
 **Goal**: Implement features through the complete quality pipeline, either serially or in dependency-aware parallel lanes.
 
-In Claude Code plugin mode, Build is no longer a sequence of manual stops. Once `build-init` begins, the implementation loop keeps running through Build, Review, Test, Ship, and Reflect unless it hits a blocker or a manual gate.
+In Claude Code plugin mode, Build is no longer a sequence of manual stops. Once `build-init` begins, the system keeps running through Build, Review, Test, Ship, and Reflect unless it hits a blocker or a manual gate.
 
 ```
 Pick Feature → TDD Red-Green-Refactor → Quality Gates
@@ -456,7 +456,7 @@ vibeflow/
 │   └── vibeflow-reflect/             # Reflection
 ├── scripts/                         # Python scripts
 │   ├── get-vibeflow-phase.py        # Phase detection (16-state router)
-│   ├── run-vibeflow-autopilot.py    # Command-line entrypoint for the implementation loop
+│   ├── run-vibeflow-autopilot.py    # Command-line entrypoint for the automatic build continuation
 │   ├── run-vibeflow-build-work.py   # Build-Work executor with dependency-aware parallelism
 │   ├── run-vibeflow-dashboard.py    # Local live dashboard
 │   ├── new-vibeflow-config.py       # Workflow config generation

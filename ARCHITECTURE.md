@@ -5,7 +5,7 @@
 VibeFlow is a repository-local workflow orchestration layer for multi-stage software delivery.
 It provides a single naming system, a file-driven phase router, static workflow templates, and a set of local skill aliases that cover the full path from Think to Reflect.
 
-In Claude Code plugin mode, the handoff point is `build-init`: planning remains interactive, while implementation defaults to a continuation loop across Build, Review, Test, Ship, and Reflect. The CLI script is just the command-line entrypoint to that same loop.
+In Claude Code plugin mode, the handoff point is `build-init`: planning remains interactive, while implementation defaults to automatic continuation across Build, Review, Test, Ship, and Reflect. The CLI script is just the command-line entrypoint to that same chain.
 
 The architecture is intentionally split into thin local orchestration and pluggable execution foundations:
 
