@@ -9,7 +9,15 @@ VibeFlow是一个结构化的七阶段工作流程，用于有目的性地、有
 
 ## 入口选择
 
-运行 `/vibeflow` 后，请选择你的开发模式：
+入口规则先定死：
+
+- **首次进入新项目**：如果 `.vibeflow/state.json` 不存在，必须先让用户选择 `Full Mode` 或 `Quick Mode`
+- **继续已有项目**：如果 `.vibeflow/state.json` 已存在，直接沿用其中的 `mode`，不要重复询问
+- **直达 Quick**：如果用户显式运行 `/vibeflow-quick`，直接进入 Quick 入口，不再额外问模式
+
+对不明确的首次请求，默认推荐 `Full Mode`；只有在“小范围、低风险、可快速回滚”的改动下，才推荐 `Quick Mode`。
+
+运行 `/vibeflow` 后，请按上面的规则处理模式选择：
 
 ### 模式 1: Quick Mode（快速开发）
 

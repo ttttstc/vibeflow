@@ -65,6 +65,18 @@ irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/vibeflow
 
 如果能看到 VibeFlow 入口说明，说明插件已经正常加载。
 
+### 首次启动怎么选模式
+
+- **第一次在一个项目里运行 `/vibeflow`**：VibeFlow 应先让你明确选择 `Full Mode` 或 `Quick Mode`
+- **如果项目里已经有 `.vibeflow/state.json`**：VibeFlow 会沿用已有 `mode`，继续当前工作流，不会重复询问
+- **如果你明确运行 `/vibeflow-quick`**：直接进入 Quick 流程
+
+简化理解：
+
+- 新项目或首次接入：先选 mode
+- 已有项目继续工作：沿用原 mode
+- 不确定时：优先选 `Full Mode`
+
 ### 更新 VibeFlow
 
 重新运行安装脚本即可覆盖旧版本：

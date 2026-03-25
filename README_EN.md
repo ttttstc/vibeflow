@@ -60,6 +60,18 @@ irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/vibeflow
 
 If Claude Code shows the VibeFlow entry flow, the plugin is loaded and ready.
 
+### Mode Selection on First Run
+
+- **First time running `/vibeflow` in a project**: VibeFlow should explicitly ask for `Full Mode` or `Quick Mode`
+- **If `.vibeflow/state.json` already exists**: VibeFlow should reuse the existing `mode` and continue the current workflow without asking again
+- **If you explicitly run `/vibeflow-quick`**: it should enter Quick flow directly
+
+Short version:
+
+- new project or first adoption: choose a mode first
+- existing project resume: reuse the stored mode
+- if unsure: prefer `Full Mode`
+
 ### Update VibeFlow
 
 Re-run the installer to replace the existing marketplace copy:

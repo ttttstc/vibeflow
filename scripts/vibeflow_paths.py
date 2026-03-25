@@ -311,6 +311,18 @@ def ensure_state(project_root: Path, topic: str | None = None) -> dict:
     return state
 
 
+def mode_selection_required(project_root: Path) -> bool:
+    return not state_path(project_root).exists()
+
+
+def selected_mode(project_root: Path) -> str | None:
+    path = state_path(project_root)
+    if not path.exists():
+        return None
+    mode = str(load_state(project_root).get("mode") or "").strip()
+    return mode or None
+
+
 def default_runtime() -> dict:
     return {
         "run_id": "",

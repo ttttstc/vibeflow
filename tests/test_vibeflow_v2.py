@@ -30,6 +30,8 @@ default_state = paths_module.default_state
 save_state = paths_module.save_state
 path_contract = paths_module.path_contract
 check_st_readiness = st_module.check_st_readiness
+mode_selection_required = paths_module.mode_selection_required
+selected_mode = paths_module.selected_mode
 
 
 def write(path: Path, content: str) -> None:
@@ -47,6 +49,24 @@ def read_json(path: Path) -> dict:
 
 
 class TestVibeFlowV2:
+    def test_mode_selection_required_only_for_fresh_project(self, tmp_path):
+        assert mode_selection_required(tmp_path) is True
+        assert selected_mode(tmp_path) is None
+
+        state = default_state(tmp_path, topic="existing-project")
+        save_state(tmp_path, state)
+
+        assert mode_selection_required(tmp_path) is False
+        assert selected_mode(tmp_path) == "full"
+
+    def test_existing_state_preserves_selected_mode(self, tmp_path):
+        state = default_state(tmp_path, topic="existing-quick-project")
+        state["mode"] = "quick"
+        save_state(tmp_path, state)
+
+        assert mode_selection_required(tmp_path) is False
+        assert selected_mode(tmp_path) == "quick"
+
     def test_default_state_enables_autopilot_handoff(self, tmp_path):
         state = default_state(tmp_path, topic="autopilot-default")
         assert state["autopilot"]["enabled"] is True

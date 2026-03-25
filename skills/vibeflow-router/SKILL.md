@@ -46,6 +46,14 @@ VibeFlow 对外暴露两种开发模式：
 
 **入口**：`/vibeflow-quick`
 
+### 模式选择规则
+
+- `.vibeflow/state.json` **不存在**：这是首次进入，必须先让用户明确选择 `Full Mode` 或 `Quick Mode`
+- `.vibeflow/state.json` **已存在**：直接沿用已有 `mode`，不要自动改写，也不要重复询问
+- `/vibeflow-quick`：显式 Quick 直达入口，不需要再问模式
+
+VibeFlow 当前**不会自动推断**首次进入应该用哪个 mode。首次选择是显式决策，后续恢复才是沿用状态。
+
 ---
 
 ## 会话开始协议
