@@ -6,6 +6,7 @@ Creates the deterministic scaffold artifacts needed for multi-session agent work
 - feature-list.json (empty template with tech_stack, quality_gates, required_configs)
 - .vibeflow/state.json (centralized workflow state)
 - .vibeflow/logs/session-log.md (human-readable progress log)
+- docs/overview/ (global project context for new contributors)
 - RELEASE_NOTES.md (living release notes, Keep a Changelog format)
 - CLAUDE.md (appended with vibeflow reference for cross-session continuity)
 - examples/ directory with README.md (runnable examples for completed features)
@@ -31,6 +32,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
+from vibeflow_overview import ensure_overview_docs  # noqa: E402
 from vibeflow_paths import default_runtime, default_state, save_runtime, save_state  # noqa: E402
 
 
@@ -42,7 +44,9 @@ _VIBEFLOW_REFERENCE_BODY = (
     "This project uses a multi-session agent workflow.\n"
     "Flow: Think → Plan → Requirements → Design → Build Init → Build Work → Review → Test System → QA → Ship → Reflect.\n\n"
     "Incremental development: requests live under `.vibeflow/increments/`, active work packages live under `docs/changes/<change-id>/`.\n\n"
-    "Key files: `docs/changes/<change-id>/requirements.md` (requirements), "
+    "Key files: `docs/overview/CURRENT-STATE.md` (project snapshot), "
+    "`docs/overview/ARCHITECTURE.md` (global architecture), "
+    "`docs/changes/<change-id>/requirements.md` (requirements), "
     "`docs/changes/<change-id>/design.md` (design), "
     "`feature-list.json` (task inventory), "
     "`.vibeflow/state.json` (workflow state), "
@@ -187,6 +191,20 @@ _Format: [Keep a Changelog](https://keepachangelog.com/) — Updated after every
 """
 
 
+def create_project_readme(project_name: str) -> str:
+    return f"""# {project_name}
+
+This project is managed with VibeFlow.
+
+## Start Here
+
+- `docs/overview/README.md` - global project context and reading order
+- `docs/changes/` - change-by-change delivery records
+- `feature-list.json` - implementation progress
+- `RELEASE_NOTES.md` - shipped changes
+"""
+
+
 def create_examples_readme(project_name: str) -> str:
     return f"""# {project_name} — Examples
 
@@ -305,6 +323,13 @@ def main():
         f.write(create_release_notes(args.project_name))
     print(f"Created: {rn_path}")
 
+    # README.md (only if missing)
+    readme_path = os.path.join(out_dir, "README.md")
+    if not os.path.exists(readme_path):
+        with open(readme_path, "w", encoding="utf-8") as f:
+            f.write(create_project_readme(args.project_name))
+        print(f"Created: {readme_path}")
+
     # scripts dir + copy helper scripts
     scripts_dir = os.path.join(out_dir, "scripts")
     os.makedirs(scripts_dir, exist_ok=True)
@@ -360,6 +385,10 @@ def main():
         "new-vibeflow-config.py",
         "get-vibeflow-paths.py",
         "vibeflow_paths.py",
+        "vibeflow_codebase.py",
+        "vibeflow_packets.py",
+        "map-codebase.py",
+        "map-change-impact.py",
         "promote-vibeflow-quick.py",
         "validate_st_cases.py",
         "validate_increment_request.py",
@@ -367,6 +396,7 @@ def main():
         "new-vibeflow-work-config.py",
         "test-vibeflow-setup.py",
         "migrate-vibeflow-v2.py",
+        "vibeflow_overview.py",
     ]
     for script_name in helper_scripts:
         src = os.path.join(plugin_scripts_dir, script_name)
@@ -382,6 +412,11 @@ def main():
     verification_dir = os.path.join(change_root, "verification")
     os.makedirs(verification_dir, exist_ok=True)
     print(f"Created: {change_root}")
+
+    overview_dir = project_path / "docs" / "overview"
+    overview_dir.mkdir(parents=True, exist_ok=True)
+    ensure_overview_docs(project_path, state)
+    print(f"Created: {overview_dir}")
 
     # docs/test-cases dir
     test_cases_dir = os.path.join(out_dir, "docs", "test-cases")
@@ -407,7 +442,7 @@ def main():
     print(f"Created: {examples_readme}")
 
     print(f"\nProject '{args.project_name}' initialized at {out_dir}")
-    print("Created: feature-list.json, CLAUDE.md, .vibeflow/state.json, session-log, RELEASE_NOTES.md, examples/, scripts/ (with helper scripts), docs/changes/<change-id>/, docs/test-cases/, docs/templates/")
+    print("Created: feature-list.json, CLAUDE.md, .vibeflow/state.json, session-log, RELEASE_NOTES.md, examples/, scripts/ (with helper scripts), docs/overview/, docs/changes/<change-id>/, docs/test-cases/, docs/templates/")
     print("TODO (LLM generates during Initializer phase):")
     print("  - .vibeflow/guides/build.md  (tailored Worker guide from SKILL.md + references + design doc)")
     print("  - init.sh / init.ps1         (environment bootstrap from design doc tech stack)")

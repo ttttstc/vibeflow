@@ -184,6 +184,30 @@ def release_notes_path(project_root: Path) -> Path:
     return project_root / "RELEASE_NOTES.md"
 
 
+def overview_root(project_root: Path) -> Path:
+    return project_root / "docs" / "overview"
+
+
+def overview_readme_path(project_root: Path) -> Path:
+    return overview_root(project_root) / "README.md"
+
+
+def overview_project_path(project_root: Path) -> Path:
+    return overview_root(project_root) / "PROJECT.md"
+
+
+def overview_product_path(project_root: Path) -> Path:
+    return overview_root(project_root) / "PRODUCT.md"
+
+
+def overview_architecture_path(project_root: Path) -> Path:
+    return overview_root(project_root) / "ARCHITECTURE.md"
+
+
+def overview_current_state_path(project_root: Path) -> Path:
+    return overview_root(project_root) / "CURRENT-STATE.md"
+
+
 def phase_history_path(project_root: Path) -> Path:
     return project_root / ".vibeflow" / "phase-history.json"
 
@@ -224,6 +248,22 @@ def services_guide_path(project_root: Path) -> Path:
     return guides_dir(project_root) / "services.md"
 
 
+def build_packets_root(project_root: Path) -> Path:
+    return project_root / ".vibeflow" / "packets"
+
+
+def build_packet_results_root(project_root: Path) -> Path:
+    return project_root / ".vibeflow" / "subagent-results"
+
+
+def codebase_map_json_path(project_root: Path) -> Path:
+    return project_root / ".vibeflow" / "codebase-map.json"
+
+
+def codebase_map_md_path(project_root: Path) -> Path:
+    return project_root / ".vibeflow" / "codebase-map.md"
+
+
 def change_root(project_root: Path, state: dict) -> Path:
     active = state.get("active_change") or {}
     rel = active.get("root")
@@ -241,6 +281,35 @@ def resolve_artifact_path(project_root: Path, state: dict, key: str) -> Path:
     return change_root(project_root, state) / f"{key}.md"
 
 
+def packet_namespace(project_root: Path, state: dict) -> str:
+    active = state.get("active_change") or {}
+    return str(active.get("id") or default_change_id())
+
+
+def build_packets_dir(project_root: Path, state: dict) -> Path:
+    return build_packets_root(project_root) / packet_namespace(project_root, state)
+
+
+def build_packet_path(project_root: Path, state: dict, feature_id: int | str) -> Path:
+    return build_packets_dir(project_root, state) / f"feature-{feature_id}.json"
+
+
+def build_packet_results_dir(project_root: Path, state: dict) -> Path:
+    return build_packet_results_root(project_root) / packet_namespace(project_root, state)
+
+
+def build_packet_result_path(project_root: Path, state: dict, feature_id: int | str) -> Path:
+    return build_packet_results_dir(project_root, state) / f"feature-{feature_id}.json"
+
+
+def codebase_impact_json_path(project_root: Path, state: dict) -> Path:
+    return change_root(project_root, state) / "codebase-impact.json"
+
+
+def codebase_impact_md_path(project_root: Path, state: dict) -> Path:
+    return change_root(project_root, state) / "codebase-impact.md"
+
+
 def path_contract(project_root: Path, state: dict | None = None) -> dict:
     loaded_state = state or load_state(project_root)
     return {
@@ -250,6 +319,14 @@ def path_contract(project_root: Path, state: dict | None = None) -> dict:
         "work_config": work_config_path(project_root),
         "feature_list": feature_list_path(project_root),
         "release_notes": release_notes_path(project_root),
+        "overview_root": overview_root(project_root),
+        "overview": {
+            "readme": overview_readme_path(project_root),
+            "project": overview_project_path(project_root),
+            "product": overview_product_path(project_root),
+            "architecture": overview_architecture_path(project_root),
+            "current_state": overview_current_state_path(project_root),
+        },
         "phase_history": phase_history_path(project_root),
         "increment_queue": increment_queue_path(project_root),
         "increment_history": increment_history_path(project_root),
@@ -258,6 +335,12 @@ def path_contract(project_root: Path, state: dict | None = None) -> dict:
         "build_guide": build_guide_path(project_root),
         "services_guide": services_guide_path(project_root),
         "change_root": change_root(project_root, loaded_state),
+        "packets_dir": build_packets_dir(project_root, loaded_state),
+        "packet_results_dir": build_packet_results_dir(project_root, loaded_state),
+        "codebase_map_json": codebase_map_json_path(project_root),
+        "codebase_map_md": codebase_map_md_path(project_root),
+        "codebase_impact_json": codebase_impact_json_path(project_root, loaded_state),
+        "codebase_impact_md": codebase_impact_md_path(project_root, loaded_state),
         "artifacts": {
             key: resolve_artifact_path(project_root, loaded_state, key)
             for key in [
@@ -309,6 +392,18 @@ def ensure_state(project_root: Path, topic: str | None = None) -> dict:
     state = default_state(project_root, topic=topic)
     save_state(project_root, state)
     return state
+
+
+def mode_selection_required(project_root: Path) -> bool:
+    return not state_path(project_root).exists()
+
+
+def selected_mode(project_root: Path) -> str | None:
+    path = state_path(project_root)
+    if not path.exists():
+        return None
+    mode = str(load_state(project_root).get("mode") or "").strip()
+    return mode or None
 
 
 def default_runtime() -> dict:

@@ -1,5 +1,11 @@
 # VibeFlow Usage
 
+## Related Docs
+
+- [README.md](README.md) - 先看项目介绍、安装方式和快速开始
+- [ARCHITECTURE.md](ARCHITECTURE.md) - 看状态机、路由和组件关系
+- [VIBEFLOW-DESIGN.md](VIBEFLOW-DESIGN.md) - 看命名规则、文件布局和实现约定
+
 ## 1. Target Project Layout
 
 A target project is expected to accumulate these artifacts over time:
@@ -96,7 +102,7 @@ flowchart TD
     R --> S[Done]
 ```
 
-In Claude Code plugin mode, reaching `build-init` is the handoff point where the system keeps advancing the delivery chain automatically. The router should keep advancing Build, Review, Test, Ship, and Reflect without waiting for a new user prompt between each subphase. For CLI runs, the script entrypoint of that same chain is:
+In Claude Code plugin mode, reaching `build-init` is the handoff point where the system keeps advancing the delivery chain automatically. The router should keep advancing Build, Review, Test, Ship, and Reflect without waiting for a new user prompt between each subphase. If you are running the workflow from the command line, you can continue the same chain with:
 
 ```bash
 python scripts/run-vibeflow-autopilot.py --project-root <target-project>

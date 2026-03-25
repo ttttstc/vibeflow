@@ -22,6 +22,8 @@ def main():
         "work_config": str(contract["work_config"]),
         "feature_list": str(contract["feature_list"]),
         "release_notes": str(contract["release_notes"]),
+        "overview_root": str(contract["overview_root"]),
+        "overview": {k: str(v) for k, v in contract["overview"].items()},
         "phase_history": str(contract["phase_history"]),
         "increment_queue": str(contract["increment_queue"]),
         "increment_history": str(contract["increment_history"]),
@@ -30,6 +32,12 @@ def main():
         "build_guide": str(contract["build_guide"]),
         "services_guide": str(contract["services_guide"]),
         "change_root": str(contract["change_root"]),
+        "packets_dir": str(contract["packets_dir"]),
+        "packet_results_dir": str(contract["packet_results_dir"]),
+        "codebase_map_json": str(contract["codebase_map_json"]),
+        "codebase_map_md": str(contract["codebase_map_md"]),
+        "codebase_impact_json": str(contract["codebase_impact_json"]),
+        "codebase_impact_md": str(contract["codebase_impact_md"]),
         "artifacts": {k: str(v) for k, v in contract["artifacts"].items()},
     }
 

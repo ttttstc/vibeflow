@@ -175,10 +175,17 @@ class TestVibeFlowModeE2E:
             "# Design Review\n\nApproved.\n",
         )
         phases.append(detect_phase(project_root)["phase"])
+        assert phases[-1] == "build-init"
+
+        update_state(
+            project_root,
+            lambda data: data["checkpoints"].__setitem__("build_init", True),
+        )
+        create_feature_list(project_root, "todo")
+        phases.append(detect_phase(project_root)["phase"])
         assert phases[-1] == "build-config"
 
         run_python(ROOT / "scripts" / "new-vibeflow-work-config.py", "--project-root", project_root)
-        create_feature_list(project_root, "todo")
         phases.append(detect_phase(project_root)["phase"])
         assert phases[-1] == "build-work"
 
@@ -232,6 +239,7 @@ class TestVibeFlowModeE2E:
             "plan",
             "requirements",
             "design",
+            "build-init",
             "build-config",
             "build-work",
             "review",

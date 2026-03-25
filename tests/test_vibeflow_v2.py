@@ -30,6 +30,8 @@ default_state = paths_module.default_state
 save_state = paths_module.save_state
 path_contract = paths_module.path_contract
 check_st_readiness = st_module.check_st_readiness
+mode_selection_required = paths_module.mode_selection_required
+selected_mode = paths_module.selected_mode
 
 
 def write(path: Path, content: str) -> None:
@@ -47,11 +49,74 @@ def read_json(path: Path) -> dict:
 
 
 class TestVibeFlowV2:
+    def test_mode_selection_required_only_for_fresh_project(self, tmp_path):
+        assert mode_selection_required(tmp_path) is True
+        assert selected_mode(tmp_path) is None
+
+        state = default_state(tmp_path, topic="existing-project")
+        save_state(tmp_path, state)
+
+        assert mode_selection_required(tmp_path) is False
+        assert selected_mode(tmp_path) == "full"
+
+    def test_existing_state_preserves_selected_mode(self, tmp_path):
+        state = default_state(tmp_path, topic="existing-quick-project")
+        state["mode"] = "quick"
+        save_state(tmp_path, state)
+
+        assert mode_selection_required(tmp_path) is False
+        assert selected_mode(tmp_path) == "quick"
+
     def test_default_state_enables_autopilot_handoff(self, tmp_path):
         state = default_state(tmp_path, topic="autopilot-default")
         assert state["autopilot"]["enabled"] is True
         assert "build-init" in state["autopilot"]["auto_runnable"]
         assert "design" in state["autopilot"]["manual_only"]
+
+    def test_path_contract_exposes_packet_directories(self, tmp_path):
+        state = default_state(tmp_path, topic="packet-paths")
+        save_state(tmp_path, state)
+
+        contract = path_contract(tmp_path, state)
+        assert contract["packets_dir"].name == state["active_change"]["id"]
+        assert contract["packet_results_dir"].name == state["active_change"]["id"]
+        assert contract["packets_dir"].parent.name == "packets"
+        assert contract["packet_results_dir"].parent.name == "subagent-results"
+        assert contract["codebase_map_json"].name == "codebase-map.json"
+        assert contract["codebase_map_md"].name == "codebase-map.md"
+        assert contract["codebase_impact_json"].name == "codebase-impact.json"
+        assert contract["codebase_impact_md"].name == "codebase-impact.md"
+        assert contract["overview_root"].name == "overview"
+        assert contract["overview"]["readme"].name == "README.md"
+        assert contract["overview"]["project"].name == "PROJECT.md"
+        assert contract["overview"]["product"].name == "PRODUCT.md"
+        assert contract["overview"]["architecture"].name == "ARCHITECTURE.md"
+        assert contract["overview"]["current_state"].name == "CURRENT-STATE.md"
+
+    def test_init_project_creates_overview_docs(self, tmp_path):
+        project_root = tmp_path / "overview-project"
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(ROOT / "scripts" / "init_project.py"),
+                "overview-project",
+                "--path",
+                str(project_root),
+                "--lang",
+                "python",
+            ],
+            capture_output=True,
+            text=True,
+            cwd=ROOT,
+        )
+        assert result.returncode == 0, result.stderr
+
+        overview_root = project_root / "docs" / "overview"
+        assert (overview_root / "README.md").exists()
+        assert (overview_root / "PROJECT.md").exists()
+        assert (overview_root / "PRODUCT.md").exists()
+        assert (overview_root / "ARCHITECTURE.md").exists()
+        assert (overview_root / "CURRENT-STATE.md").exists()
 
     def test_v2_requirements_missing(self, tmp_path):
         state = default_state(tmp_path, topic="sample")
@@ -68,6 +133,51 @@ class TestVibeFlowV2:
 
         result = detect_phase(tmp_path)
         assert result["phase"] == "requirements"
+
+    def test_empty_feature_list_returns_to_build_init(self, tmp_path):
+        state = default_state(tmp_path, topic="empty-build")
+        for checkpoint in ("think", "plan", "requirements", "design"):
+            state["checkpoints"][checkpoint] = True
+        save_state(tmp_path, state)
+        contract = path_contract(tmp_path, state)
+
+        write(contract["workflow"], 'template: "api-standard"\n')
+        write(contract["artifacts"]["think"], "# Context\n")
+        write(contract["artifacts"]["plan"], "# Proposal\n")
+        write(contract["artifacts"]["requirements"], "# Requirements\n")
+        write(contract["artifacts"]["design"], "# Design\n")
+        write(contract["artifacts"]["design_review"], "# Design Review\n")
+        write_json(contract["feature_list"], {"project": "empty-build", "features": []})
+
+        result = detect_phase(tmp_path)
+        assert result["phase"] == "build-init"
+
+    def test_legacy_build_config_keeps_existing_project_past_build_init(self, tmp_path):
+        state = default_state(tmp_path, topic="legacy-build-config")
+        for checkpoint in ("think", "plan", "requirements", "design"):
+            state["checkpoints"][checkpoint] = True
+        save_state(tmp_path, state)
+        contract = path_contract(tmp_path, state)
+
+        write(contract["workflow"], 'template: "api-standard"\n')
+        write(contract["artifacts"]["think"], "# Context\n")
+        write(contract["artifacts"]["plan"], "# Proposal\n")
+        write(contract["artifacts"]["requirements"], "# Requirements\n")
+        write(contract["artifacts"]["design"], "# Design\n")
+        write(contract["artifacts"]["design_review"], "# Design Review\n")
+        write_json(
+            contract["feature_list"],
+            {
+                "project": "legacy-build-config",
+                "features": [
+                    {"id": 1, "title": "Legacy feature", "status": "failing", "dependencies": []}
+                ],
+            },
+        )
+        write(contract["work_config"], '{"steps":["build-work"]}\n')
+
+        result = detect_phase(tmp_path)
+        assert result["phase"] == "build-work"
 
     def test_v2_quick_mode_goes_straight_to_build_work(self, tmp_path):
         state = default_state(tmp_path, topic="quick-fix")

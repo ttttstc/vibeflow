@@ -72,6 +72,24 @@ def all_features_passing(feature_list_path: Path) -> bool:
     return bool(features) and all(f.get("status") == "passing" for f in features)
 
 
+def has_active_features(feature_list_path: Path) -> bool:
+    if not feature_list_path.exists():
+        return False
+    data = json.loads(feature_list_path.read_text(encoding="utf-8"))
+    features = [f for f in data.get("features", []) if not f.get("deprecated")]
+    return bool(features)
+
+
+def build_packets_ready(feature_list_path: Path, packets_dir: Path) -> bool:
+    if not feature_list_path.exists():
+        return False
+    data = json.loads(feature_list_path.read_text(encoding="utf-8"))
+    features = [f for f in data.get("features", []) if not f.get("deprecated")]
+    if not features:
+        return False
+    return all((packets_dir / f"feature-{feature.get('id')}.json").exists() for feature in features if feature.get("id") is not None)
+
+
 def increment_pending(project_root: Path) -> bool:
     queue_json = increment_queue_path(project_root)
     if queue_json.exists():
@@ -212,6 +230,7 @@ def state_based_detect_phase(project_root: Path, verbose: bool = False) -> dict:
     workflow_path_obj = contract["workflow"]
     feature_list = contract["feature_list"]
     work_config = contract["work_config"]
+    packets_dir = contract["packets_dir"]
     release_notes = contract["release_notes"]
     artifacts = contract["artifacts"]
     state_root = project_root / ".vibeflow"
@@ -224,6 +243,11 @@ def state_based_detect_phase(project_root: Path, verbose: bool = False) -> dict:
     pending_increment = increment_pending(project_root)
     quick_issues = quick_readiness_issues(project_root, state) if is_quick_mode else []
     quick_state_meta = quick_meta(state) if is_quick_mode else {}
+    build_init_ready = feature_list.exists() and has_active_features(feature_list) and (
+        checkpoint_done(state, "build_init")
+        or build_packets_ready(feature_list, packets_dir)
+        or work_config.exists()
+    )
 
     checks = []
     checks.append(
@@ -239,7 +263,18 @@ def state_based_detect_phase(project_root: Path, verbose: bool = False) -> dict:
     checks.append(("plan", not checkpoint_done(state, "plan") or not artifacts["plan"].exists(), f'checkpoint={checkpoint_done(state, "plan")}, artifact={"exists" if artifacts["plan"].exists() else "missing"}'))
     checks.append(("requirements", not checkpoint_done(state, "requirements") or not artifacts["requirements"].exists(), f'checkpoint={checkpoint_done(state, "requirements")}, artifact={"exists" if artifacts["requirements"].exists() else "missing"}'))
     checks.append(("design", (not checkpoint_done(state, "design")) or (not artifacts["design"].exists()) or (not artifacts["design_review"].exists()), f'design={checkpoint_done(state, "design")}, design_doc={"exists" if artifacts["design"].exists() else "missing"}, design_review={"exists" if artifacts["design_review"].exists() else "missing"}'))
-    checks.append(("build-init", not feature_list.exists(), "feature-list " + ("missing" if not feature_list.exists() else "exists")))
+    checks.append(
+        (
+            "build-init",
+            not build_init_ready,
+            "build-init "
+            + (
+                "ready"
+                if build_init_ready
+                else "feature-list, work-config, or implementation packets are missing/incomplete"
+            ),
+        )
+    )
     checks.append(("build-config", not work_config.exists(), "work-config " + ("missing" if not work_config.exists() else "exists")))
     checks.append(("build-work", not all_features_passing(feature_list), "features " + ("not passing" if not all_features_passing(feature_list) else "all passing")))
     checks.append(("review", not checkpoint_done(state, "review") or not artifacts["review"].exists(), f'review={checkpoint_done(state, "review")}, artifact={"exists" if artifacts["review"].exists() else "missing"}'))
@@ -284,8 +319,8 @@ def state_based_detect_phase(project_root: Path, verbose: bool = False) -> dict:
         phase, reason = "requirements", "Requirements artifact is missing or not approved."
     elif not checkpoint_done(state, "design") or not artifacts["design"].exists() or not artifacts["design_review"].exists():
         phase, reason = "design", "Design or design review artifact is missing or not approved."
-    elif not feature_list.exists():
-        phase, reason = "build-init", "feature-list.json is missing."
+    elif not build_init_ready:
+        phase, reason = "build-init", "feature-list.json is missing, empty, or no build-init readiness signal exists."
     elif not work_config.exists():
         phase, reason = "build-config", ".vibeflow/work-config.json is missing."
     elif not all_features_passing(feature_list):
