@@ -4,9 +4,9 @@
 
 # VibeFlow
 
-**Make Claude, Codex, and OpenCode deliver software with engineering discipline, not random vibe coding.**
+**Make AI deliver software with engineering discipline, not random vibe coding.**
 
-VibeFlow is a structured delivery framework for Claude Code, Codex, and OpenCode. It connects requirements, design, implementation, review, testing, release, and retrospectives into one recoverable workflow so AI can finish a real delivery cycle instead of just producing code.
+VibeFlow is a structured delivery framework for Claude Code. It connects requirements, design, implementation, review, testing, release, and retrospectives into one recoverable workflow so AI can finish a real delivery cycle instead of just producing code.
 
 > Think first, then let the system carry the second half of the delivery loop.
 
@@ -19,6 +19,7 @@ VibeFlow is a structured delivery framework for Claude Code, Codex, and OpenCode
 - [Common commands](README_EN.md#common-commands)
 - [Detailed usage guide](USAGE.md)
 - [Architecture](ARCHITECTURE.md)
+- [Deep Technical Architecture Overview](https://deepwiki.com/ttttstc/vibeflow/1-vibeflow-overview)
 - [Design contract and implementation notes](VIBEFLOW-DESIGN.md)
 
 ---
@@ -29,31 +30,21 @@ VibeFlow is a structured delivery framework for Claude Code, Codex, and OpenCode
 
 The default behavior installs the latest released version. To pin a version, add `VIBEFLOW_VERSION=v1.0.0`.
 
-| Tool | Platform | Install Command | After Install |
-|---|---|---|---|
-| Claude Code | macOS / Linux | `/sh curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.sh \| bash` | run `/plugin install vibeflow@vibeflow` |
-| Claude Code | Windows PowerShell | `irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.ps1 \| iex` | run `/plugin install vibeflow@vibeflow` |
-| Codex | macOS / Linux | `curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/codex/install.sh \| bash` | restart Codex |
-| Codex | Windows PowerShell | `irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/codex/install.ps1 \| iex` | restart Codex |
-| OpenCode | macOS / Linux | `curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/opencode/install.sh \| bash` | restart OpenCode |
+| Platform | Install Command | After Install |
+|---|---|---|
+| macOS / Linux | `/sh curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.sh \| bash` | run `/plugin install vibeflow@vibeflow` |
+| Windows PowerShell | `irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.ps1 \| iex` | run `/plugin install vibeflow@vibeflow` |
 
 Pinned version examples:
 
-| Tool | Platform | Version-Pinned Command |
-|---|---|---|
-| Claude Code | macOS / Linux | `/sh curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.sh \| VIBEFLOW_VERSION=v1.0.0 bash` |
-| Claude Code | Windows | `$env:VIBEFLOW_VERSION="v1.0.0"; irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.ps1 \| iex` |
-| Codex | macOS / Linux | `curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/codex/install.sh \| VIBEFLOW_VERSION=v1.0.0 bash` |
-| Codex | Windows | `$env:VIBEFLOW_VERSION="v1.0.0"; irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/codex/install.ps1 \| iex` |
-| OpenCode | macOS / Linux | `curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/opencode/install.sh \| VIBEFLOW_VERSION=v1.0.0 bash` |
+| Platform | Version-Pinned Command |
+|---|---|
+| macOS / Linux | `/sh curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.sh \| VIBEFLOW_VERSION=v1.0.0 bash` |
+| Windows | `$env:VIBEFLOW_VERSION="v1.0.0"; irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.ps1 \| iex` |
 
 ### Verify Installation
 
-| Tool | Verification |
-|---|---|
-| Claude Code | run `/vibeflow` and confirm the VibeFlow entry flow appears |
-| Codex | after restart, confirm `vibeflow-*` appears in the available skills list |
-| OpenCode | after restart, confirm the `vibeflow` plugin and skills are available |
+Run `/vibeflow` and confirm the VibeFlow entry flow appears.
 
 ### Mode Selection on First Run
 
@@ -66,29 +57,22 @@ Recommended default:
 
 ### Ask AI to Install It for You
 
-If you want Claude Code or Codex to handle setup, paste this:
+If you want Claude Code to handle setup, paste this:
 
 ```text
 Install VibeFlow for me.
 
 Requirements:
-1. First detect whether the current tool is Claude Code, Codex, or OpenCode
-2. Choose the official install command based on the tool and OS:
-   - Claude Code on macOS / Linux:
+1. Choose the official install command based on the current OS:
+   - macOS / Linux:
      /sh curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.sh | bash
-   - Claude Code on Windows:
+   - Windows:
      irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.ps1 | iex
-   - Codex on macOS / Linux:
-     curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/codex/install.sh | bash
-   - Codex on Windows:
-     irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/codex/install.ps1 | iex
-   - OpenCode on macOS / Linux:
-     curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/opencode/install.sh | bash
-3. If I give you a version number, install that version. Otherwise install the latest released version
-4. If that fails, install it manually into the appropriate tool directory
-5. If the tool is Claude Code, run:
+2. If I give you a version number, install that version. Otherwise install the latest released version
+3. If that fails, install it manually into the Claude Code marketplace directory
+4. After installation, run:
    /plugin install vibeflow@vibeflow
-6. Then tell me:
+5. Then tell me:
    - whether installation succeeded
    - where it was installed
    - how I should verify it
@@ -97,8 +81,6 @@ Requirements:
 ### Update and Uninstall
 
 Update uses the same commands as install.
-
-Claude Code
 
 macOS / Linux:
 
@@ -130,37 +112,11 @@ After updating, restart Claude Code and run:
 /plugin install vibeflow@vibeflow
 ```
 
-Codex
-
-macOS / Linux:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/codex/install.sh | bash
-```
-
-Windows:
-
-```powershell
-irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/codex/install.ps1 | iex
-```
-
-Restart Codex after updating.
-
-OpenCode
-
-macOS / Linux:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/opencode/install.sh | bash
-```
-
-Restart OpenCode after updating.
-
 To uninstall:
-1. close the tool
-2. remove the corresponding installation directory
-3. for Claude Code, also remove the `vibeflow` entry from `known_marketplaces.json`
-4. reopen the tool
+1. close Claude Code
+2. remove the marketplace directory
+3. remove the `vibeflow` entry from `known_marketplaces.json`
+4. reopen Claude Code
 
 ---
 

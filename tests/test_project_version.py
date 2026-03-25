@@ -102,6 +102,18 @@ def test_readmes_reference_all_supported_hosts():
     required_markers = [
         "claude-code/install.sh",
         "claude-code/install.ps1",
+        "deepwiki.com/ttttstc/vibeflow/1-vibeflow-overview",
+    ]
+
+    for path in readmes:
+        text = read_text(path)
+        for marker in required_markers:
+            assert marker in text, f"{path} should reference {marker}"
+
+
+def test_readmes_do_not_include_codex_or_opencode_install_guidance():
+    readmes = [REPO_ROOT / "README.md", REPO_ROOT / "README_EN.md"]
+    forbidden_markers = [
         "codex/install.sh",
         "codex/install.ps1",
         "opencode/install.sh",
@@ -109,5 +121,5 @@ def test_readmes_reference_all_supported_hosts():
 
     for path in readmes:
         text = read_text(path)
-        for marker in required_markers:
-            assert marker in text, f"{path} should reference {marker}"
+        for marker in forbidden_markers:
+            assert marker not in text, f"{path} should not reference {marker}"

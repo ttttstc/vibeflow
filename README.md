@@ -4,9 +4,9 @@
 
 # VibeFlow
 
-**让 Claude、Codex、OpenCode 按工程纪律交付软件，而不是随机开写。**
+**让 AI 按工程纪律交付软件，而不是随机开写。**
 
-VibeFlow 是一个面向 Claude Code、Codex、OpenCode 的结构化交付框架。它把需求、设计、实现、审查、测试、发布和复盘串成一条可恢复、可追踪、可自动继续的工作流，让 AI 不只是“会写代码”，而是能把一轮完整交付做稳。
+VibeFlow 是一个面向 Claude Code 的结构化交付框架。它把需求、设计、实现、审查、测试、发布和复盘串成一条可恢复、可追踪、可自动继续的工作流，让 AI 不只是“会写代码”，而是能把一轮完整交付做稳。
 
 > 先把事情想清楚，再让系统把后半程做完。
 
@@ -19,6 +19,7 @@ VibeFlow 是一个面向 Claude Code、Codex、OpenCode 的结构化交付框架
 - [常用命令](README.md#常用命令)
 - [详细使用指南](USAGE.md)
 - [架构说明](ARCHITECTURE.md)
+- [详细技术架构导览（DeepWiki）](https://deepwiki.com/ttttstc/vibeflow/1-vibeflow-overview)
 - [设计契约与实现约定](VIBEFLOW-DESIGN.md)
 
 ---
@@ -29,31 +30,21 @@ VibeFlow 是一个面向 Claude Code、Codex、OpenCode 的结构化交付框架
 
 默认安装最新发布版本；指定版本时为命令增加 `VIBEFLOW_VERSION=v1.0.0`。
 
-| 工具 | 平台 | 安装命令 | 安装后 |
-|---|---|---|---|
-| Claude Code | macOS / Linux | `/sh curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.sh \| bash` | 运行 `/plugin install vibeflow@vibeflow` |
-| Claude Code | Windows PowerShell | `irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.ps1 \| iex` | 运行 `/plugin install vibeflow@vibeflow` |
-| Codex | macOS / Linux | `curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/codex/install.sh \| bash` | 重启 Codex |
-| Codex | Windows PowerShell | `irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/codex/install.ps1 \| iex` | 重启 Codex |
-| OpenCode | macOS / Linux | `curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/opencode/install.sh \| bash` | 重启 OpenCode |
+| 平台 | 安装命令 | 安装后 |
+|---|---|---|
+| macOS / Linux | `/sh curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.sh \| bash` | 运行 `/plugin install vibeflow@vibeflow` |
+| Windows PowerShell | `irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.ps1 \| iex` | 运行 `/plugin install vibeflow@vibeflow` |
 
 指定版本示例：
 
-| 工具 | 平台 | 指定版本命令 |
-|---|---|---|
-| Claude Code | macOS / Linux | `/sh curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.sh \| VIBEFLOW_VERSION=v1.0.0 bash` |
-| Claude Code | Windows | `$env:VIBEFLOW_VERSION="v1.0.0"; irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.ps1 \| iex` |
-| Codex | macOS / Linux | `curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/codex/install.sh \| VIBEFLOW_VERSION=v1.0.0 bash` |
-| Codex | Windows | `$env:VIBEFLOW_VERSION="v1.0.0"; irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/codex/install.ps1 \| iex` |
-| OpenCode | macOS / Linux | `curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/opencode/install.sh \| VIBEFLOW_VERSION=v1.0.0 bash` |
+| 平台 | 指定版本命令 |
+|---|---|
+| macOS / Linux | `/sh curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.sh \| VIBEFLOW_VERSION=v1.0.0 bash` |
+| Windows | `$env:VIBEFLOW_VERSION="v1.0.0"; irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.ps1 \| iex` |
 
 ### 验证安装
 
-| 工具 | 验证方式 |
-|---|---|
-| Claude Code | 运行 `/vibeflow`，能看到 VibeFlow 入口说明 |
-| Codex | 重启后在可用 skills 列表中看到 `vibeflow-*` |
-| OpenCode | 重启后看到 `vibeflow` 插件与 skills 已加载 |
+运行 `/vibeflow`，能看到 VibeFlow 入口说明，就说明插件已正常加载。
 
 ### 首次启动的模式选择
 
@@ -67,29 +58,22 @@ VibeFlow 是一个面向 Claude Code、Codex、OpenCode 的结构化交付框架
 
 ### 让 AI 帮你安装
 
-如果你想直接让 Claude Code 或 Codex 自己完成安装，粘贴下面这段：
+如果你想直接让 Claude Code 自己完成安装，粘贴下面这段：
 
 ```text
 帮我安装 VibeFlow。
 
 要求：
-1. 先识别当前工具是 Claude Code、Codex 还是 OpenCode
-2. 根据工具和当前系统选择官方安装命令：
-   - Claude Code on macOS / Linux：
+1. 根据当前系统选择官方安装命令：
+   - macOS / Linux：
      /sh curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.sh | bash
-   - Claude Code on Windows：
+   - Windows：
      irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.ps1 | iex
-   - Codex on macOS / Linux：
-     curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/codex/install.sh | bash
-   - Codex on Windows：
-     irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/codex/install.ps1 | iex
-   - OpenCode on macOS / Linux：
-     curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/opencode/install.sh | bash
-3. 如果我给了版本号，就安装指定版本；否则安装最新发布版本
-4. 如果脚本不可用，再手动安装到对应工具的目录
-5. 如果是 Claude Code，安装完成后执行：
+2. 如果我给了版本号，就安装指定版本；否则安装最新发布版本
+3. 如果脚本不可用，再手动安装到 Claude Code marketplace 目录
+4. 安装完成后执行：
    /plugin install vibeflow@vibeflow
-6. 最后告诉我：
+5. 最后告诉我：
    - 是否安装成功
    - 安装到了哪里
    - 下一步该怎么验证
@@ -98,8 +82,6 @@ VibeFlow 是一个面向 Claude Code、Codex、OpenCode 的结构化交付框架
 ### 更新与卸载
 
 更新命令与安装命令相同。
-
-Claude Code
 
 macOS / Linux：
 
@@ -131,37 +113,11 @@ $env:VIBEFLOW_VERSION="v1.0.0"; irm https://raw.githubusercontent.com/ttttstc/vi
 /plugin install vibeflow@vibeflow
 ```
 
-Codex
-
-macOS / Linux：
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/codex/install.sh | bash
-```
-
-Windows：
-
-```powershell
-irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/codex/install.ps1 | iex
-```
-
-更新后重启 Codex。
-
-OpenCode
-
-macOS / Linux：
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/opencode/install.sh | bash
-```
-
-更新后重启 OpenCode。
-
 卸载时：
-1. 关闭对应工具
-2. 删除对应安装目录
-3. Claude Code 额外从 `known_marketplaces.json` 中移除 `vibeflow`
-4. 重新打开对应工具
+1. 关闭 Claude Code
+2. 删除 marketplace 目录
+3. 从 `known_marketplaces.json` 中移除 `vibeflow`
+4. 重新打开 Claude Code
 
 ---
 
