@@ -294,6 +294,10 @@ VibeFlow 不只有一条固定强度的流程。
 
 ---
 
+## 学习网站
+[访问学习网站](https://ttttstc.github.io/vibeflow)
+---
+
 ## 许可证
 
 MIT
