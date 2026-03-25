@@ -100,6 +100,13 @@ claude-code/
   install.sh
   install.ps1
 
+codex/
+  install.sh
+  install.ps1
+
+opencode/
+  install.sh
+
 .claude-plugin/
   marketplace.json
   plugin.json
