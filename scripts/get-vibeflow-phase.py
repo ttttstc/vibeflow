@@ -244,7 +244,9 @@ def state_based_detect_phase(project_root: Path, verbose: bool = False) -> dict:
     quick_issues = quick_readiness_issues(project_root, state) if is_quick_mode else []
     quick_state_meta = quick_meta(state) if is_quick_mode else {}
     build_init_ready = feature_list.exists() and has_active_features(feature_list) and (
-        checkpoint_done(state, "build_init") or build_packets_ready(feature_list, packets_dir)
+        checkpoint_done(state, "build_init")
+        or build_packets_ready(feature_list, packets_dir)
+        or work_config.exists()
     )
 
     checks = []
@@ -269,7 +271,7 @@ def state_based_detect_phase(project_root: Path, verbose: bool = False) -> dict:
             + (
                 "ready"
                 if build_init_ready
-                else "feature-list or implementation packets are missing/incomplete"
+                else "feature-list, work-config, or implementation packets are missing/incomplete"
             ),
         )
     )
@@ -318,7 +320,7 @@ def state_based_detect_phase(project_root: Path, verbose: bool = False) -> dict:
     elif not checkpoint_done(state, "design") or not artifacts["design"].exists() or not artifacts["design_review"].exists():
         phase, reason = "design", "Design or design review artifact is missing or not approved."
     elif not build_init_ready:
-        phase, reason = "build-init", "feature-list.json is missing, empty, or implementation packets are missing."
+        phase, reason = "build-init", "feature-list.json is missing, empty, or no build-init readiness signal exists."
     elif not work_config.exists():
         phase, reason = "build-config", ".vibeflow/work-config.json is missing."
     elif not all_features_passing(feature_list):

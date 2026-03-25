@@ -121,6 +121,33 @@ class TestVibeFlowV2:
         result = detect_phase(tmp_path)
         assert result["phase"] == "build-init"
 
+    def test_legacy_build_config_keeps_existing_project_past_build_init(self, tmp_path):
+        state = default_state(tmp_path, topic="legacy-build-config")
+        for checkpoint in ("think", "plan", "requirements", "design"):
+            state["checkpoints"][checkpoint] = True
+        save_state(tmp_path, state)
+        contract = path_contract(tmp_path, state)
+
+        write(contract["workflow"], 'template: "api-standard"\n')
+        write(contract["artifacts"]["think"], "# Context\n")
+        write(contract["artifacts"]["plan"], "# Proposal\n")
+        write(contract["artifacts"]["requirements"], "# Requirements\n")
+        write(contract["artifacts"]["design"], "# Design\n")
+        write(contract["artifacts"]["design_review"], "# Design Review\n")
+        write_json(
+            contract["feature_list"],
+            {
+                "project": "legacy-build-config",
+                "features": [
+                    {"id": 1, "title": "Legacy feature", "status": "failing", "dependencies": []}
+                ],
+            },
+        )
+        write(contract["work_config"], '{"steps":["build-work"]}\n')
+
+        result = detect_phase(tmp_path)
+        assert result["phase"] == "build-work"
+
     def test_v2_quick_mode_goes_straight_to_build_work(self, tmp_path):
         state = default_state(tmp_path, topic="quick-fix")
         state["mode"] = "quick"
