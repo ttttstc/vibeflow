@@ -231,6 +231,33 @@ VibeFlow 不只有一条固定强度的流程。
 
 ---
 
+## 生成工程后先看什么
+
+在 VibeFlow 生成出来的目标工程里，普通用户主要看这几处：
+
+- `README.md`
+  项目入口，先了解项目是什么、怎么运行
+- `docs/overview/README.md`
+  全局文档导航，告诉你先看项目背景、现状还是架构
+- `docs/overview/CURRENT-STATE.md`
+  当前项目快照：做到哪了、当前 active change 是什么、下一步建议看什么
+- `docs/changes/<change-id>/`
+  本次变更的完整方案和验证结果
+- `feature-list.json`
+  当前实施状态总表
+- `RELEASE_NOTES.md`
+  已交付内容和发布结果
+
+一句话区分：
+
+- 看整个项目：`docs/overview/`
+- 看这次工作：`docs/changes/<change-id>/`
+- 看实施进度：`feature-list.json`
+
+`.vibeflow/` 里的文件默认不用盯着看，它们主要是系统内部运行状态。
+
+---
+
 ## 工作流总览
 
 ```text
@@ -253,6 +280,11 @@ Ship -> Reflect
 
 | 文件 | 作用 |
 |---|---|
+| `docs/overview/README.md` | 全局文档导航，第一次接手项目时先看这里 |
+| `docs/overview/PROJECT.md` | 项目背景、范围和长期上下文 |
+| `docs/overview/PRODUCT.md` | 产品能力、边界和用户视角 |
+| `docs/overview/ARCHITECTURE.md` | 项目级架构说明 |
+| `docs/overview/CURRENT-STATE.md` | 当前项目现状快照 |
 | `.vibeflow/state.json` | 当前工作流真相：模式、阶段、工作包、checkpoint |
 | `.vibeflow/runtime.json` | 运行态覆盖层：当前动作、友好提示、最近事件、heartbeat |
 | `.vibeflow/codebase-map.json` | 项目级代码结构地图，给现有项目改动复用 |

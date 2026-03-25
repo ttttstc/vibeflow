@@ -184,6 +184,30 @@ def release_notes_path(project_root: Path) -> Path:
     return project_root / "RELEASE_NOTES.md"
 
 
+def overview_root(project_root: Path) -> Path:
+    return project_root / "docs" / "overview"
+
+
+def overview_readme_path(project_root: Path) -> Path:
+    return overview_root(project_root) / "README.md"
+
+
+def overview_project_path(project_root: Path) -> Path:
+    return overview_root(project_root) / "PROJECT.md"
+
+
+def overview_product_path(project_root: Path) -> Path:
+    return overview_root(project_root) / "PRODUCT.md"
+
+
+def overview_architecture_path(project_root: Path) -> Path:
+    return overview_root(project_root) / "ARCHITECTURE.md"
+
+
+def overview_current_state_path(project_root: Path) -> Path:
+    return overview_root(project_root) / "CURRENT-STATE.md"
+
+
 def phase_history_path(project_root: Path) -> Path:
     return project_root / ".vibeflow" / "phase-history.json"
 
@@ -295,6 +319,14 @@ def path_contract(project_root: Path, state: dict | None = None) -> dict:
         "work_config": work_config_path(project_root),
         "feature_list": feature_list_path(project_root),
         "release_notes": release_notes_path(project_root),
+        "overview_root": overview_root(project_root),
+        "overview": {
+            "readme": overview_readme_path(project_root),
+            "project": overview_project_path(project_root),
+            "product": overview_product_path(project_root),
+            "architecture": overview_architecture_path(project_root),
+            "current_state": overview_current_state_path(project_root),
+        },
         "phase_history": phase_history_path(project_root),
         "increment_queue": increment_queue_path(project_root),
         "increment_history": increment_history_path(project_root),

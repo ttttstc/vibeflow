@@ -22,6 +22,8 @@ def main():
         "work_config": str(contract["work_config"]),
         "feature_list": str(contract["feature_list"]),
         "release_notes": str(contract["release_notes"]),
+        "overview_root": str(contract["overview_root"]),
+        "overview": {k: str(v) for k, v in contract["overview"].items()},
         "phase_history": str(contract["phase_history"]),
         "increment_queue": str(contract["increment_queue"]),
         "increment_history": str(contract["increment_history"]),

@@ -488,6 +488,11 @@ class TestVibeFlowAutopilot:
         assert "## Verdict" in review_text
         assert (project_root / "RELEASE_NOTES.md").exists()
         assert any((project_root / ".vibeflow" / "logs").glob("retro-*.md"))
+        current_state_doc = project_root / "docs" / "overview" / "CURRENT-STATE.md"
+        assert current_state_doc.exists()
+        current_state_text = current_state_doc.read_text(encoding="utf-8")
+        assert "Active change" in current_state_text
+        assert "Feature status: 3/3 passing" in current_state_text
 
     def test_quick_mode_autopilot_runs_sample_project_to_done(self, tmp_path):
         project_root = copy_sample_project(tmp_path, "sample-quick-autopilot")
@@ -507,6 +512,9 @@ class TestVibeFlowAutopilot:
         assert state["checkpoints"]["test_system"] is True
         assert state["checkpoints"]["ship"] is True
         assert state["checkpoints"]["reflect"] is True
+        current_state_doc = project_root / "docs" / "overview" / "CURRENT-STATE.md"
+        assert current_state_doc.exists()
+        assert "Mode: `quick`" in current_state_doc.read_text(encoding="utf-8")
 
     def test_parallel_build_runs_ready_features_and_respects_dependencies(self, tmp_path):
         project_root = create_parallel_project(tmp_path)

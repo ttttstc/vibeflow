@@ -86,6 +86,37 @@ class TestVibeFlowV2:
         assert contract["codebase_map_md"].name == "codebase-map.md"
         assert contract["codebase_impact_json"].name == "codebase-impact.json"
         assert contract["codebase_impact_md"].name == "codebase-impact.md"
+        assert contract["overview_root"].name == "overview"
+        assert contract["overview"]["readme"].name == "README.md"
+        assert contract["overview"]["project"].name == "PROJECT.md"
+        assert contract["overview"]["product"].name == "PRODUCT.md"
+        assert contract["overview"]["architecture"].name == "ARCHITECTURE.md"
+        assert contract["overview"]["current_state"].name == "CURRENT-STATE.md"
+
+    def test_init_project_creates_overview_docs(self, tmp_path):
+        project_root = tmp_path / "overview-project"
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(ROOT / "scripts" / "init_project.py"),
+                "overview-project",
+                "--path",
+                str(project_root),
+                "--lang",
+                "python",
+            ],
+            capture_output=True,
+            text=True,
+            cwd=ROOT,
+        )
+        assert result.returncode == 0, result.stderr
+
+        overview_root = project_root / "docs" / "overview"
+        assert (overview_root / "README.md").exists()
+        assert (overview_root / "PROJECT.md").exists()
+        assert (overview_root / "PRODUCT.md").exists()
+        assert (overview_root / "ARCHITECTURE.md").exists()
+        assert (overview_root / "CURRENT-STATE.md").exists()
 
     def test_v2_requirements_missing(self, tmp_path):
         state = default_state(tmp_path, topic="sample")

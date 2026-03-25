@@ -35,6 +35,7 @@ from vibeflow_packets import (  # noqa: E402
     sync_feature_packets,
     write_feature_result,
 )
+from vibeflow_overview import refresh_current_state  # noqa: E402
 
 
 MANUAL_ONLY_PHASES = {
@@ -217,6 +218,20 @@ def friendly_message_for_phase(phase: str, *, status: str = "running", detail: s
 def append_session_log(project_root: Path, line: str) -> None:
     contract = path_contract(project_root)
     append_text(contract["session_log"], f"- {now_iso()} {line}\n")
+
+
+def refresh_current_state_safe(project_root: Path, state: dict, runtime: dict, *, phase: str) -> None:
+    try:
+        refresh_current_state(project_root, state)
+    except Exception as exc:  # pragma: no cover - best effort side effect
+        append_runtime_event(
+            runtime,
+            kind="doc",
+            title="Current state refresh skipped",
+            detail=f"{phase}: {exc}",
+            phase=phase,
+            status="warning",
+        )
 
 
 def infer_language(project_root: Path, feature_payload: dict) -> str:
@@ -800,6 +815,7 @@ def execute_build_init(project_root: Path, state: dict, runtime: dict) -> dict:
 
     set_checkpoint(state, "build_init", True, phase="build-init")
     save_state(project_root, state)
+    refresh_current_state_safe(project_root, state, runtime, phase="build-init")
     append_phase_history(project_root, {"timestamp": now_iso(), "phase": "build-init", "status": "completed", "detail": detail})
     append_runtime_event(runtime, kind="phase", title="Build Init completed", detail=detail, phase="build-init", status="success")
     record_phase_run(runtime, phase="build-init", status="completed", detail=detail)
@@ -825,6 +841,7 @@ def execute_build_config(project_root: Path, state: dict, runtime: dict) -> dict
     if feature_list_path(project_root).exists():
         set_checkpoint(state, "build_init", True)
     save_state(project_root, state)
+    refresh_current_state_safe(project_root, state, runtime, phase="build-config")
     append_phase_history(project_root, {"timestamp": now_iso(), "phase": "build-config", "status": "completed", "detail": detail})
     append_runtime_event(runtime, kind="phase", title="Build Config completed", detail=detail, phase="build-config", status="success")
     record_phase_run(runtime, phase="build-config", status="completed", detail=detail)
@@ -848,6 +865,7 @@ def execute_build_work(project_root: Path, state: dict, runtime: dict, *, parall
         if not pending:
             set_checkpoint(state, "build_work", True, phase="build-work")
             save_state(project_root, state)
+            refresh_current_state_safe(project_root, state, runtime, phase="build-work")
             detail = "All active features are passing."
             append_phase_history(project_root, {"timestamp": now_iso(), "phase": "build-work", "status": "completed", "detail": detail})
             append_runtime_event(runtime, kind="phase", title="Build Work completed", detail=detail, phase="build-work", status="success")
@@ -929,6 +947,7 @@ def execute_build_work(project_root: Path, state: dict, runtime: dict, *, parall
 
         save_feature_payload(project_root, payload)
         save_state(project_root, state)
+        refresh_current_state_safe(project_root, state, runtime, phase="build-work")
         save_runtime(project_root, runtime)
 
         if not parallel:
@@ -976,6 +995,7 @@ def execute_review(project_root: Path, state: dict, runtime: dict) -> dict:
 
     set_checkpoint(state, "review", True, phase="review")
     save_state(project_root, state)
+    refresh_current_state_safe(project_root, state, runtime, phase="review")
     detail = "Review checks passed."
     append_phase_history(project_root, {"timestamp": now_iso(), "phase": "review", "status": "completed", "detail": detail})
     append_runtime_event(runtime, kind="phase", title="Review completed", detail=detail, phase="review", status="success")
@@ -1005,6 +1025,7 @@ def execute_test_system(project_root: Path, state: dict, runtime: dict) -> dict:
     write_phase_artifact(contract["artifacts"]["system_test"], "System Test", sections)
     set_checkpoint(state, "test_system", True, phase="test-system")
     save_state(project_root, state)
+    refresh_current_state_safe(project_root, state, runtime, phase="test-system")
     detail = "System tests passed."
     append_phase_history(project_root, {"timestamp": now_iso(), "phase": "test-system", "status": "completed", "detail": detail})
     append_runtime_event(runtime, kind="phase", title="System Test completed", detail=detail, phase="test-system", status="success")
@@ -1034,6 +1055,7 @@ def execute_test_qa(project_root: Path, state: dict, runtime: dict) -> dict:
     write_phase_artifact(contract["artifacts"]["qa"], "QA", sections)
     set_checkpoint(state, "test_qa", True, phase="test-qa")
     save_state(project_root, state)
+    refresh_current_state_safe(project_root, state, runtime, phase="test-qa")
     detail = "QA checks passed."
     append_phase_history(project_root, {"timestamp": now_iso(), "phase": "test-qa", "status": "completed", "detail": detail})
     append_runtime_event(runtime, kind="phase", title="QA completed", detail=detail, phase="test-qa", status="success")
@@ -1060,6 +1082,7 @@ def execute_ship(project_root: Path, state: dict, runtime: dict) -> dict:
             append_text(path, "\n" + section)
     set_checkpoint(state, "ship", True, phase="ship")
     save_state(project_root, state)
+    refresh_current_state_safe(project_root, state, runtime, phase="ship")
     detail = "Release notes are ready."
     append_phase_history(project_root, {"timestamp": now_iso(), "phase": "ship", "status": "completed", "detail": detail})
     append_runtime_event(runtime, kind="phase", title="Ship completed", detail=detail, phase="ship", status="success")
@@ -1087,6 +1110,7 @@ def execute_reflect(project_root: Path, state: dict, runtime: dict) -> dict:
     write_text(path, "\n".join(lines) + "\n")
     set_checkpoint(state, "reflect", True, phase="reflect")
     save_state(project_root, state)
+    refresh_current_state_safe(project_root, state, runtime, phase="reflect")
     detail = "Retrospective recorded."
     append_phase_history(project_root, {"timestamp": now_iso(), "phase": "reflect", "status": "completed", "detail": detail})
     append_runtime_event(runtime, kind="phase", title="Reflect completed", detail=detail, phase="reflect", status="success")
