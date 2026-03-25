@@ -19,7 +19,7 @@ VibeFlow 对外暴露两种开发模式：
 | Plan | 人工 | CEO 视角价值评审（fail-fast）|
 | Requirements | 人工 | 需求规格说明书 |
 | Design | 人工 | 技术设计 + 三视角评审 |
-| Build | 自动 | 构建 → 质量门禁 → 功能验收 |
+| Build | 自动接管 | 进入 `build-init` 后默认由系统自动继续后续链路，不再逐段等待用户 |
 | Review | 自动 | 跨功能审查（架构、安全、性能）|
 | Test | 自动 | 系统测试 + QA 验证 |
 
@@ -104,17 +104,54 @@ cat .vibeflow/increments/queue.json 2>/dev/null || echo "No pending increments"
 | `plan` | `skills/vibeflow-plan/SKILL.md` | `docs/changes/<change-id>/proposal.md` |
 | `requirements` | `skills/vibeflow-requirements/SKILL.md` | `docs/changes/<change-id>/requirements.md` |
 | `design` | `skills/vibeflow-design/SKILL.md` | `docs/changes/<change-id>/design.md` + `docs/changes/<change-id>/design-review.md` |
-| `build-init` | `skills/vibeflow-build-init/SKILL.md` | 项目脚手架 |
-| `build-config` | `scripts/new-vibeflow-work-config.py` | `.vibeflow/work-config.json` |
-| `build-work` | `skills/vibeflow-build-work/SKILL.md` | 已实现功能 |
-| `review` | `skills/vibeflow-review/SKILL.md` | `docs/changes/<change-id>/verification/review.md` |
-| `test-system` | `skills/vibeflow-test-system/SKILL.md` | `docs/changes/<change-id>/verification/system-test.md` |
-| `test-qa` | `skills/vibeflow-test-qa/SKILL.md` | `docs/changes/<change-id>/verification/qa.md` |
-| `ship` | `skills/vibeflow-ship/SKILL.md` | `RELEASE_NOTES.md` |
-| `reflect` | `skills/vibeflow-reflect/SKILL.md` | `.vibeflow/logs/retro-*.md` |
+| `build-init` | Build 后自动继续（Claude Code 默认） / `scripts/run-vibeflow-autopilot.py`（CLI 对应入口） | 项目脚手架 |
+| `build-config` | Build 后自动继续（默认继续） | `.vibeflow/work-config.json` |
+| `build-work` | Build 后自动继续（默认继续） | 已实现功能 |
+| `review` | Build 后自动继续（默认继续） | `docs/changes/<change-id>/verification/review.md` |
+| `test-system` | Build 后自动继续（默认继续） | `docs/changes/<change-id>/verification/system-test.md` |
+| `test-qa` | Build 后自动继续（默认继续） | `docs/changes/<change-id>/verification/qa.md` |
+| `ship` | Build 后自动继续（默认继续） | `RELEASE_NOTES.md` |
+| `reflect` | Build 后自动继续（默认继续） | `.vibeflow/logs/retro-*.md` |
 | `done` | — | 完成摘要 |
 
 **详细阶段说明**（完整文档见 `references/`）：
+
+## Build 后自动继续规则
+
+当 `detect_phase()` 返回以下任一阶段时：
+
+- `build-init`
+- `build-config`
+- `build-work`
+- `review`
+- `test-system`
+- `test-qa`
+- `ship`
+- `reflect`
+
+Claude Code 插件里的默认行为不是停在当前子阶段等用户继续，而是开始自动继续后续链路：
+
+1. 执行当前 phase 对应的子步骤
+2. 立刻重新运行 `python scripts/get-vibeflow-phase.py`
+3. 如果下一个 phase 仍属于上述实施阶段，则继续自动推进
+4. 直到：
+   - `done`
+   - 审查/测试失败后回到 `build-work`
+   - 命中人工确认点
+   - 出现阻塞需要人工处理
+
+对 Claude Code 来说，**Build 是实施入口，自动继续后续链路是默认执行语义**。  
+`vibeflow-build-init`、`vibeflow-build-work`、`vibeflow-review`、`vibeflow-test-system` 等子 skill 仍然保留，但默认定位是：
+
+- 自动继续链路里的内部子步骤
+- 单阶段调试入口
+- 失败后的恢复入口
+
+如果用户明确要求命令行无人值守、CI 执行或 dashboard 配套运行，则使用这条自动执行链路的脚本入口：
+
+```bash
+python scripts/run-vibeflow-autopilot.py --project-root .
+```
 
 ### 阶段：`increment`
 **条件**：有待处理的增量请求。
@@ -148,35 +185,35 @@ cat .vibeflow/increments/queue.json 2>/dev/null || echo "No pending increments"
 
 ### 阶段：`build-init`
 **条件**：设计完成，初始化构建。
-**操作**：使用 `skills/vibeflow-build-init/SKILL.md`，生成项目脚手架。
+**操作**：开始自动继续后续链路。先执行 `skills/vibeflow-build-init/SKILL.md` 完成初始化，再立即重检 phase 并继续后续阶段。仅在用户明确要求调试单阶段时，才把 `vibeflow-build-init` 当成独立停顿点。
 
 ### 阶段：`build-config`
 **条件**：build-init 完成，需功能配置。
-**操作**：运行 `python scripts/new-vibeflow-work-config.py`，审查 `.vibeflow/work-config.json` 完整性。
+**操作**：作为自动继续链路的内部子步骤运行 `python scripts/new-vibeflow-work-config.py`，完成后立即继续下一阶段，不等待用户额外确认。
 
 ### 阶段：`build-work`
 **条件**：build-config 完成，開始实现功能。
-**操作**：使用 `skills/vibeflow-build-work/SKILL.md`，遍历 feature-list.json 按优先级实现功能。
+**操作**：作为自动继续链路的核心执行步骤，使用 `skills/vibeflow-build-work/SKILL.md` 遍历 feature-list.json 按优先级实现功能。若审查/测试失败返回此阶段，自动执行会从这里恢复。
 
 ### 阶段：`review`
 **条件**：功能实现完成，需代码审查。
-**操作**：使用 `skills/vibeflow-review/SKILL.md`，输出 `docs/changes/<change-id>/verification/review.md`。审查失败则路由回 `build-work`。
+**操作**：作为自动继续链路的一部分运行 `skills/vibeflow-review/SKILL.md`，输出 `docs/changes/<change-id>/verification/review.md`。审查失败则自动回到 `build-work` 继续处理。
 
 ### 阶段：`test-system`
 **条件**：审查通过，需系统测试。
-**操作**：使用 `skills/vibeflow-test-system/SKILL.md`，输出 `docs/changes/<change-id>/verification/system-test.md`。
+**操作**：作为自动继续链路的一部分运行 `skills/vibeflow-test-system/SKILL.md`，输出 `docs/changes/<change-id>/verification/system-test.md`。
 
 ### 阶段：`test-qa`
 **条件**：系统测试通过，需 QA 验证。
-**操作**：使用 `skills/vibeflow-test-qa/SKILL.md`，输出 `docs/changes/<change-id>/verification/qa.md`。
+**操作**：作为自动继续链路的一部分运行 `skills/vibeflow-test-qa/SKILL.md`，输出 `docs/changes/<change-id>/verification/qa.md`。
 
 ### 阶段：`ship`
 **条件**：所有测试通过，部署就绪。
-**操作**：使用 `skills/vibeflow-ship/SKILL.md`，生成 `RELEASE_NOTES.md`，更新 feature-list.json。
+**操作**：作为自动继续链路的一部分运行 `skills/vibeflow-ship/SKILL.md`，生成 `RELEASE_NOTES.md`，更新 feature-list.json。
 
 ### 阶段：`reflect`
 **条件**：项目交付完成，需回顾。
-**操作**：使用 `skills/vibeflow-reflect/SKILL.md`，输出 `.vibeflow/logs/retro-*.md`。
+**操作**：作为自动继续链路的一部分运行 `skills/vibeflow-reflect/SKILL.md`，输出 `.vibeflow/logs/retro-*.md`。
 
 ### 阶段：`done`
 **条件**：所有阶段完成。
@@ -212,6 +249,10 @@ cat .vibeflow/increments/queue.json 2>/dev/null || echo "No pending increments"
 ### 规则3：feature-list.json 是事实来源
 
 构建顺序、状态、依赖、阻塞均来自 feature-list.json。绝不假设功能已完成。
+
+### 规则3.5：进入 Build 后默认自动继续后续链路
+
+当 phase 首次进入 `build-init` 时，默认开始自动继续后续链路，并持续推进 `build-init -> build-config -> build-work -> review -> test -> ship -> reflect`。除非用户明确要求单阶段调试，否则不要在这些子阶段之间停下来等待下一条指令。
 
 ### 规则4：phase-history.json 仅追加
 

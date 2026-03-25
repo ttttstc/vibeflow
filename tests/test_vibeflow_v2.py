@@ -47,6 +47,12 @@ def read_json(path: Path) -> dict:
 
 
 class TestVibeFlowV2:
+    def test_default_state_enables_autopilot_handoff(self, tmp_path):
+        state = default_state(tmp_path, topic="autopilot-default")
+        assert state["autopilot"]["enabled"] is True
+        assert "build-init" in state["autopilot"]["auto_runnable"]
+        assert "design" in state["autopilot"]["manual_only"]
+
     def test_v2_requirements_missing(self, tmp_path):
         state = default_state(tmp_path, topic="sample")
         save_state(tmp_path, state)

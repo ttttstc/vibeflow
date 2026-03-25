@@ -48,6 +48,7 @@ def main():
     workflow_path = project_root / '.vibeflow' / 'workflow.yaml'
     work_config_path = project_root / '.vibeflow' / 'work-config.json'
     state_path = project_root / '.vibeflow' / 'state.json'
+    runtime_path = project_root / '.vibeflow' / 'runtime.json'
 
     # Check skills (framework-level verification)
     skill_results = []
@@ -62,14 +63,17 @@ def main():
     work_config_ok = work_config_path.exists()
     state_ok = state_path.exists()
 
-    # setup_ok requires: all skills present + state + workflow + work_config
-    all_ok = missing_count == 0 and state_ok and workflow_ok and work_config_ok
+    runtime_ok = runtime_path.exists()
+
+    # setup_ok requires: all skills present + state + runtime + workflow + work_config
+    all_ok = missing_count == 0 and state_ok and runtime_ok and workflow_ok and work_config_ok
 
     phase_info = phase_module.detect_phase(project_root)
     report = {
         'setup_ok': all_ok,
         'phase': phase_info['phase'],
         'state': state_ok,
+        'runtime': runtime_ok,
         'workflow': workflow_ok,
         'work_config': (project_root / '.vibeflow' / 'work-config.json').exists(),
         'skills': SKILL_NAMES,
@@ -83,6 +87,8 @@ def main():
             warnings.append(f"{missing_count} skills missing")
         if not state_ok:
             warnings.append('state.json missing')
+        if not runtime_ok:
+            warnings.append('runtime.json missing')
         if not workflow_ok:
             warnings.append('workflow.yaml missing')
         if not work_config_ok:

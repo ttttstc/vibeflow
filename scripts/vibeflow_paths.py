@@ -124,6 +124,38 @@ def default_state(project_root: Path, topic: str | None = None) -> dict:
             "promoted_from_quick": False,
             "promotion_reason": "",
         },
+        "autopilot": {
+            "enabled": True,
+            "max_steps": 20,
+            "max_retries_per_phase": 0,
+            "parallel_build": True,
+            "parallel_build_workers": 2,
+            "manual_only": [
+                "increment",
+                "think",
+                "template-selection",
+                "plan",
+                "requirements",
+                "design",
+                "quick",
+            ],
+            "auto_runnable": [
+                "build-init",
+                "build-config",
+                "build-work",
+                "review",
+                "test-system",
+                "test-qa",
+                "ship",
+                "reflect",
+            ],
+            "retryable": [
+                "build-work",
+                "review",
+                "test-system",
+                "test-qa",
+            ],
+        },
     }
 
 
@@ -154,6 +186,10 @@ def release_notes_path(project_root: Path) -> Path:
 
 def phase_history_path(project_root: Path) -> Path:
     return project_root / ".vibeflow" / "phase-history.json"
+
+
+def runtime_path(project_root: Path) -> Path:
+    return project_root / ".vibeflow" / "runtime.json"
 
 
 def increments_dir(project_root: Path) -> Path:
@@ -209,6 +245,7 @@ def path_contract(project_root: Path, state: dict | None = None) -> dict:
     loaded_state = state or load_state(project_root)
     return {
         "state": state_path(project_root),
+        "runtime": runtime_path(project_root),
         "workflow": workflow_path(project_root),
         "work_config": work_config_path(project_root),
         "feature_list": feature_list_path(project_root),
@@ -246,9 +283,13 @@ def load_state(project_root: Path) -> dict:
     data = json.loads(path.read_text(encoding="utf-8"))
     merged = default_state(project_root)
     merged.update(
-        {k: v for k, v in data.items() if k not in {"active_change", "artifacts", "checkpoints", "quick_meta"}}
+        {
+            k: v
+            for k, v in data.items()
+            if k not in {"active_change", "artifacts", "checkpoints", "quick_meta", "autopilot"}
+        }
     )
-    for key in ("active_change", "artifacts", "checkpoints", "quick_meta"):
+    for key in ("active_change", "artifacts", "checkpoints", "quick_meta", "autopilot"):
         if key in data and isinstance(data[key], dict):
             merged[key].update(data[key])
     return merged
@@ -268,6 +309,55 @@ def ensure_state(project_root: Path, topic: str | None = None) -> dict:
     state = default_state(project_root, topic=topic)
     save_state(project_root, state)
     return state
+
+
+def default_runtime() -> dict:
+    return {
+        "run_id": "",
+        "status": "idle",
+        "current_phase": "",
+        "current_action": "",
+        "friendly_message": "准备就绪，随时可以继续。",
+        "last_heartbeat_at": "",
+        "stop_reason": "",
+        "step_count": 0,
+        "attempts": {},
+        "events": [],
+        "phase_runs": [],
+        "feature_runs": [],
+    }
+
+
+def load_runtime(project_root: Path) -> dict:
+    path = runtime_path(project_root)
+    if not path.exists():
+        return default_runtime()
+    data = json.loads(path.read_text(encoding="utf-8"))
+    merged = default_runtime()
+    merged.update({k: v for k, v in data.items() if k not in {"attempts", "events", "phase_runs", "feature_runs"}})
+    for key in ("attempts", "events", "phase_runs", "feature_runs"):
+        loaded = data.get(key)
+        if isinstance(loaded, dict) and isinstance(merged.get(key), dict):
+            merged[key].update(loaded)
+        elif isinstance(loaded, list):
+            merged[key] = loaded
+    return merged
+
+
+def save_runtime(project_root: Path, runtime: dict) -> Path:
+    path = runtime_path(project_root)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(runtime, indent=2, ensure_ascii=False), encoding="utf-8")
+    return path
+
+
+def ensure_runtime(project_root: Path) -> dict:
+    path = runtime_path(project_root)
+    if path.exists():
+        return load_runtime(project_root)
+    runtime = default_runtime()
+    save_runtime(project_root, runtime)
+    return runtime
 
 
 def checkpoint_done(state: dict, key: str) -> bool:

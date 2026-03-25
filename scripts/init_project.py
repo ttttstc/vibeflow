@@ -31,7 +31,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
-from vibeflow_paths import default_state, save_state  # noqa: E402
+from vibeflow_paths import default_runtime, default_state, save_runtime, save_state  # noqa: E402
 
 
 CLAUDE_MD_MARKER = "<!-- vibeflow -->"
@@ -46,6 +46,7 @@ _VIBEFLOW_REFERENCE_BODY = (
     "`docs/changes/<change-id>/design.md` (design), "
     "`feature-list.json` (task inventory), "
     "`.vibeflow/state.json` (workflow state), "
+    "`.vibeflow/runtime.json` (live workflow runtime), "
     "`.vibeflow/logs/session-log.md` (session log), "
     "`RELEASE_NOTES.md` (changelog), "
     "`docs/test-cases/feature-*.md` (per-feature ST test cases), "
@@ -272,6 +273,9 @@ def main():
     state = default_state(project_path, topic=args.project_name)
     save_state(project_path, state)
     print(f"Created: {project_path / '.vibeflow' / 'state.json'}")
+
+    save_runtime(project_path, default_runtime())
+    print(f"Created: {project_path / '.vibeflow' / 'runtime.json'}")
 
     # queue/history files
     queue_path = os.path.join(increments_dir, "queue.json")
