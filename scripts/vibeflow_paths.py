@@ -224,6 +224,22 @@ def services_guide_path(project_root: Path) -> Path:
     return guides_dir(project_root) / "services.md"
 
 
+def build_packets_root(project_root: Path) -> Path:
+    return project_root / ".vibeflow" / "packets"
+
+
+def build_packet_results_root(project_root: Path) -> Path:
+    return project_root / ".vibeflow" / "subagent-results"
+
+
+def codebase_map_json_path(project_root: Path) -> Path:
+    return project_root / ".vibeflow" / "codebase-map.json"
+
+
+def codebase_map_md_path(project_root: Path) -> Path:
+    return project_root / ".vibeflow" / "codebase-map.md"
+
+
 def change_root(project_root: Path, state: dict) -> Path:
     active = state.get("active_change") or {}
     rel = active.get("root")
@@ -239,6 +255,35 @@ def resolve_artifact_path(project_root: Path, state: dict, key: str) -> Path:
     if rel:
         return project_root / Path(rel)
     return change_root(project_root, state) / f"{key}.md"
+
+
+def packet_namespace(project_root: Path, state: dict) -> str:
+    active = state.get("active_change") or {}
+    return str(active.get("id") or default_change_id())
+
+
+def build_packets_dir(project_root: Path, state: dict) -> Path:
+    return build_packets_root(project_root) / packet_namespace(project_root, state)
+
+
+def build_packet_path(project_root: Path, state: dict, feature_id: int | str) -> Path:
+    return build_packets_dir(project_root, state) / f"feature-{feature_id}.json"
+
+
+def build_packet_results_dir(project_root: Path, state: dict) -> Path:
+    return build_packet_results_root(project_root) / packet_namespace(project_root, state)
+
+
+def build_packet_result_path(project_root: Path, state: dict, feature_id: int | str) -> Path:
+    return build_packet_results_dir(project_root, state) / f"feature-{feature_id}.json"
+
+
+def codebase_impact_json_path(project_root: Path, state: dict) -> Path:
+    return change_root(project_root, state) / "codebase-impact.json"
+
+
+def codebase_impact_md_path(project_root: Path, state: dict) -> Path:
+    return change_root(project_root, state) / "codebase-impact.md"
 
 
 def path_contract(project_root: Path, state: dict | None = None) -> dict:
@@ -258,6 +303,12 @@ def path_contract(project_root: Path, state: dict | None = None) -> dict:
         "build_guide": build_guide_path(project_root),
         "services_guide": services_guide_path(project_root),
         "change_root": change_root(project_root, loaded_state),
+        "packets_dir": build_packets_dir(project_root, loaded_state),
+        "packet_results_dir": build_packet_results_dir(project_root, loaded_state),
+        "codebase_map_json": codebase_map_json_path(project_root),
+        "codebase_map_md": codebase_map_md_path(project_root),
+        "codebase_impact_json": codebase_impact_json_path(project_root, loaded_state),
+        "codebase_impact_md": codebase_impact_md_path(project_root, loaded_state),
         "artifacts": {
             key: resolve_artifact_path(project_root, loaded_state, key)
             for key in [

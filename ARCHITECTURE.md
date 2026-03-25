@@ -1,5 +1,11 @@
 # VibeFlow Architecture
 
+## Related Docs
+
+- [README.md](README.md) - 项目介绍、安装和用户入口
+- [USAGE.md](USAGE.md) - 实际使用方式和目标项目操作说明
+- [VIBEFLOW-DESIGN.md](VIBEFLOW-DESIGN.md) - 设计契约、命名和文件布局
+
 ## 1. Goal
 
 VibeFlow is a repository-local workflow orchestration layer for multi-stage software delivery.

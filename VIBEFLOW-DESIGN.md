@@ -4,6 +4,12 @@
 > Date: 2026-03-23
 > Status: Full local workflow scaffold implemented + 7-phase architecture
 
+## Related Docs
+
+- [README.md](README.md) - 项目介绍、安装和快速开始
+- [USAGE.md](USAGE.md) - 实际使用说明和项目产物概览
+- [ARCHITECTURE.md](ARCHITECTURE.md) - 状态机、路由和组件关系
+
 ## Overview
 
 VibeFlow is a 7-phase workflow for iterative product delivery:

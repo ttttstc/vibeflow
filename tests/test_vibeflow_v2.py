@@ -73,6 +73,20 @@ class TestVibeFlowV2:
         assert "build-init" in state["autopilot"]["auto_runnable"]
         assert "design" in state["autopilot"]["manual_only"]
 
+    def test_path_contract_exposes_packet_directories(self, tmp_path):
+        state = default_state(tmp_path, topic="packet-paths")
+        save_state(tmp_path, state)
+
+        contract = path_contract(tmp_path, state)
+        assert contract["packets_dir"].name == state["active_change"]["id"]
+        assert contract["packet_results_dir"].name == state["active_change"]["id"]
+        assert contract["packets_dir"].parent.name == "packets"
+        assert contract["packet_results_dir"].parent.name == "subagent-results"
+        assert contract["codebase_map_json"].name == "codebase-map.json"
+        assert contract["codebase_map_md"].name == "codebase-map.md"
+        assert contract["codebase_impact_json"].name == "codebase-impact.json"
+        assert contract["codebase_impact_md"].name == "codebase-impact.md"
+
     def test_v2_requirements_missing(self, tmp_path):
         state = default_state(tmp_path, topic="sample")
         save_state(tmp_path, state)
@@ -88,6 +102,24 @@ class TestVibeFlowV2:
 
         result = detect_phase(tmp_path)
         assert result["phase"] == "requirements"
+
+    def test_empty_feature_list_returns_to_build_init(self, tmp_path):
+        state = default_state(tmp_path, topic="empty-build")
+        for checkpoint in ("think", "plan", "requirements", "design"):
+            state["checkpoints"][checkpoint] = True
+        save_state(tmp_path, state)
+        contract = path_contract(tmp_path, state)
+
+        write(contract["workflow"], 'template: "api-standard"\n')
+        write(contract["artifacts"]["think"], "# Context\n")
+        write(contract["artifacts"]["plan"], "# Proposal\n")
+        write(contract["artifacts"]["requirements"], "# Requirements\n")
+        write(contract["artifacts"]["design"], "# Design\n")
+        write(contract["artifacts"]["design_review"], "# Design Review\n")
+        write_json(contract["feature_list"], {"project": "empty-build", "features": []})
+
+        result = detect_phase(tmp_path)
+        assert result["phase"] == "build-init"
 
     def test_v2_quick_mode_goes_straight_to_build_work(self, tmp_path):
         state = default_state(tmp_path, topic="quick-fix")

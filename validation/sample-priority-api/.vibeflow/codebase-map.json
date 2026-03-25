@@ -1,0 +1,95 @@
+{
+  "version": 1,
+  "generated_at": "2026-03-25T20:15:30+08:00",
+  "scan_scope": "full",
+  "repo_fingerprint": {
+    "top_level_dirs": [
+      ".vibeflow",
+      "docs",
+      "examples",
+      "src",
+      "tests"
+    ],
+    "key_files": [
+      "README.md",
+      "pyproject.toml"
+    ],
+    "source_roots": [
+      "src"
+    ],
+    "test_roots": [
+      "tests"
+    ]
+  },
+  "languages": [
+    {
+      "name": "python",
+      "file_count": 5
+    }
+  ],
+  "frameworks": [],
+  "roots": {
+    "source": [
+      "src"
+    ],
+    "tests": [
+      "tests"
+    ],
+    "docs": [
+      "docs"
+    ],
+    "config": []
+  },
+  "modules": [
+    {
+      "name": "sample_priority_api",
+      "path": "src/sample_priority_api",
+      "kind": "api"
+    }
+  ],
+  "entrypoints": [],
+  "surfaces": {
+    "ui": [],
+    "api": [
+      "src/sample_priority_api"
+    ],
+    "data": [],
+    "infra": []
+  },
+  "configs": [
+    ".vibeflow/runtime.json",
+    ".vibeflow/state.json",
+    ".vibeflow/work-config.json",
+    ".vibeflow/workflow.yaml",
+    "README.md",
+    "feature-list.json",
+    "pyproject.toml"
+  ],
+  "generated_or_ignored": [
+    ".git",
+    ".hg",
+    ".idea",
+    ".mypy_cache",
+    ".next",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".svn",
+    ".venv",
+    ".vscode",
+    "__pycache__",
+    "build",
+    "coverage",
+    "dist",
+    "node_modules",
+    "target",
+    "venv"
+  ],
+  "hotspots": [
+    ".vibeflow",
+    "docs/changes/2026-03-21-sample-priority-api",
+    "docs/plans",
+    "tests",
+    "docs/changes/2026-03-21-sample-priority-api/verification"
+  ],
+  "warnings": []
+}

@@ -1,5 +1,11 @@
 # VibeFlow Usage
 
+## Related Docs
+
+- [README.md](README.md) - 先看项目介绍、安装方式和快速开始
+- [ARCHITECTURE.md](ARCHITECTURE.md) - 看状态机、路由和组件关系
+- [VIBEFLOW-DESIGN.md](VIBEFLOW-DESIGN.md) - 看命名规则、文件布局和实现约定
+
 ## 1. Target Project Layout
 
 A target project is expected to accumulate these artifacts over time:

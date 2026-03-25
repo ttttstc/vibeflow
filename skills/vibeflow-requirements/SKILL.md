@@ -35,9 +35,11 @@ description: "SRS 文档不存在且无设计文档时使用 — 通过结构化
 1. 通读用户提供的需求文档 / 想法描述
 2. 运行 `python scripts/get-vibeflow-paths.py --json`，读取 `docs/changes/<change-id>/context.md` 获取问题定义和边界
 3. 阅读 `.vibeflow/workflow.yaml` 了解所选模板的严格度级别
-4. 探索已有代码 / 项目将要构建或集成的仓库
-5. 识别初始约束：技术栈、平台、集成、法规
-6. 检查 SRS 模板：
+4. 如是现有项目改动，先运行 `python scripts/map-change-impact.py --project-root . --source requirements`，读取：
+   - `docs/changes/<change-id>/codebase-impact.md`
+5. 探索已有代码 / 项目将要构建或集成的仓库
+6. 识别初始约束：技术栈、平台、集成、法规
+7. 检查 SRS 模板：
    - 如用户指定了模板路径 -> 读取并验证
    - 否则 -> 检查 `docs/templates/srs-template.md`
    - **验证**：模板必须是 `.md` 文件且至少包含一个 `## ` 标题
@@ -130,6 +132,11 @@ description: "SRS 文档不存在且无设计文档时使用 — 通过结构化
 - **验收标准** — 至少一个具体的 Given/When/Then 场景
 - **优先级** — Must / Should / Could / Won't（MoSCoW）
 - **来源** — 追溯到哪个干系人需要或用户故事
+
+对于现有项目改动，必须把 `codebase-impact.md` 的结果吸收到需求文档中，至少明确：
+- `Current State`
+- `Affected Areas`
+- `Out of Scope`
 
 ## 步骤 5：验证 SRS 质量
 

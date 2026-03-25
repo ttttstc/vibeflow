@@ -100,6 +100,21 @@ description: "设计文档存在但 feature-list.json 尚未创建时使用 — 
 
 目标：10-200+ 个功能；每个独立可验证，可在一个会话中完成。
 
+### 5.1 生成实施任务包
+在 `feature-list.json` 准备完成后，为每个 feature 生成独立的实施任务包，放到：
+
+- `.vibeflow/packets/<change-id>/feature-<id>.json`
+
+每个任务包至少包含：
+- 功能目标
+- 依赖关系
+- 文件范围
+- 验证方式
+- 完成定义
+- 相关文档引用（requirements / design / tasks）
+
+这些任务包是 Build 阶段后续独立实施单元的正式输入，不应依赖长会话上下文记忆。
+
 ### 6. 填充 required_configs
 从 SRS（IFR-xxx 接口需求）和设计文档：
 - API 密钥、服务 URL -> type `env`
@@ -167,6 +182,7 @@ python scripts/new-vibeflow-work-config.py --project-root .
 | 文件 | 用途 |
 |------|------|
 | `feature-list.json` | 带状态的结构化任务清单 |
+| `.vibeflow/packets/<change-id>/feature-*.json` | 每个 feature 的实施任务包 |
 | `.vibeflow/logs/session-log.md` | 逐会话进度日志 |
 | `RELEASE_NOTES.md` | 活跃的发布说明 |
 | `.vibeflow/guides/build.md` | 项目专属构建指南 |

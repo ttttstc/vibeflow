@@ -251,6 +251,7 @@ if missing:
             "status": "failing",
             "priority": "high",
             "dependencies": [],
+            "file_scope": ["src/feature-a"],
             "verification_steps": ["Run feature A barrier command"],
             "autopilot_commands": [
                 f'python scripts/parallel_barrier.py "{marker_root}" feature-a feature-b'
@@ -264,6 +265,7 @@ if missing:
             "status": "failing",
             "priority": "high",
             "dependencies": [],
+            "file_scope": ["src/feature-b"],
             "verification_steps": ["Run feature B barrier command"],
             "autopilot_commands": [
                 f'python scripts/parallel_barrier.py "{marker_root}" feature-b feature-a'
@@ -277,6 +279,7 @@ if missing:
             "status": "failing",
             "priority": "medium",
             "dependencies": [1, 2],
+            "file_scope": ["src/feature-c"],
             "verification_steps": ["Verify dependency markers exist"],
             "autopilot_commands": [
                 f'python scripts/parallel_verify.py "{marker_root}"'
@@ -287,7 +290,154 @@ if missing:
     return project_root
 
 
+def create_conflicting_parallel_project(tmp_path: Path) -> Path:
+    project_root = tmp_path / "conflicting-build-project"
+    run_python(
+        ROOT / "scripts" / "init_project.py",
+        "conflicting-build-project",
+        "--path",
+        project_root,
+        "--lang",
+        "python",
+    )
+    write_text(
+        project_root / ".vibeflow" / "workflow.yaml",
+        """name: "Conflicting Build"
+template: "api-standard"
+created_at: "2026-03-25"
+
+build:
+  steps:
+    - id: tdd
+      required: true
+""",
+    )
+    state = read_json(project_root / ".vibeflow" / "state.json")
+    for checkpoint in ("think", "plan", "requirements", "design", "build_init", "build_config"):
+        state["checkpoints"][checkpoint] = True
+    state["current_phase"] = "build-work"
+    write_json(project_root / ".vibeflow" / "state.json", state)
+    write_text(project_root / state["artifacts"]["think"], "# Context\n\nConflicting build context.\n")
+    write_text(project_root / state["artifacts"]["plan"], "# Proposal\n\nConflicting build proposal.\n")
+    write_text(project_root / state["artifacts"]["requirements"], "# Requirements\n\nConflicting build requirements.\n")
+    write_text(project_root / state["artifacts"]["design"], "# Design\n\nConflicting build design.\n")
+    write_text(project_root / state["artifacts"]["design_review"], "# Design Review\n\nApproved.\n")
+    run_python(ROOT / "scripts" / "new-vibeflow-work-config.py", "--project-root", project_root)
+
+    write_text(
+        project_root / "scripts" / "exclusive_lock.py",
+        """from pathlib import Path
+import sys
+import time
+
+lock_file = Path(sys.argv[1])
+done_file = Path(sys.argv[2])
+if lock_file.exists():
+    raise SystemExit("lock already held")
+lock_file.write_text("locked", encoding="utf-8")
+time.sleep(0.15)
+done_file.write_text("done", encoding="utf-8")
+lock_file.unlink()
+""",
+    )
+
+    marker_root = project_root / ".tmp-conflict"
+    marker_root.mkdir(parents=True, exist_ok=True)
+    shared_scope = ["src/shared"]
+    shared_lock = marker_root / "shared.lock"
+    feature_a_done = marker_root / "feature-a.done"
+    feature_b_done = marker_root / "feature-b.done"
+    feature_payload = read_json(project_root / "feature-list.json")
+    feature_payload["features"] = [
+        {
+            "id": 1,
+            "category": "build",
+            "title": "Shared Feature A",
+            "description": "Touches a shared implementation surface.",
+            "status": "failing",
+            "priority": "high",
+            "dependencies": [],
+            "file_scope": shared_scope,
+            "verification_steps": ["Run shared feature A command"],
+            "autopilot_commands": [
+                f'python scripts/exclusive_lock.py "{shared_lock}" "{feature_a_done}"'
+            ],
+        },
+        {
+            "id": 2,
+            "category": "build",
+            "title": "Shared Feature B",
+            "description": "Touches the same shared implementation surface.",
+            "status": "failing",
+            "priority": "high",
+            "dependencies": [],
+            "file_scope": shared_scope,
+            "verification_steps": ["Run shared feature B command"],
+            "autopilot_commands": [
+                f'python scripts/exclusive_lock.py "{shared_lock}" "{feature_b_done}"'
+            ],
+        },
+    ]
+    write_json(project_root / "feature-list.json", feature_payload)
+    return project_root
+
+
 class TestVibeFlowAutopilot:
+    def test_build_init_generates_feature_packets_and_normalized_feature_contracts(self, tmp_path):
+        project_root = tmp_path / "packet-build-init"
+        run_python(
+            ROOT / "scripts" / "init_project.py",
+            "packet-build-init",
+            "--path",
+            project_root,
+            "--lang",
+            "python",
+        )
+
+        state = read_json(project_root / ".vibeflow" / "state.json")
+        for checkpoint in ("think", "plan", "requirements", "design"):
+            state["checkpoints"][checkpoint] = True
+        state["current_phase"] = "design"
+        write_json(project_root / ".vibeflow" / "state.json", state)
+
+        change_root = project_root / state["active_change"]["root"]
+        write_text(change_root / "context.md", "# Context\n\nDeliver a small authenticated API workflow.\n")
+        write_text(change_root / "proposal.md", "# Proposal\n\nImplement two bounded features.\n")
+        write_text(change_root / "requirements.md", "# Requirements\n\n- FR-001 Auth flow\n- FR-002 Audit trail\n")
+        write_text(change_root / "design.md", "# Design\n\n## 4.1 Auth\n\nImplement auth.\n\n## 4.2 Audit\n\nImplement audit.\n")
+        write_text(change_root / "design-review.md", "# Design Review\n\nApproved.\n")
+        write_text(
+            project_root / ".vibeflow" / "workflow.yaml",
+            'name: "Packet Build Init"\ntemplate: "api-standard"\n',
+        )
+        write_text(
+            change_root / "tasks.md",
+            "# Tasks\n\n- [ ] Implement auth flow\n- [ ] Implement audit trail\n",
+        )
+
+        result = run_autopilot(project_root, "--stop-at", "build-config")
+        assert result["status"] == "stopped"
+        assert result["final_phase"] == "build-config"
+
+        feature_payload = read_json(project_root / "feature-list.json")
+        assert len(feature_payload["features"]) == 2
+        first = feature_payload["features"][0]
+        assert first["objective"] == "Implement auth flow"
+        assert "done_criteria" in first
+        assert "source_refs" in first
+        assert "requirements" in first["source_refs"]
+        assert "design" in first["source_refs"]
+        assert "tasks" in first["source_refs"]
+
+        packet_dir = project_root / ".vibeflow" / "packets" / state["active_change"]["id"]
+        packet_path = packet_dir / "feature-1.json"
+        assert packet_path.exists()
+        packet = read_json(packet_path)
+        assert packet["feature"]["id"] == 1
+        assert packet["objective"] == "Implement auth flow"
+        assert packet["source_snippets"]["requirements_summary"]
+        assert packet["source_snippets"]["design_summary"]
+
     def test_autopilot_waits_at_manual_phase(self, tmp_path):
         project_root = tmp_path / "manual-stop-project"
         run_python(
@@ -332,6 +482,10 @@ class TestVibeFlowAutopilot:
         system_test_artifact = project_root / state["artifacts"]["system_test"]
         assert review_artifact.exists()
         assert system_test_artifact.exists()
+        review_text = review_artifact.read_text(encoding="utf-8")
+        assert "## Spec Compliance" in review_text
+        assert "## Code Quality" in review_text
+        assert "## Verdict" in review_text
         assert (project_root / "RELEASE_NOTES.md").exists()
         assert any((project_root / ".vibeflow" / "logs").glob("retro-*.md"))
 
@@ -370,6 +524,19 @@ class TestVibeFlowAutopilot:
         assert (marker_root / "feature-b-done").exists()
         assert (marker_root / "feature-c-done").exists()
 
+        state = read_json(project_root / ".vibeflow" / "state.json")
+        packet_dir = project_root / ".vibeflow" / "packets" / state["active_change"]["id"]
+        result_dir = project_root / ".vibeflow" / "subagent-results" / state["active_change"]["id"]
+        assert (packet_dir / "feature-1.json").exists()
+        assert (packet_dir / "feature-2.json").exists()
+        assert (packet_dir / "feature-3.json").exists()
+        assert (result_dir / "feature-1.json").exists()
+        assert (result_dir / "feature-2.json").exists()
+        assert (result_dir / "feature-3.json").exists()
+        feature_result = read_json(result_dir / "feature-1.json")
+        assert feature_result["status"] == "passing"
+        assert feature_result["verification"]["passed"] is True
+
     def test_autopilot_blocks_on_failed_feature_command(self, tmp_path):
         project_root = create_parallel_project(tmp_path)
         feature_payload = read_json(project_root / "feature-list.json")
@@ -383,3 +550,48 @@ class TestVibeFlowAutopilot:
         runtime = read_json(project_root / ".vibeflow" / "runtime.json")
         assert runtime["status"] == "blocked"
         assert runtime["current_phase"] == "build-work"
+
+    def test_review_blocks_when_feature_result_is_missing(self, tmp_path):
+        project_root = create_parallel_project(tmp_path)
+
+        build_result = run_build_work(project_root, "--max-workers", 2)
+        assert build_result["ok"] is True
+
+        state = read_json(project_root / ".vibeflow" / "state.json")
+        result_dir = project_root / ".vibeflow" / "subagent-results" / state["active_change"]["id"]
+        missing_result = result_dir / "feature-2.json"
+        assert missing_result.exists()
+        missing_result.unlink()
+
+        state["current_phase"] = "review"
+        state["checkpoints"]["build_work"] = True
+        state["checkpoints"]["review"] = False
+        write_json(project_root / ".vibeflow" / "state.json", state)
+
+        result = run_autopilot(project_root, expect_ok=False)
+        assert result["status"] == "blocked"
+        assert result["final_phase"] == "review"
+
+        runtime = read_json(project_root / ".vibeflow" / "runtime.json")
+        assert runtime["status"] == "blocked"
+        assert runtime["current_phase"] == "review"
+
+        review_artifact = project_root / state["artifacts"]["review"]
+        assert review_artifact.exists()
+        review_text = review_artifact.read_text(encoding="utf-8")
+        assert "Feature #2 (Feature B): implementation result file is missing." in review_text
+        assert "FAIL — Fix review issues before system testing." in review_text
+
+    def test_parallel_build_falls_back_to_serial_when_file_scope_overlaps(self, tmp_path):
+        project_root = create_conflicting_parallel_project(tmp_path)
+
+        result = run_build_work(project_root, "--max-workers", 2)
+        assert result["ok"] is True
+
+        feature_payload = read_json(project_root / "feature-list.json")
+        statuses = {feature["id"]: feature["status"] for feature in feature_payload["features"]}
+        assert statuses == {1: "passing", 2: "passing"}
+
+        marker_root = project_root / ".tmp-conflict"
+        assert (marker_root / "feature-a.done").exists()
+        assert (marker_root / "feature-b.done").exists()
