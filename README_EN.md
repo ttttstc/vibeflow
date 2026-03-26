@@ -26,6 +26,48 @@ VibeFlow is a structured delivery framework for Claude Code. LLMs are brilliant 
 
 ---
 
+## Methodology Fit
+
+If you want to place VibeFlow using familiar external terms, it sits closest to the overlap of:
+
+- an AI-native software delivery orchestration layer
+- a repo-local agent harness with specs and artifact trails
+- a workflow operating layer that connects spec-first planning to automatic execution
+
+| Concept | How it shows up in VibeFlow | What that means for you |
+|---|---|---|
+| Harness Engineering (approximate) | The repo does not explicitly brand itself with this term, but it does wrap the model with routing, skills, quality gates, safety rails, automatic continuation, and observable artifacts | Reliability comes less from one giant prompt and more from constraints, feedback loops, and explicit state |
+| SDD / Spec-Driven Development | `requirements.md`, `design.md`, `design-review.md`, and spec review are part of the default flow | You define requirements and design before implementation instead of jumping straight into code |
+| File-driven workflow | The active phase is inferred from `.vibeflow/state.json`, `workflow.yaml`, `work-config.json`, and change artifacts | Sessions can resume across time, machines, and even different models |
+| Artifact-driven collaboration | `docs/changes/<change-id>/...`, `feature-list.json`, and `RELEASE_NOTES.md` are first-class delivery outputs | Human-agent coordination depends on durable artifacts, not chat memory |
+| Human-in-the-loop + agent continuation | `Think -> Plan -> Requirements -> Design` stays human-led, while `build-init` hands off to automatic continuation through `Build -> Review -> Test -> Ship / Reflect` | Humans keep the judgment-heavy decisions; the system carries the repetitive execution chain |
+| Template-derived governance | `prototype / web-standard / api-standard / enterprise` templates control strictness and quality thresholds | You can choose the process intensity that matches the project risk, instead of forcing one workflow on everything |
+
+### Best Fit
+
+- Teams that want Claude Code to do more than generate code and actually drive delivery forward
+- Teams that want explicit traces for requirements, design, review, testing, and release
+- Teams working on both greenfield and existing repositories, especially where change impact and codebase maps matter
+- Teams that want the system to continue after `build-init` instead of manually prompting every sub-step
+- Teams that value recoverability, auditability, and handoff quality
+
+### Less Ideal Fit
+
+- People who only want one-shot code generation and do not want artifacts or process
+- Teams that want the model to improvise freely without gates, review, or constraints
+- Teams that do not want repo-local state files, workflow documents, or local script conventions
+
+### Tech Stack and Integration Surface
+
+- Host layer: Claude Code plugin commands and local skills
+- Orchestration layer: Python scripts for phase detection, workflow config, autopilot, and dashboard
+- State and contracts: Markdown + JSON + YAML, centered around `.vibeflow/`, `docs/changes/`, and `feature-list.json`
+- Installation and host integration: Bash + PowerShell
+- Verification chain: explicit requirements, design, review, system-test, and QA artifacts
+- Operations and visibility: local live dashboard, CLI snapshots, and autopilot entrypoints
+
+---
+
 ## Install
 
 ### One-Line Install
