@@ -30,45 +30,36 @@ VibeFlow 是一个标准化AI工程交付编排框架。大模型擅长即兴，
 
 ---
 
-## 方法论定位
+## 设计理念与技术栈
 
-如果用外部术语来定位，VibeFlow 最接近这三类东西的交集：
+VibeFlow 是一个面向 Claude Code 的 AI 工程交付框架。它把一次软件改动拆成明确阶段，并把状态、规格、任务和验证结果留在仓库里，让 AI 可以继续、恢复、审查和交接。
 
-- 一个 AI-native 的软件交付编排层
-- 一个带 spec 与 artifact trail 的 repo-local agent harness
-- 一个把 SDD 前半程和自动执行后半程接起来的工作流操作层
+### 核心设计
 
-| 概念 | 在 VibeFlow 中怎么体现 | 对你意味着什么 |
-|---|---|---|
-| Harness Engineering（近似） | 仓库没有直接把自己命名为这个术语，但它确实把阶段路由、技能、质量门禁、安全护栏、自动续跑和可观测产物组织成一个约束 AI 的执行外壳 | 重点不是“提示词多强”，而是让代理在约束、反馈和状态里更稳定地交付 |
-| SDD / Spec-Driven Development | `requirements.md`、`design.md`、`design-review.md`、`spec review` 都在主流程里 | 先定义需求和方案，再进入实现，而不是直接跳过规格开写 |
-| 文件驱动工作流 | phase 由 `.vibeflow/state.json`、`workflow.yaml`、`work-config.json` 和变更文档推导 | 可以跨会话、跨机器、跨模型恢复，降低聊天上下文丢失的风险 |
-| Artifact-driven collaboration | `docs/changes/<change-id>/...`、`feature-list.json`、`RELEASE_NOTES.md` 都是显式交付物 | 人和 AI 的协作依赖文档与状态，不依赖“记得上次聊到哪” |
-| Human-in-the-loop + Agent continuation | `Think -> Plan -> Requirements -> Design` 以人为主，进入 `build-init` 后默认自动推进 `Build -> Review -> Test -> Ship / Reflect` | 关键判断留给人，重复执行和收尾交给系统 |
-| Template-derived governance | `prototype / web-standard / api-standard / enterprise` 四种模板决定严格度和质量阈值 | 能按项目风险选流程强度，而不是所有项目都走同一套重流程 |
+| 概念 | 在 VibeFlow 中的定义 |
+|---|---|
+| AI 交付编排 | `Think -> Plan -> Requirements -> Design -> Build -> Review -> Test -> Ship / Reflect` 是一条标准交付链路 |
+| Spec-Driven | 先写 `requirements.md` 和 `design.md`，再进入实现与验证 |
+| 文件驱动 | `.vibeflow/state.json`、`workflow.yaml`、`feature-list.json` 决定当前阶段和执行状态 |
+| Agent Harness | router、skills、quality gates、safety rails 一起约束 AI 的执行边界 |
+| 自动续跑 | 进入 `build-init` 后，系统默认自动推进实现、审查、测试与收尾 |
 
-### 适合谁
+### 适合什么团队
 
-- 想把 Claude Code 从“会写代码”升级成“能持续交付”的团队
-- 希望在仓库里显式保留需求、设计、评审、测试和发布痕迹的团队
-- 既做新项目，也会在旧项目上持续迭代，需要 change impact / codebase map 的团队
-- 希望让 AI 在 `build-init` 后自动继续，而不是每一步都手动盯着催的团队
-- 重视可恢复性、可审计性、可交接性的团队
+- 希望 AI 不只写代码，还能推进完整交付的团队
+- 希望保留需求、设计、评审、测试、发布痕迹的团队
+- 需要跨会话恢复、跨人交接、跨模型延续的团队
+- 需要在已有仓库上持续迭代，而不是只做新项目的团队
 
-### 不太适合谁
+如果你只想一次性生成代码，不想维护状态文件、规格文档和验证产物，这个框架就不适合你。
 
-- 只想要一次性生成代码，不想维护任何文档或流程的人
-- 希望所有决策都让模型自由发挥，不想加约束、门禁或审查的人
-- 不接受 repo 内状态文件、工作流文档和本地脚本约定的团队
+### 技术栈
 
-### 技术栈与集成面
-
-- Host 层：Claude Code 插件命令与本地 skills
-- 编排层：Python 脚本负责 phase detection、workflow config、autopilot、dashboard
-- 状态与契约：Markdown + JSON + YAML，核心位于 `.vibeflow/`、`docs/changes/`、`feature-list.json`
-- 安装与宿主集成：Bash + PowerShell
-- 验证链路：requirements / design / review / system-test / QA 等显式产物
-- 观测与操作：本地 live dashboard、CLI snapshot、autopilot 入口脚本
+- Claude Code plugin commands + local skills
+- Python scripts for router / workflow config / autopilot / dashboard
+- Markdown + JSON + YAML for state and delivery artifacts
+- Bash + PowerShell for installation and host integration
+- Review / system-test / QA / release artifacts as verification surface
 
 ---
 
