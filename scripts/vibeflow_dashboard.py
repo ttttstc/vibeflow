@@ -207,11 +207,12 @@ def load_feature_summary(project_root: Path) -> dict:
 def build_dashboard_snapshot(project_root: Path) -> dict:
     project_root = project_root.resolve()
     state = load_state(project_root)
-    runtime = load_runtime(project_root)
     contract = path_contract(project_root, state)
-    detect_info = detect_phase(project_root)
+    detect_info = detect_phase(project_root, sync_runtime=True)
+    runtime = load_runtime(project_root)
     flags = required_flags(contract["workflow"])
     feature_summary = load_feature_summary(project_root)
+    invariant = runtime.get("invariant") or {}
 
     macro_cards = []
     for key, label, phases in PHASE_GROUPS:
@@ -292,10 +293,21 @@ def build_dashboard_snapshot(project_root: Path) -> dict:
 
     current_phase = detect_info["phase"]
     runtime_status = runtime.get("status") or ("completed" if current_phase == "done" else "idle")
-    friendly = runtime.get("friendly_message") or friendly_message_for_phase(
+    invariant_matches = (
+        current_phase != "done"
+        and invariant.get("phase") == current_phase
+        and bool(invariant.get("reason"))
+    )
+    if invariant_matches:
+        runtime_status = invariant.get("status") or runtime_status
+    stop_reason = runtime.get("stop_reason") or invariant.get("reason") or detect_info["reason"]
+    friendly_seed = runtime.get("friendly_message")
+    if invariant_matches and runtime_status in {"blocked", "pending"}:
+        friendly_seed = ""
+    friendly = friendly_seed or friendly_message_for_phase(
         current_phase,
         status="waiting_manual" if current_phase in {"think", "plan", "requirements", "design", "quick"} else runtime_status,
-        detail=detect_info["reason"],
+        detail=stop_reason,
     )
 
     return {
@@ -307,7 +319,8 @@ def build_dashboard_snapshot(project_root: Path) -> dict:
         "current_phase": current_phase,
         "status": runtime_status,
         "friendly_message": friendly,
-        "reason": detect_info["reason"],
+        "reason": stop_reason,
+        "reason_code": invariant.get("reason_code") or detect_info.get("reason_code", ""),
         "active_change": state.get("active_change") or {},
         "workflow": macro_cards,
         "features": feature_summary,
@@ -315,6 +328,7 @@ def build_dashboard_snapshot(project_root: Path) -> dict:
         "events": events,
         "checkpoints": state.get("checkpoints") or {},
         "runtime": runtime,
+        "invariant": invariant,
         "flags": flags,
     }
 

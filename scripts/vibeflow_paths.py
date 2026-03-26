@@ -50,6 +50,14 @@ DEFAULT_QUICK_PROMOTION_RULES = [
     "design decisions are no longer obvious",
 ]
 
+POLICY_PHASE_FIELDS = (
+    "required_artifacts",
+    "required_checkpoints",
+    "required_approvals",
+    "completion_evidence",
+    "blocking_conditions",
+)
+
 
 def slugify(value: str) -> str:
     cleaned = []
@@ -174,6 +182,10 @@ def workflow_path(project_root: Path) -> Path:
 
 def work_config_path(project_root: Path) -> Path:
     return project_root / ".vibeflow" / "work-config.json"
+
+
+def policy_path(project_root: Path) -> Path:
+    return project_root / ".vibeflow" / "policy.yaml"
 
 
 def feature_list_path(project_root: Path) -> Path:
@@ -319,6 +331,7 @@ def path_contract(project_root: Path, state: dict | None = None) -> dict:
     return {
         "state": state_path(project_root),
         "runtime": runtime_path(project_root),
+        "policy": policy_path(project_root),
         "workflow": workflow_path(project_root),
         "work_config": work_config_path(project_root),
         "feature_list": feature_list_path(project_root),
@@ -411,6 +424,175 @@ def selected_mode(project_root: Path) -> str | None:
     return mode or None
 
 
+def default_policy() -> dict:
+    return {
+        "version": 1,
+        "phases": {
+            "think": {
+                "required_artifacts": ["think"],
+                "required_checkpoints": [],
+                "required_approvals": ["think"],
+                "completion_evidence": ["artifact:think"],
+                "blocking_conditions": [],
+            },
+            "plan": {
+                "required_artifacts": ["plan"],
+                "required_checkpoints": [],
+                "required_approvals": ["plan"],
+                "completion_evidence": ["artifact:plan"],
+                "blocking_conditions": [],
+            },
+            "requirements": {
+                "required_artifacts": ["requirements"],
+                "required_checkpoints": [],
+                "required_approvals": ["requirements"],
+                "completion_evidence": ["artifact:requirements"],
+                "blocking_conditions": [],
+            },
+            "design": {
+                "required_artifacts": ["design", "design_review"],
+                "required_checkpoints": [],
+                "required_approvals": ["design"],
+                "completion_evidence": ["artifact:design", "artifact:design_review"],
+                "blocking_conditions": [],
+            },
+            "build-init": {
+                "required_artifacts": ["feature_list"],
+                "required_checkpoints": [],
+                "required_approvals": [],
+                "completion_evidence": ["active_features", "build_init_ready_signal"],
+                "blocking_conditions": [],
+            },
+            "review": {
+                "required_artifacts": ["review"],
+                "required_checkpoints": [],
+                "required_approvals": ["review"],
+                "completion_evidence": ["artifact:review"],
+                "blocking_conditions": [],
+            },
+            "test-system": {
+                "required_artifacts": ["system_test"],
+                "required_checkpoints": [],
+                "required_approvals": ["test_system"],
+                "completion_evidence": ["artifact:system_test"],
+                "blocking_conditions": [],
+            },
+            "ship": {
+                "required_artifacts": ["release_notes"],
+                "required_checkpoints": [],
+                "required_approvals": ["ship"],
+                "completion_evidence": ["release_notes_exists"],
+                "blocking_conditions": [],
+            },
+        },
+    }
+
+
+def _parse_policy_scalar(value: str):
+    if value == "":
+        return ""
+    if value.startswith("[") or value.startswith("{"):
+        return json.loads(value)
+    lowered = value.lower()
+    if lowered in {"true", "false"}:
+        return lowered == "true"
+    if value.startswith('"') and value.endswith('"'):
+        return json.loads(value)
+    if value.startswith("'") and value.endswith("'"):
+        return value[1:-1]
+    try:
+        return int(value)
+    except ValueError:
+        return value
+
+
+def _parse_policy_text(text: str) -> dict:
+    data: dict = {}
+    current_phase: str | None = None
+    in_phases = False
+
+    for raw_line in text.splitlines():
+        line = raw_line.split("#", 1)[0].rstrip()
+        if not line.strip():
+            continue
+        indent = len(line) - len(line.lstrip(" "))
+        stripped = line.strip()
+
+        if indent == 0:
+            current_phase = None
+            key, _, value = stripped.partition(":")
+            key = key.strip()
+            value = value.strip()
+            if key == "phases":
+                data["phases"] = {}
+                in_phases = True
+                continue
+            in_phases = False
+            data[key] = _parse_policy_scalar(value)
+            continue
+
+        if indent == 2 and in_phases and stripped.endswith(":"):
+            current_phase = stripped[:-1].strip()
+            data.setdefault("phases", {})[current_phase] = {}
+            continue
+
+        if indent == 4 and in_phases and current_phase:
+            key, _, value = stripped.partition(":")
+            data["phases"][current_phase][key.strip()] = _parse_policy_scalar(value.strip())
+            continue
+
+        raise ValueError(f"Unsupported policy syntax: {raw_line}")
+
+    return data
+
+
+def _normalize_policy_list(value) -> list[str]:
+    if isinstance(value, list):
+        return [str(item).strip() for item in value if str(item).strip()]
+    if isinstance(value, str) and value.strip():
+        return [value.strip()]
+    return []
+
+
+def load_policy(project_root: Path) -> dict:
+    merged = deepcopy(default_policy())
+    path = policy_path(project_root)
+    if not path.exists():
+        return merged
+
+    loaded = _parse_policy_text(path.read_text(encoding="utf-8"))
+    version = loaded.get("version")
+    if isinstance(version, int):
+        merged["version"] = version
+
+    phases = loaded.get("phases") or {}
+    if not isinstance(phases, dict):
+        return merged
+
+    for phase_name, config in phases.items():
+        if not isinstance(config, dict):
+            continue
+        target = merged["phases"].setdefault(
+            phase_name,
+            {field: [] for field in POLICY_PHASE_FIELDS},
+        )
+        for field in POLICY_PHASE_FIELDS:
+            if field in config:
+                target[field] = _normalize_policy_list(config.get(field))
+
+    return merged
+
+
+def default_runtime_invariant() -> dict:
+    return {
+        "phase": "",
+        "reason": "",
+        "reason_code": "",
+        "status": "clear",
+        "updated_at": "",
+    }
+
+
 def default_runtime() -> dict:
     return {
         "run_id": "",
@@ -425,6 +607,7 @@ def default_runtime() -> dict:
         "events": [],
         "phase_runs": [],
         "feature_runs": [],
+        "invariant": default_runtime_invariant(),
     }
 
 
@@ -434,8 +617,14 @@ def load_runtime(project_root: Path) -> dict:
         return default_runtime()
     data = json.loads(path.read_text(encoding="utf-8"))
     merged = default_runtime()
-    merged.update({k: v for k, v in data.items() if k not in {"attempts", "events", "phase_runs", "feature_runs"}})
-    for key in ("attempts", "events", "phase_runs", "feature_runs"):
+    merged.update(
+        {
+            k: v
+            for k, v in data.items()
+            if k not in {"attempts", "events", "phase_runs", "feature_runs", "invariant"}
+        }
+    )
+    for key in ("attempts", "events", "phase_runs", "feature_runs", "invariant"):
         loaded = data.get(key)
         if isinstance(loaded, dict) and isinstance(merged.get(key), dict):
             merged[key].update(loaded)
@@ -457,6 +646,32 @@ def ensure_runtime(project_root: Path) -> dict:
         return load_runtime(project_root)
     runtime = default_runtime()
     save_runtime(project_root, runtime)
+    return runtime
+
+
+def set_runtime_invariant(
+    runtime: dict,
+    *,
+    phase: str = "",
+    reason: str = "",
+    reason_code: str = "",
+    status: str = "clear",
+    updated_at: str | None = None,
+) -> dict:
+    invariant = deepcopy(default_runtime_invariant())
+    loaded = runtime.get("invariant")
+    if isinstance(loaded, dict):
+        invariant.update(loaded)
+    invariant.update(
+        {
+            "phase": phase,
+            "reason": reason,
+            "reason_code": reason_code,
+            "status": status,
+            "updated_at": updated_at or datetime.now().astimezone().isoformat(timespec="seconds"),
+        }
+    )
+    runtime["invariant"] = invariant
     return runtime
 
 

@@ -120,6 +120,35 @@ def create_feature_list(project_root: Path, status: str) -> None:
 
 
 class TestVibeFlowModeE2E:
+    def test_detect_phase_cli_syncs_invariant_reason_to_runtime(self, tmp_path):
+        project_root = tmp_path / "invariant-runtime-project"
+        run_python(
+            ROOT / "scripts" / "init_project.py",
+            "invariant-runtime-project",
+            "--path",
+            project_root,
+            "--lang",
+            "python",
+        )
+
+        state = update_state(
+            project_root,
+            lambda data: data["checkpoints"].__setitem__("think", True),
+        )
+        write_text(project_root / state["artifacts"]["think"], "# Context\n\nInvariant runtime.\n")
+        create_workflow(project_root)
+        write_text(project_root / state["artifacts"]["plan"], "# Proposal\n\nWaiting approval.\n")
+
+        result = detect_phase(project_root)
+        assert result["phase"] == "plan"
+        assert result["reason_code"] == "missing_approval"
+        assert result["blocking_item"] == "plan"
+
+        runtime = read_json(project_root / ".vibeflow" / "runtime.json")
+        assert runtime["invariant"]["phase"] == "plan"
+        assert runtime["invariant"]["reason_code"] == "missing_approval"
+        assert "plan checkpoint" in runtime["invariant"]["reason"]
+
     def test_full_mode_end_to_end_flow(self, tmp_path):
         project_root = tmp_path / "full-mode-project"
         run_python(
