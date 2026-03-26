@@ -1,0 +1,2036 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VibeFlow 交互课程 — 让 AI 交付有章法</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400;1,9..40,500&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --color-bg:            #FAF7F2;
+      --color-bg-warm:       #F5F0E8;
+      --color-bg-code:       #1E1E2E;
+      --color-text:          #2C2A28;
+      --color-text-secondary:#6B6560;
+      --color-text-muted:    #9E9790;
+      --color-border:        #E5DFD6;
+      --color-border-light:  #EEEBE5;
+      --color-surface:       #FFFFFF;
+      --color-surface-warm:  #FDF9F3;
+      --color-accent:        #D94F30;
+      --color-accent-hover:  #C4432A;
+      --color-accent-light:  #FDEEE9;
+      --color-accent-muted:  #E8836C;
+      --color-success:       #2D8B55;
+      --color-success-light: #E8F5EE;
+      --color-error:         #C93B3B;
+      --color-error-light:   #FDE8E8;
+      --color-info:          #2A7B9B;
+      --color-info-light:    #E4F2F7;
+      --color-actor-1:       #D94F30;
+      --color-actor-2:       #2A7B9B;
+      --color-actor-3:       #7B6DAA;
+      --color-actor-4:       #D4A843;
+      --color-actor-5:       #2D8B55;
+
+      --font-display: 'Bricolage Grotesque', Georgia, serif;
+      --font-body:    'DM Sans', -apple-system, sans-serif;
+      --font-mono:    'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+
+      --text-xs:   0.75rem;
+      --text-sm:   0.875rem;
+      --text-base: 1rem;
+      --text-lg:   1.125rem;
+      --text-xl:   1.25rem;
+      --text-2xl:  1.5rem;
+      --text-3xl:  1.875rem;
+      --text-4xl:  2.25rem;
+      --text-5xl:  3rem;
+      --text-6xl:  3.75rem;
+
+      --leading-tight:  1.15;
+      --leading-snug:   1.3;
+      --leading-normal: 1.6;
+      --leading-loose:  1.8;
+
+      --space-1:  0.25rem;
+      --space-2:  0.5rem;
+      --space-3:  0.75rem;
+      --space-4:  1rem;
+      --space-5:  1.25rem;
+      --space-6:  1.5rem;
+      --space-8:  2rem;
+      --space-10: 2.5rem;
+      --space-12: 3rem;
+      --space-16: 4rem;
+      --space-20: 5rem;
+      --space-24: 6rem;
+
+      --content-width:     800px;
+      --content-width-wide: 1000px;
+      --nav-height:        50px;
+      --radius-sm:  8px;
+      --radius-md:  12px;
+      --radius-lg:  16px;
+      --radius-full: 9999px;
+
+      --shadow-sm:  0 1px 2px rgba(44, 42, 40, 0.05);
+      --shadow-md:  0 4px 12px rgba(44, 42, 40, 0.08);
+      --shadow-lg:  0 8px 24px rgba(44, 42, 40, 0.1);
+      --shadow-xl:  0 16px 48px rgba(44, 42, 40, 0.12);
+
+      --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+      --duration-fast:   150ms;
+      --duration-normal: 300ms;
+      --duration-slow:   500ms;
+      --stagger-delay:   120ms;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: var(--radius-full); }
+
+    html {
+      scroll-snap-type: y proximity;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--color-bg);
+      background-image: radial-gradient(ellipse at 20% 50%, rgba(217, 79, 48, 0.03) 0%, transparent 50%);
+      color: var(--color-text);
+      font-family: var(--font-body);
+      font-size: var(--text-base);
+      line-height: var(--leading-normal);
+      overflow-x: hidden;
+    }
+
+    pre, code {
+      font-family: var(--font-mono);
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow-x: hidden;
+    }
+
+    /* Navigation */
+    .nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: var(--nav-height);
+      background: rgba(250, 247, 242, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--color-border);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      padding: 0 var(--space-6);
+    }
+    .nav-title {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: var(--text-sm);
+      color: var(--color-text);
+      margin-right: auto;
+    }
+    .nav-dots {
+      display: flex;
+      gap: var(--space-2);
+    }
+    .nav-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: 2px solid var(--color-text-muted);
+      background: transparent;
+      cursor: pointer;
+      transition: all var(--duration-fast);
+      padding: 0;
+    }
+    .nav-dot:hover { border-color: var(--color-accent-muted); }
+    .nav-dot.current {
+      border-color: var(--color-accent);
+      background: var(--color-accent);
+      box-shadow: 0 0 0 3px rgba(217, 79, 48, 0.2);
+    }
+    .nav-dot.visited { background: var(--color-accent-muted); border-color: var(--color-accent-muted); }
+
+    .progress-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 2px;
+      background: var(--color-accent);
+      width: 0%;
+      transition: width var(--duration-normal);
+    }
+
+    /* Module */
+    .module {
+      min-height: 100dvh;
+      scroll-snap-align: start;
+      padding: var(--space-16) var(--space-6);
+      padding-top: calc(var(--nav-height) + var(--space-12));
+    }
+    .module:nth-child(even) { background: var(--color-bg-warm); }
+    .module-content {
+      max-width: var(--content-width);
+      margin: 0 auto;
+    }
+    .module-header {
+      margin-bottom: var(--space-12);
+    }
+    .module-number {
+      display: block;
+      font-family: var(--font-display);
+      font-size: var(--text-6xl);
+      font-weight: 800;
+      color: var(--color-accent);
+      opacity: 0.15;
+      line-height: 1;
+      margin-bottom: var(--space-4);
+    }
+    .module-title {
+      font-family: var(--font-display);
+      font-size: var(--text-4xl);
+      font-weight: 700;
+      line-height: var(--leading-tight);
+      margin: 0 0 var(--space-3);
+    }
+    .module-subtitle {
+      font-size: var(--text-lg);
+      color: var(--color-text-secondary);
+      margin: 0;
+      line-height: var(--leading-snug);
+    }
+
+    /* Animations */
+    .animate-in {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity var(--duration-slow) var(--ease-out), transform var(--duration-slow) var(--ease-out);
+    }
+    .animate-in.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .stagger-children > .animate-in {
+      transition-delay: calc(var(--stagger-index, 0) * var(--stagger-delay));
+    }
+
+    /* Screen */
+    .screen {
+      margin-bottom: var(--space-16);
+    }
+    .screen-heading {
+      font-family: var(--font-display);
+      font-size: var(--text-2xl);
+      font-weight: 600;
+      margin: 0 0 var(--space-6);
+      color: var(--color-text);
+    }
+
+    /* Flow Steps */
+    .flow-steps {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      flex-wrap: wrap;
+      margin: var(--space-8) 0;
+    }
+    .flow-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--space-2);
+      background: var(--color-surface);
+      border-radius: var(--radius-md);
+      padding: var(--space-4) var(--space-5);
+      box-shadow: var(--shadow-sm);
+      min-width: 100px;
+      text-align: center;
+    }
+    .flow-step-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--color-accent);
+      color: white;
+      font-weight: 700;
+      font-family: var(--font-display);
+      font-size: var(--text-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .flow-step p { margin: 0; font-size: var(--text-xs); color: var(--color-text-secondary); }
+    .flow-arrow { font-size: var(--text-xl); color: var(--color-accent-muted); flex-shrink: 0; }
+
+    /* Translation Block */
+    .translation-block {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      box-shadow: var(--shadow-md);
+      margin: var(--space-8) 0;
+    }
+    .translation-code {
+      background: var(--color-bg-code);
+      color: #CDD6F4;
+      padding: var(--space-6);
+      font-size: var(--text-sm);
+      line-height: 1.7;
+      position: relative;
+      overflow-x: hidden;
+    }
+    .translation-code pre, .translation-code code { white-space: pre-wrap; word-break: break-word; overflow-x: hidden; }
+    .translation-english {
+      background: var(--color-surface-warm);
+      padding: var(--space-6);
+      font-size: var(--text-sm);
+      line-height: 1.7;
+      border-left: 3px solid var(--color-accent);
+    }
+    .translation-label {
+      position: absolute;
+      top: var(--space-2);
+      right: var(--space-3);
+      font-size: var(--text-xs);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      opacity: 0.5;
+    }
+    .translation-english .translation-label { color: var(--color-text-muted); }
+
+    /* Callout */
+    .callout {
+      display: flex;
+      gap: var(--space-4);
+      padding: var(--space-5) var(--space-6);
+      border-radius: var(--radius-md);
+      margin: var(--space-8) 0;
+    }
+    .callout-accent { background: var(--color-accent-light); border-left: 4px solid var(--color-accent); }
+    .callout-info { background: var(--color-info-light); border-left: 4px solid var(--color-info); }
+    .callout-icon { font-size: var(--text-2xl); flex-shrink: 0; }
+    .callout-content p { margin: 0; font-size: var(--text-sm); }
+    .callout-content strong { display: block; margin-bottom: var(--space-1); }
+
+    /* Pattern Cards */
+    .pattern-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: var(--space-4);
+      margin: var(--space-8) 0;
+    }
+    .pattern-card {
+      background: var(--color-surface);
+      border-radius: var(--radius-md);
+      padding: var(--space-6);
+      box-shadow: var(--shadow-sm);
+      border-top: 3px solid var(--color-accent);
+      transition: transform var(--duration-normal) var(--ease-out), box-shadow var(--duration-normal);
+    }
+    .pattern-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+    .pattern-icon { font-size: var(--text-2xl); margin-bottom: var(--space-3); }
+    .pattern-title { font-family: var(--font-display); font-weight: 700; margin: 0 0 var(--space-2); font-size: var(--text-lg); }
+    .pattern-desc { margin: 0; font-size: var(--text-sm); color: var(--color-text-secondary); line-height: var(--leading-normal); }
+
+    /* Step Cards */
+    .step-cards { display: flex; flex-direction: column; gap: var(--space-3); margin: var(--space-8) 0; }
+    .step-card {
+      display: flex; align-items: flex-start; gap: var(--space-4);
+      padding: var(--space-4) var(--space-5);
+      background: var(--color-surface);
+      border-radius: var(--radius-md);
+      border-left: 3px solid var(--color-accent);
+      box-shadow: var(--shadow-sm);
+    }
+    .step-num {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--color-accent); color: white; font-weight: 700;
+      font-family: var(--font-display);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .step-body p { margin: var(--space-1) 0 0; color: var(--color-text-secondary); font-size: var(--text-sm); }
+    .step-body strong { font-family: var(--font-display); }
+
+    /* Chat Window */
+    .chat-window {
+      background: var(--color-surface);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      overflow: hidden;
+      margin: var(--space-8) 0;
+      max-width: 500px;
+    }
+    .chat-header {
+      background: var(--color-bg-warm);
+      padding: var(--space-3) var(--space-4);
+      border-bottom: 1px solid var(--color-border);
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .chat-messages { padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-3); min-height: 200px; }
+    .chat-message {
+      display: flex; gap: var(--space-3); align-items: flex-start;
+      animation: fadeSlideUp 0.3s var(--ease-out);
+    }
+    @keyframes fadeSlideUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .chat-avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-display); font-weight: 700; font-size: var(--text-xs);
+      color: white; flex-shrink: 0;
+    }
+    .chat-bubble { background: var(--color-bg-warm); border-radius: var(--radius-md); padding: var(--space-3) var(--space-4); max-width: 80%; }
+    .chat-sender { font-size: var(--text-xs); font-weight: 600; display: block; margin-bottom: var(--space-1); }
+    .chat-bubble p { margin: 0; font-size: var(--text-sm); }
+    .chat-message.right { flex-direction: row-reverse; }
+    .chat-message.right .chat-bubble { background: var(--color-accent-light); }
+    .chat-typing { display: flex; gap: var(--space-3); align-items: center; padding: var(--space-3) var(--space-4); }
+    .chat-typing-dots { display: flex; gap: 4px; align-items: center; }
+    .typing-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--color-text-muted); animation: typingBounce 1.4s infinite; }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes typingBounce { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-6px); } }
+    .chat-controls { display: flex; gap: var(--space-2); padding: var(--space-3) var(--space-4); border-top: 1px solid var(--color-border); }
+    .chat-controls button {
+      padding: var(--space-2) var(--space-4);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      background: var(--color-surface);
+      font-size: var(--text-xs);
+      cursor: pointer;
+      font-family: var(--font-body);
+      transition: all var(--duration-fast);
+    }
+    .chat-controls button:hover { border-color: var(--color-accent); color: var(--color-accent); }
+    .chat-progress { font-size: var(--text-xs); color: var(--color-text-muted); margin-left: auto; display: flex; align-items: center; }
+
+    /* Flow Animation */
+    .flow-animation {
+      background: var(--color-surface);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      padding: var(--space-8);
+      margin: var(--space-8) 0;
+      text-align: center;
+    }
+    .flow-actors { display: flex; justify-content: center; gap: var(--space-8); flex-wrap: wrap; margin-bottom: var(--space-8); }
+    .flow-actor {
+      display: flex; flex-direction: column; align-items: center; gap: var(--space-2);
+      padding: var(--space-4);
+      border-radius: var(--radius-md);
+      transition: all var(--duration-normal) var(--ease-out);
+      min-width: 80px;
+    }
+    .flow-actor-icon {
+      width: 56px; height: 56px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: var(--text-xl);
+    }
+    .flow-actor span { font-size: var(--text-sm); font-weight: 600; color: var(--color-text-secondary); }
+    .flow-actor.active { transform: scale(1.1); }
+    .flow-actor.active .flow-actor-icon { box-shadow: 0 0 0 3px var(--color-accent), 0 0 20px rgba(217, 79, 48, 0.3); }
+    .flow-packet {
+      width: 12px; height: 12px; border-radius: 50%;
+      background: var(--color-accent);
+      margin: var(--space-4) auto;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .flow-packet.visible { opacity: 1; }
+    .flow-step-label {
+      font-size: var(--text-sm); color: var(--color-text-secondary);
+      min-height: 40px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: var(--space-6);
+    }
+    .flow-controls { display: flex; gap: var(--space-2); justify-content: center; align-items: center; }
+    .flow-controls button {
+      padding: var(--space-2) var(--space-5);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      background: var(--color-surface);
+      font-size: var(--text-sm);
+      cursor: pointer;
+      font-family: var(--font-body);
+      transition: all var(--duration-fast);
+    }
+    .flow-controls button:hover { background: var(--color-accent); color: white; border-color: var(--color-accent); }
+    .flow-progress { font-size: var(--text-xs); color: var(--color-text-muted); margin-left: var(--space-4); }
+
+    /* Quiz */
+    .quiz-container { margin: var(--space-8) 0; }
+    .quiz-question-block { margin-bottom: var(--space-8); }
+    .quiz-question {
+      font-family: var(--font-display);
+      font-size: var(--text-lg);
+      font-weight: 600;
+      margin: 0 0 var(--space-4);
+    }
+    .quiz-options { display: flex; flex-direction: column; gap: var(--space-2); }
+    .quiz-option {
+      display: flex; align-items: center; gap: var(--space-3);
+      padding: var(--space-3) var(--space-4);
+      border: 2px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      background: var(--color-surface);
+      cursor: pointer; width: 100%;
+      font-size: var(--text-sm);
+      font-family: var(--font-body);
+      text-align: left;
+      transition: border-color var(--duration-fast), background var(--duration-fast);
+    }
+    .quiz-option:hover { border-color: var(--color-accent-muted); }
+    .quiz-option.selected { border-color: var(--color-accent); background: var(--color-accent-light); }
+    .quiz-option.correct { border-color: var(--color-success); background: var(--color-success-light); }
+    .quiz-option.incorrect { border-color: var(--color-error); background: var(--color-error-light); }
+    .quiz-option-radio {
+      width: 18px; height: 18px; border-radius: 50%;
+      border: 2px solid var(--color-border);
+      flex-shrink: 0;
+      transition: all var(--duration-fast);
+    }
+    .quiz-option.selected .quiz-option-radio { border-color: var(--color-accent); background: var(--color-accent); box-shadow: inset 0 0 0 3px white; }
+    .quiz-option.correct .quiz-option-radio { border-color: var(--color-success); background: var(--color-success); box-shadow: inset 0 0 0 3px white; }
+    .quiz-option.incorrect .quiz-option-radio { border-color: var(--color-error); background: var(--color-error); box-shadow: inset 0 0 0 3px white; }
+    .quiz-feedback {
+      max-height: 0; overflow: hidden; opacity: 0;
+      transition: max-height var(--duration-normal), opacity var(--duration-normal);
+      font-size: var(--text-sm);
+    }
+    .quiz-feedback.show { max-height: 200px; opacity: 1; padding: var(--space-3); margin-top: var(--space-2); border-radius: var(--radius-sm); }
+    .quiz-feedback.success { background: var(--color-success-light); color: var(--color-success); }
+    .quiz-feedback.error { background: var(--color-error-light); color: var(--color-error); }
+    .quiz-check-btn {
+      padding: var(--space-3) var(--space-6);
+      background: var(--color-accent);
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: var(--text-sm);
+      font-family: var(--font-body);
+      cursor: pointer;
+      font-weight: 600;
+      transition: background var(--duration-fast);
+    }
+    .quiz-check-btn:hover { background: var(--color-accent-hover); }
+    .quiz-reset-btn {
+      padding: var(--space-3) var(--space-6);
+      background: transparent;
+      color: var(--color-text-secondary);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      font-size: var(--text-sm);
+      font-family: var(--font-body);
+      cursor: pointer;
+      margin-left: var(--space-2);
+      transition: all var(--duration-fast);
+    }
+    .quiz-reset-btn:hover { border-color: var(--color-text-secondary); }
+
+    /* Term Tooltip */
+    .term {
+      border-bottom: 1.5px dashed var(--color-accent-muted);
+      cursor: pointer;
+    }
+    .term:hover, .term.active { border-bottom-color: var(--color-accent); color: var(--color-accent); }
+    .term-tooltip {
+      position: fixed;
+      background: var(--color-bg-code);
+      color: #CDD6F4;
+      padding: var(--space-3) var(--space-4);
+      border-radius: var(--radius-sm);
+      font-size: var(--text-sm);
+      font-family: var(--font-body);
+      line-height: var(--leading-normal);
+      width: max(200px, min(320px, 80vw));
+      box-shadow: var(--shadow-lg);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity var(--duration-fast);
+      z-index: 10000;
+    }
+    .term-tooltip::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 6px solid transparent;
+      border-top-color: var(--color-bg-code);
+    }
+    .term-tooltip.visible { opacity: 1; }
+    .term-tooltip.flip { top: auto; }
+    .term-tooltip.flip::after { top: auto; bottom: 100%; border-top-color: transparent; border-bottom-color: var(--color-bg-code); }
+
+    /* Architecture diagram */
+    .arch-diagram {
+      background: var(--color-surface);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      padding: var(--space-8);
+      margin: var(--space-8) 0;
+    }
+    .arch-zones { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4); margin-bottom: var(--space-6); }
+    .arch-zone { background: var(--color-bg-warm); border-radius: var(--radius-md); padding: var(--space-4); }
+    .arch-zone-label { font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.1em; color: var(--color-text-muted); margin: 0 0 var(--space-3); }
+    .arch-component {
+      background: var(--color-surface);
+      border-radius: var(--radius-sm);
+      padding: var(--space-3);
+      margin-bottom: var(--space-2);
+      font-size: var(--text-sm);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--duration-fast);
+      border: 1px solid transparent;
+    }
+    .arch-component:hover { border-color: var(--color-accent); background: var(--color-accent-light); }
+    .arch-description {
+      background: var(--color-bg-warm);
+      border-radius: var(--radius-sm);
+      padding: var(--space-4);
+      font-size: var(--text-sm);
+      color: var(--color-text-secondary);
+      min-height: 60px;
+    }
+
+    /* Hero visual */
+    .hero-visual {
+      background: linear-gradient(135deg, var(--color-accent-light), var(--color-info-light));
+      border-radius: var(--radius-lg);
+      padding: var(--space-12) var(--space-8);
+      text-align: center;
+      margin: var(--space-8) 0;
+    }
+    .hero-visual h3 { font-family: var(--font-display); font-size: var(--text-2xl); margin: 0 0 var(--space-4); }
+    .hero-visual p { margin: 0; color: var(--color-text-secondary); font-size: var(--text-sm); }
+
+    /* File tree */
+    .file-tree { font-family: var(--font-mono); font-size: var(--text-sm); margin: var(--space-6) 0; }
+    .ft-folder, .ft-file { padding: var(--space-2) var(--space-3); border-left: 2px solid var(--color-border-light); margin-left: var(--space-4); }
+    .ft-folder > .ft-name { color: var(--color-accent); font-weight: 600; }
+    .ft-folder > .ft-name::before { content: '📁 '; }
+    .ft-file > .ft-name::before { content: '📄 '; }
+    .ft-desc { color: var(--color-text-secondary); font-family: var(--font-body); margin-left: var(--space-2); font-size: var(--text-xs); }
+    .ft-children { margin-left: var(--space-4); }
+
+    /* Phase pipeline */
+    .phase-pipeline {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+      margin: var(--space-6) 0;
+    }
+    .phase-chip {
+      padding: var(--space-2) var(--space-4);
+      border-radius: var(--radius-full);
+      font-size: var(--text-xs);
+      font-weight: 600;
+      font-family: var(--font-mono);
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      color: var(--color-text-secondary);
+      transition: all var(--duration-fast);
+    }
+    .phase-chip.manual { border-color: var(--color-info); color: var(--color-info); background: var(--color-info-light); }
+    .phase-chip.auto { border-color: var(--color-success); color: var(--color-success); background: var(--color-success-light); }
+    .phase-chip.current { border-color: var(--color-accent); color: var(--color-accent); background: var(--color-accent-light); }
+
+    /* Icon rows */
+    .icon-rows { display: flex; flex-direction: column; gap: var(--space-4); margin: var(--space-6) 0; }
+    .icon-row {
+      display: flex; align-items: center; gap: var(--space-4);
+      padding: var(--space-4);
+      background: var(--color-surface);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+    }
+    .icon-circle { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0; }
+    .icon-row p { margin: 0; color: var(--color-text-secondary); font-size: var(--text-sm); }
+    .icon-row strong { font-family: var(--font-display); }
+
+    /* Module divider */
+    .module-divider {
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+      margin: var(--space-12) 0;
+      color: var(--color-text-muted);
+      font-size: var(--text-sm);
+    }
+    .module-divider::before, .module-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--color-border);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .module { padding: var(--space-8) var(--space-4); }
+      .module-number { font-size: var(--text-5xl); }
+      .module-title { font-size: var(--text-3xl); }
+      .translation-block { grid-template-columns: 1fr; }
+      .translation-english { border-left: none; border-top: 3px solid var(--color-accent); }
+      .flow-steps { flex-direction: column; }
+      .flow-arrow { transform: rotate(90deg); }
+      .arch-zones { grid-template-columns: 1fr; }
+      .flow-actors { gap: var(--space-4); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="nav">
+  <span class="nav-title">VibeFlow 课程</span>
+  <div class="nav-dots">
+    <button class="nav-dot current" data-target="module-1" title="模块 1"></button>
+    <button class="nav-dot" data-target="module-2" title="模块 2"></button>
+    <button class="nav-dot" data-target="module-3" title="模块 3"></button>
+    <button class="nav-dot" data-target="module-4" title="模块 4"></button>
+    <button class="nav-dot" data-target="module-5" title="模块 5"></button>
+    <button class="nav-dot" data-target="module-6" title="模块 6"></button>
+  </div>
+  <div class="progress-bar"></div>
+</nav>
+
+<!-- ==================== MODULE 1 ==================== -->
+<section class="module" id="module-1">
+  <div class="module-content">
+    <header class="module-header animate-in">
+      <span class="module-number">01</span>
+      <h1 class="module-title">VibeFlow 是什么</h1>
+      <p class="module-subtitle">一个让 AI 交付更有章法的编排框架</p>
+    </header>
+
+    <!-- Screen 1: What it does -->
+    <div class="screen animate-in">
+      <div class="hero-visual">
+        <h3>把一个想法，变成可交付的系统</h3>
+        <p>VibeFlow 为 AI 辅助开发铺上轨道，让交付过程可追踪、可审查、可继续</p>
+      </div>
+
+      <p style="font-size: var(--text-lg); color: var(--color-text-secondary); margin: var(--space-8) 0;">
+        大模型擅长即兴发挥，软件工程需要定力。真正稀缺的不是"生成一段代码"，而是从想法到发布的完整路径。
+        <strong>VibeFlow</strong> 做的就是给这条路铺上轨道。
+      </p>
+    </div>
+
+    <!-- Screen 2: The pipeline -->
+    <div class="screen animate-in">
+      <h2 class="screen-heading">交付的生命周期</h2>
+      <p>一个想法进入 VibeFlow，会穿越这几个阶段：</p>
+
+      <div class="flow-steps">
+        <div class="flow-step">
+          <div class="flow-step-num">1</div>
+          <p><strong>Think</strong><br>想清楚边界</p>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="flow-step-num">2</div>
+          <p><strong>Plan</strong><br>评估价值</p>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="flow-step-num">3</div>
+          <p><strong>Requirements</strong><br>精确定义</p>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="flow-step-num">4</div>
+          <p><strong>Design</strong><br>方案设计</p>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step" style="border-left: 3px solid var(--color-accent);">
+          <div class="flow-step-num" style="background: var(--color-accent);">5</div>
+          <p><strong>Build</strong><br>实现</p>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="flow-step-num">6</div>
+          <p><strong>Review</strong><br>审查</p>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="flow-step-num">7</div>
+          <p><strong>Test</strong><br>测试</p>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <div class="flow-step-num">8</div>
+          <p><strong>Ship</strong><br>发布</p>
+        </div>
+      </div>
+
+      <div class="callout callout-accent">
+        <div class="callout-icon">💡</div>
+        <div class="callout-content">
+          <strong>关键洞察</strong>
+          <p>前 4 个阶段（Think → Design）需要你参与决策；后 4 个阶段（Build → Ship）可以由系统自动推进。这就是"前半程你拍板，后半程系统自己跑"的意思。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Screen 3: Two modes -->
+    <div class="screen animate-in">
+      <h2 class="screen-heading">两种工作模式</h2>
+
+      <div class="pattern-cards">
+        <div class="pattern-card" style="border-top-color: var(--color-actor-1);">
+          <div class="pattern-icon">🎯</div>
+          <h4 class="pattern-title">Full Mode</h4>
+          <p class="pattern-desc">完整的交付流程。适合新功能、架构改动、复杂需求。所有阶段都要走完，文档化程度高。</p>
+        </div>
+        <div class="pattern-card" style="border-top-color: var(--color-actor-4);">
+          <div class="pattern-icon">⚡</div>
+          <h4 class="pattern-title">Quick Mode</h4>
+          <p class="pattern-desc">快速通道。适合 bugfix、hotfix、小改动。限定范围，自动升级——如果发现范围超出预期，会提醒切回 Full。</p>
+        </div>
+      </div>
+
+      <div class="callout callout-info">
+        <div class="callout-icon">📌</div>
+        <div class="callout-content">
+          <strong>什么时候用哪个？</strong>
+          <p>不确定时选 Full Mode。只有小范围、低风险、可快速回滚的改动（比如改个配置、修个 bug）才用 Quick Mode。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Screen 4: A real example -->
+    <div class="screen animate-in">
+      <h2 class="screen-heading">一个想法的旅程</h2>
+
+      <div class="step-cards stagger-children">
+        <div class="step-card animate-in">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <strong>你："给博客加个深色模式"</strong>
+            <p>这句话进入 Think 阶段，VibeFlow 问你要覆盖哪些文件、支持什么场景、边界在哪。</p>
+          </div>
+        </div>
+        <div class="step-card animate-in">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <strong>Plan 阶段：价值评估</strong>
+            <p>VibeFlow 帮你分析投入产出，问你："这值得花多少时间？用什么技术方案？"</p>
+          </div>
+        </div>
+        <div class="step-card animate-in">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <strong>Design 阶段：设计方案</strong>
+            <p>生成具体方案文档——怎么改 CSS 变量、要不要改 JS 逻辑、影响范围多大。</p>
+          </div>
+        </div>
+        <div class="step-card animate-in">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <strong>Build 阶段开始 → 自动继续</strong>
+            <p>设计方案确认后，系统自动推进 Build → Review → Test → Ship，你只需要在关键节点确认。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Screen 5: Quiz -->
+    <div class="screen animate-in">
+      <h2 class="screen-heading">小测验</h2>
+      <div class="quiz-container" id="quiz-1">
+        <div class="quiz-question-block" data-question="q1" data-correct="b">
+          <h3 class="quiz-question">你想要加一个新功能，预计需要改动 5 个文件，涉及 API 逻辑。用哪种模式？</h3>
+          <div class="quiz-options">
+            <button class="quiz-option" data-value="a" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>Quick Mode — 改动范围不大</span>
+            </button>
+            <button class="quiz-option" data-value="b" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>Full Mode — 涉及 API 逻辑属于核心改动</span>
+            </button>
+          </div>
+          <div class="quiz-feedback" id="q1-feedback"></div>
+        </div>
+
+        <button class="quiz-check-btn" onclick="checkQuiz('quiz-1')">检查答案</button>
+        <button class="quiz-reset-btn" onclick="resetQuiz('quiz-1')">再来一次</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== MODULE 2 ==================== -->
+<section class="module" id="module-2" style="background: var(--color-bg-warm);">
+  <div class="module-content">
+    <header class="module-header animate-in">
+      <span class="module-number">02</span>
+      <h1 class="module-title">认识核心角色</h1>
+      <p class="module-subtitle">VibeFlow 的组件们各自负责什么</p>
+    </header>
+
+    <!-- Screen 1: The cast -->
+    <div class="screen animate-in">
+      <h2 class="screen-heading">VibeFlow 的"演员阵容"</h2>
+      <p>每个组件都有自己的职责。它们互相配合，完成整个交付流程。</p>
+
+      <div class="icon-rows stagger-children">
+        <div class="icon-row animate-in">
+          <div class="icon-circle" style="background: var(--color-actor-1);">🗂️</div>
+          <div>
+            <strong><span class="term" data-definition="VibeFlow 的核心数据库。一个 JSON 文件，记录当前在哪个阶段、有哪些 checkpoint、配置是什么。它是整个系统的真相来源。">state.json</span></strong>
+            <p>系统真相来源 — 当前在哪个阶段、配置是什么、有哪些功能待完成</p>
+          </div>
+        </div>
+        <div class="icon-row animate-in">
+          <div class="icon-circle" style="background: var(--color-actor-2);">🤖</div>
+          <div>
+            <strong><span class="term" data-definition="VibeFlow 的自动引擎。它读取 state.json，根据当前阶段决定下一步做什么。在 Build 之后它可以自动推进流程。">Autopilot</span></strong>
+            <p>自动驾驶仪 — 设计确认后自动推进 Build → Review → Test → Ship</p>
+          </div>
+        </div>
+        <div class="icon-row animate-in">
+          <div class="icon-circle" style="background: var(--color-actor-3);">📦</div>
+          <div>
+            <strong><span class="term" data-definition="一个 JSON 包，包含某个功能的完整上下文：目标、验收标准、涉及文件、依赖关系。Build 阶段靠它知道要做什么。">Feature Packet</span></strong>
+            <p>功能数据包 — 一个功能的完整上下文，包括目标、文件范围、验证方式</p>
+          </div>
+        </div>
+        <div class="icon-row animate-in">
+          <div class="icon-circle" style="background: var(--color-actor-4);">📊</div>
+          <div>
+            <strong>Dashboard</strong>
+            <p>实时看板 — 在浏览器里看当前阶段、进度、事件时间线</p>
+          </div>
+        </div>
+        <div class="icon-row animate-in">
+          <div class="icon-circle" style="background: var(--color-actor-5);">📝</div>
+          <div>
+            <strong><span class="term" data-definition="一个 JSON 文件，记录运行时的状态：当前在做什么、遇到了什么问题、最近发生了什么事件。它是 state.json 的运行时补充。">runtime.json</span></strong>
+            <p>运行时状态 — 当前动作、友好提示、事件记录、心跳</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Screen 2: Group chat -->
+    <div class="screen animate-in">
+      <h2 class="screen-heading">它们怎么配合？</h2>
+      <p>假设用户点击了"继续"，这些组件会这样对话：</p>
+
+      <div class="chat-window animate-in">
+        <div class="chat-header">组件对话</div>
+        <div class="chat-messages" id="chat-1">
+          <div class="chat-message" data-msg="0" data-sender="actor-dashboard" style="display:none">
+            <div class="chat-avatar" style="background: var(--color-actor-4);">👤</div>
+            <div class="chat-bubble">
+              <span class="chat-sender" style="color: var(--color-actor-4);">用户</span>
+              <p>/vibeflow-work</p>
+            </div>
+          </div>
+          <div class="chat-message" data-msg="1" data-sender="actor-state" style="display:none">
+            <div class="chat-avatar" style="background: var(--color-actor-1);">🗂️</div>
+            <div class="chat-bubble">
+              <span class="chat-sender" style="color: var(--color-actor-1);">state.json</span>
+              <p>当前在 design 阶段，checkpoint 已标记完成。</p>
+            </div>
+          </div>
+          <div class="chat-message" data-msg="2" data-sender="actor-autopilot" style="display:none">
+            <div class="chat-avatar" style="background: var(--color-actor-2);">🤖</div>
+            <div class="chat-bubble">
+              <span class="chat-sender" style="color: var(--color-actor-2);">Autopilot</span>
+              <p>Design 已确认！自动进入 build-init，创建 feature-list.json。</p>
+            </div>
+          </div>
+          <div class="chat-message" data-msg="3" data-sender="actor-packet" style="display:none">
+            <div class="chat-avatar" style="background: var(--color-actor-3);">📦</div>
+            <div class="chat-bubble">
+              <span class="chat-sender" style="color: var(--color-actor-3);">Packets</span>
+              <p>为每个功能生成数据包，包含验收标准和文件范围。</p>
+            </div>
+          </div>
+          <div class="chat-message" data-msg="4" data-sender="actor-autopilot" style="display:none">
+            <div class="chat-avatar" style="background: var(--color-actor-2);">🤖</div>
+            <div class="chat-bubble">
+              <span class="chat-sender" style="color: var(--color-actor-2);">Autopilot</span>
+              <p>Build-init 完成。自动进入 build-work，按依赖顺序执行功能。</p>
+            </div>
+          </div>
+          <div class="chat-message" data-msg="5" data-sender="actor-dashboard" style="display:none">
+            <div class="chat-avatar" style="background: var(--color-actor-4);">📊</div>
+            <div class="chat-bubble">
+              <span class="chat-sender" style="color: var(--color-actor-4);">Dashboard</span>
+              <p>看板更新：当前 build-work · 2/3 功能通过 · Review 待开始</p>
+            </div>
+          </div>
+        </div>
+        <div class="chat-controls">
+          <button onclick="playChatNext('chat-1')">下一条</button>
+          <button onclick="playChatAll('chat-1')">播放全部</button>
+          <button onclick="resetChat('chat-1')">重播</button>
+          <span class="chat-progress" id="chat-1-progress">0 / 6</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Screen 3: Code translation -->
+    <div class="screen animate-in">
+      <h2 class="screen-heading">真实代码：状态读写</h2>
+      <p>VibeFlow 用 <span class="term" data-definition="Python 的标准方式读取和保存 JSON 文件。所有状态都存在这里。">JSON 文件</span>而不是数据库来保存状态——这样任何人都可以直接查看和修改。</p>
+
+      <div class="translation-block">
+        <div class="translation-code">
+          <span class="translation-label">CODE</span>
+          <pre><code><span class="code-keyword">def</span> <span class="code-function">load_state</span>(project_root):
+    path = state_path(project_root)
+    <span class="code-keyword">if</span> <span class="code-keyword">not</span> path.exists():
+        <span class="code-keyword">return</span> default_state(project_root)
+    data = json.loads(path.read_text(<span class="code-string">"utf-8"</span>))
+    merged = default_state(project_root)
+    merged.update(...)
+    <span class="code-keyword">return</span> merged</code></pre>
+        </div>
+        <div class="translation-english">
+          <span class="translation-label">PLAIN ENGLISH</span>
+          <div class="translation-lines">
+            <p class="tl">Define a function to load the state file from disk.</p>
+            <p class="tl">If the file doesn't exist yet, return a default empty state.</p>
+            <p class="tl">Read the JSON file as text and parse it into a Python dictionary.</p>
+            <p class="tl">Start with default values, then overwrite with what's in the file.</p>
+            <p class="tl">Return the merged result — so the rest of VibeFlow always gets a complete state object.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout callout-accent">
+        <div class="callout-icon">💡</div>
+        <div class="callout-content">
+          <strong>设计决策</strong>
+          <p>VibeFlow 选择 JSON 文件而不是数据库，是因为文件可以 commit 到 Git、可以在任何编辑器打开、不会丢数据。即使 AI 崩溃，状态还在磁盘上。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Screen 4: Quiz -->
+    <div class="screen animate-in">
+      <h2 class="screen-heading">小测验</h2>
+      <div class="quiz-container" id="quiz-2">
+        <div class="quiz-question-block" data-question="q1" data-correct="c">
+          <h3 class="quiz-question">Autopilot 在什么时候开始接管推进？</h3>
+          <div class="quiz-options">
+            <button class="quiz-option" data-value="a" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>从一开始就自动跑完所有阶段</span>
+            </button>
+            <button class="quiz-option" data-value="b" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>Design 阶段之后</span>
+            </button>
+            <button class="quiz-option" data-value="c" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>设计方案被人工确认之后</span>
+            </button>
+          </div>
+          <div class="quiz-feedback" id="q1-feedback"></div>
+        </div>
+
+        <button class="quiz-check-btn" onclick="checkQuiz('quiz-2')">检查答案</button>
+        <button class="quiz-reset-btn" onclick="resetQuiz('quiz-2')">再来一次</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== MODULE 3 ==================== -->
+<section class="module" id="module-3">
+  <div class="module-content">
+    <header class="module-header animate-in">
+      <span class="module-number">03</span>
+      <h1 class="module-title">文件即真相</h1>
+      <p class="module-subtitle">状态如何持久化，checkpoint 机制是什么</p>
+    </header>
+
+    <!-- Screen 1: State file structure -->
+    <div class="screen animate-in">
+      <h2 class="screen-heading">state.json 里有什么</h2>
+      <p>当你运行 <code>/vibeflow</code> 后，项目根目录会出现一个 <code>.vibeflow/state.json</code> 文件。这就是系统的"真相来源"。</p>
+
+      <div class="file-tree animate-in">
+        <div class="ft-folder open">
+          <span class="ft-name">.vibeflow/</span>
+          <span class="ft-desc">VibeFlow 的系统目录</span>
+          <div class="ft-children">
+            <div class="ft-file">
+              <span class="ft-name">state.json</span>
+              <span class="ft-desc">当前阶段、checkpoints、mode、change 信息</span>
+            </div>
+            <div class="ft-file">
+              <span class="ft-name">runtime.json</span>
+              <span class="ft-desc">运行时状态、事件记录、友好提示</span>
+            </div>
+            <div class="ft-file">
+              <span class="ft-name">workflow.yaml</span>
+              <span class="ft-desc">流程配置：哪些阶段必须手动、哪些可自动</span>
+            </div>
+            <div class="ft-folder">
+              <span class="ft-name">packets/</span>
+              <span class="ft-desc">每个功能的执行数据包</span>
+            </div>
+            <div class="ft-folder">
+              <span class="ft-name">subagent-results/</span>
+              <span class="ft-desc">功能执行结果（通过/失败）</span>
+            </div>
+          </div>
+        </div>
+        <div class="ft-folder open">
+          <span class="ft-name">docs/changes/</span>
+          <span class="ft-desc">这次变更的完整文档</span>
+          <div class="ft-children">
+            <div class="ft-file"><span class="ft-name">context.md</span><span class="ft-desc">起点和目标</span></div>
+            <div class="ft-file"><span class="ft-name">proposal.md</span><span class="ft-desc">方案提案</span></div>
+            <div class="ft-file"><span class="ft-name">requirements.md</span><span class="ft-desc">正式需求</span></div>
+            <div class="ft-file"><span class="ft-name">design.md</span><span class="ft-desc">实现方案</span></div>
+            <div class="ft-file"><span class="ft-name">tasks.md</span><span class="ft-desc">执行清单</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Screen 2: Checkpoint mechanism -->
+    <div class="screen animate-in">
+      <h2 class="screen-heading">Checkpoint：进度快照</h2>
+      <p>每个阶段完成后，会在 state.json 里打一个 <span class="term" data-definition="一个布尔标记，表示某个阶段是否已完成。VibeFlow 用它来决定下一步可以做什么。">checkpoint</span>。就像游戏存档——崩溃了可以从最近的存档恢复。</p>
+
+      <div class="translation-block">
+        <div class="translation-code">
+          <span class="translation-label">CODE</span>
+          <pre><code><span class="code-property">"checkpoints"</span>: {
+  <span class="code-string">"think"</span>: <span class="code-keyword">true</span>,
+  <span class="code-string">"plan"</span>: <span class="code-keyword">true</span>,
+  <span class="code-string">"requirements"</span>: <span class="code-keyword">true</span>,
+  <span class="code-string">"design"</span>: <span class="code-keyword">true</span>,
+  <span class="code-string">"build_init"</span>: <span class="code-keyword">true</span>,
+  <span class="code-string">"build_config"</span>: <span class="code-keyword">false</span>,
+  <span class="code-string">"build_work"</span>: <span class="code-keyword">false</span>,
+  <span class="code-string">"review"</span>: <span class="code-keyword">false</span>,
+  <span class="code-string">"test_system"</span>: <span class="code-keyword">false</span>,
+  <span class="code-string">"ship"</span>: <span class="code-keyword">false</span>
+}</code></pre>
+        </div>
+        <div class="translation-english">
+          <span class="translation-label">PLAIN ENGLISH</span>
+          <div class="translation-lines">
+            <p class="tl">Here's the checkpoints section — a map of what we've finished.</p>
+            <p class="tl">Think, Plan, Requirements, Design — all done, marked as true.</p>
+            <p class="tl">Build-init is also done — the feature list was created.</p>
+            <p class="tl">Build-config is still false — we're just about to start it.</p>
+            <p class="tl">The rest (build-work, review, test, ship) are still pending.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout callout-info">
+        <div class="callout-icon">📌</div>
+        <div class="callout-content">
+          <strong>为什么这很重要？</strong>
+          <p>如果你关掉 Claude Code 会话，下次回来时 VibeFlow 读取 state.json 就知道"我们已经完成了 Design，现在应该在 build-config"。它不会让你重新走一遍已经完成的阶段。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Screen 3: Phase machine -->
+    <div class="screen animate-in">
+      <h2 class="screen-heading">阶段检测逻辑</h2>
+      <p>VibeFlow 有一个"阶段检测器"——每次 autopilot 想知道"下一步该做什么"时，就问它。它检查 checkpoint 和 artifacts 文件来决定当前应该处于哪个阶段。</p>
+
+      <div class="translation-block">
+        <div class="translation-code">
+          <span class="translation-label">CODE</span>
+          <pre><code><span class="code-keyword">def</span> <span class="code-function">detect_phase</span>(project_root, ...):
+    state = load_state(project_root)
+    checkpoints = state.get(<span class="code-string">"checkpoints"</span>, {})
+
+    <span class="code-keyword">if not</span> checkpoints.get(<span class="code-string">"think"</span>):
+        <span class="code-keyword">return</span> {<span class="code-string">"phase"</span>: <span class="code-string">"think"</span>, ...}
+    <span class="code-keyword">if not</span> checkpoints.get(<span class="code-string">"plan"</span>):
+        <span class="code-keyword">return</span> {<span class="code-string">"phase"</span>: <span class="code-string">"plan"</span>, ...}
+    <span class="code-keyword">if not</span> checkpoints.get(<span class="code-string">"requirements"</span>):
+        <span class="code-keyword">return</span> {<span class="code-string">"phase"</span>: <span class="code-string">"requirements"</span>, ...}
+    <span class="code-keyword">if not</span> checkpoints.get(<span class="code-string">"design"</span>):
+        <span class="code-keyword">return</span> {<span class="code-string">"phase"</span>: <span class="code-string">"design"</span>, ...}
+    <span class="code-keyword">if not</span> checkpoints.get(<span class="code-string">"build_init"</span>):
+        <span class="code-keyword">return</span> {<span class="code-string">"phase"</span>: <span class="code-string">"build-init"</span>, ...}
+    ...
+    <span class="code-keyword">return</span> {<span class="code-string">"phase"</span>: <span class="code-string">"done"</span>}</code></pre>
+        </div>
+        <div class="translation-english">
+          <span class="translation-label">PLAIN ENGLISH</span>
+          <div class="translation-lines">
+            <p class="tl">Define a function that looks at the checkpoints and tells you what the current phase is.</p>
+            <p class="tl">First check: is "think" marked done? If not, we're in the "think" phase.</p>
+            <p class="tl">Otherwise check "plan", then "requirements", then "design"...</p>
+            <p class="tl">Each one is a gate — you must pass through in order.</p>
+            <p class="tl">If all checkpoints are true, we're done — the whole workflow is complete.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Screen 4: Quiz -->
+    <div class="screen animate-in">
+      <h2 class="screen-heading">小测验</h2>
+      <div class="quiz-container" id="quiz-3">
+        <div class="quiz-question-block" data-question="q1" data-correct="b">
+          <h3 class="quiz-question">VibeFlow 重启 Claude Code 会话后，如何知道上次做到哪里了？</h3>
+          <div class="quiz-options">
+            <button class="quiz-option" data-value="a" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>它会重新扫描代码，猜测进度</span>
+            </button>
+            <button class="quiz-option" data-value="b" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>读取 .vibeflow/state.json 里的 checkpoints</span>
+            </button>
+            <button class="quiz-option" data-value="c" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>它无法知道，会从头开始</span>
+            </button>
+          </div>
+          <div class="quiz-feedback" id="q1-feedback"></div>
+        </div>
+
+        <button class="quiz-check-btn" onclick="checkQuiz('quiz-3')">检查答案</button>
+        <button class="quiz-reset-btn" onclick="resetQuiz('quiz-3')">再来一次</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== MODULE 4 ==================== -->
+<section class="module" id="module-4" style="background: var(--color-bg-warm);">
+  <div class="module-content">
+    <header class="module-header animate-in">
+      <span class="module-number">04</span>
+      <h1 class="module-title">自动驾驶仪</h1>
+      <p class="module-subtitle">Autopilot 如何自动推进 Build → Review → Test</p>
+    </header>
+
+    <!-- Screen 1: What autopilot does -->
+    <div class="screen animate-in">
+      <h2 class="screen-heading">Autopilot 的工作方式</h2>
+      <p>设计方案确认后，你运行一次 <code>/vibeflow-work</code>，Autopilot 就开始接管：</p>
+
+      <div class="phase-pipeline">
+        <span class="phase-chip current">build-init</span>
+        <span style="color: var(--color-text-muted);">→</span>
+        <span class="phase-chip auto">build-config</span>
+        <span style="color: var(--color-text-muted);">→</span>
+        <span class="phase-chip auto">build-work</span>
+        <span style="color: var(--color-text-muted);">→</span>
+        <span class="phase-chip auto">review</span>
+        <span style="color: var(--color-text-muted);">→</span>
+        <span class="phase-chip auto">test-system</span>
+        <span style="color: var(--color-text-muted);">→</span>
+        <span class="phase-chip auto">test-qa</span>
+        <span style="color: var(--color-text-muted);">→</span>
+        <span class="phase-chip auto">ship</span>
+        <span style="color: var(--color-text-muted);">→</span>
+        <span class="phase-chip auto">reflect</span>
+      </div>
+
+      <div class="callout callout-info">
+        <div class="callout-icon">🤖</div>
+        <div class="callout-content">
+          <strong>手动 vs 自动阶段</strong>
+          <p>Think、Plan、Requirements、Design 这些"思考阶段"需要你参与决策。Build 之后的阶段 Autopilot 可以自动推进——直到遇到问题卡住，它会停下来等你。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Screen 2: Flow animation -->
+    <div class="screen animate-in">
+      <h2 class="screen-heading">Autopilot 执行流程</h2>
+
+      <div class="flow-animation">
+        <div class="flow-actors">
+          <div class="flow-actor" id="fa-state">
+            <div class="flow-actor-icon" style="background: var(--color-actor-1);">🗂️</div>
+            <span>state.json</span>
+          </div>
+          <div class="flow-actor" id="fa-autopilot">
+            <div class="flow-actor-icon" style="background: var(--color-actor-2);">🤖</div>
+            <span>Autopilot</span>
+          </div>
+          <div class="flow-actor" id="fa-feature">
+            <div class="flow-actor-icon" style="background: var(--color-actor-3);">📦</div>
+            <span>Feature</span>
+          </div>
+          <div class="flow-actor" id="fa-result">
+            <div class="flow-actor-icon" style="background: var(--color-actor-5);">✅</div>
+            <span>Result</span>
+          </div>
+        </div>
+        <div class="flow-packet" id="flow-packet"></div>
+        <div class="flow-step-label" id="flow-label">点击"下一步"开始</div>
+        <div class="flow-controls">
+          <button onclick="flowNext()">下一步</button>
+          <button onclick="flowReset()">重新开始</button>
+          <span class="flow-progress" id="flow-progress">第 0 / 5 步</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Screen 3: Parallel build -->
+    <div class="screen animate-in">
+      <h2 class="screen-heading">并行构建：加速执行</h2>
+      <p>当有多个功能（features）互相独立时，Autopilot 会并行执行它们——就像同时开多条生产线。</p>
+
+      <div class="step-cards">
+        <div class="step-card">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <strong>分析依赖关系</strong>
+            <p>Autopilot 读取 feature-list.json，看哪些功能可以并行、哪些必须等前一个完成。</p>
+          </div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <strong>选择并行批次</strong>
+            <p>找出文件范围不重叠的功能，组成一个批次同时跑。比如"加深色模式"和"改 SEO 标签"可以并行，因为它们改的是不同文件。</p>
+          </div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <strong>依赖满足后解锁</strong>
+            <p>如果功能 B 依赖功能 A 的输出，那 B 必须等 A 完成后才能开始。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="translation-block">
+        <div class="translation-code">
+          <span class="translation-label">CODE</span>
+          <pre><code><span class="code-keyword">def</span> <span class="code-function">scopes_overlap</span>(left, right):
+    <span class="code-keyword">for</span> l <span class="code-keyword">in</span> left:
+        <span class="code-keyword">for</span> r <span class="code-keyword">in</span> right:
+            <span class="code-keyword">if</span> l == r: <span class="code-keyword">return True</span>
+            <span class="code-keyword">if</span> l.startswith(r + <span class="code-string">"/"</span>): <span class="code-keyword">return True</span>
+            <span class="code-keyword">if</span> r.startswith(l + <span class="code-string">"/"</span>): <span class="code-keyword">return True</span>
+    <span class="code-keyword">return False</span></code></pre>
+        </div>
+        <div class="translation-english">
+          <span class="translation-label">PLAIN ENGLISH</span>
+          <div class="translation-lines">
+            <p class="tl">Function to check if two features touch overlapping files.</p>
+            <p class="tl">If both features modify the same file (exact match), they're not safe to run in parallel.</p>
+            <p class="tl">If one modifies a parent folder and the other modifies a subfolder, they also overlap.</p>
+            <p class="tl">Only if both conditions are false — completely separate paths — can they run at the same time.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Screen 4: Quiz -->
+    <div class="screen animate-in">
+      <h2 class="screen-heading">小测验</h2>
+      <div class="quiz-container" id="quiz-4">
+        <div class="quiz-question-block" data-question="q1" data-correct="a">
+          <h3 class="quiz-question">Autopilot 遇到一个功能执行失败时会怎么做？</h3>
+          <div class="quiz-options">
+            <button class="quiz-option" data-value="a" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>停下来等你处理，然后继续</span>
+            </button>
+            <button class="quiz-option" data-value="b" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>自动跳过失败的功能，继续跑下一个</span>
+            </button>
+            <button class="quiz-option" data-value="c" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>重试3次，然后停止整个构建</span>
+            </button>
+          </div>
+          <div class="quiz-feedback" id="q1-feedback"></div>
+        </div>
+
+        <button class="quiz-check-btn" onclick="checkQuiz('quiz-4')">检查答案</button>
+        <button class="quiz-reset-btn" onclick="resetQuiz('quiz-4')">再来一次</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== MODULE 5 ==================== -->
+<section class="module" id="module-5">
+  <div class="module-content">
+    <header class="module-header animate-in">
+      <span class="module-number">05</span>
+      <h1 class="module-title">实时看板</h1>
+      <p class="module-subtitle">Dashboard 如何让系统状态一目了然</p>
+    </header>
+
+    <!-- Screen 1: What dashboard shows -->
+    <div class="screen animate-in">
+      <h2 class="screen-heading">Dashboard 展示什么</h2>
+      <p>运行 <code>/vibeflow-dashboard</code> 后，浏览器会打开一个本地页面，实时展示系统当前状态。</p>
+
+      <div class="arch-diagram">
+        <div class="arch-zones">
+          <div class="arch-zone">
+            <div class="arch-zone-label">左上：总体状态</div>
+            <div class="arch-component" onclick="showArchDesc(this)" data-desc="当前处于哪个阶段（think/plan/build...）。还有模式（Full/Quick）和状态（running/blocked/completed）。">
+              当前阶段 + 状态
+            </div>
+            <div class="arch-component" onclick="showArchDesc(this)" data-desc="一句友好的提示，比如"正在推进功能实现和验证链路"——告诉你系统现在在做什么。">
+              友好消息
+            </div>
+          </div>
+          <div class="arch-zone">
+            <div class="arch-zone-label">右上：工作流总览</div>
+            <div class="arch-component" onclick="showArchDesc(this)" data-desc="多阶段状态图，每个阶段一个卡片：pending(未开始)、running(进行中)、completed(已完成)、blocked(被阻塞)。当前阶段会高亮。">
+              阶段卡片
+            </div>
+          </div>
+          <div class="arch-zone">
+            <div class="arch-zone-label">下方：详细信息</div>
+            <div class="arch-component" onclick="showArchDesc(this)" data-desc="文档清单：context.md、proposal.md、design.md 等——显示哪些已生成、哪些还缺失。">
+              Artifacts 状态
+            </div>
+            <div class="arch-component" onclick="showArchDesc(this)" data-desc="每个功能的 ID、标题、状态（passing/failing/running）和优先级。">
+              Feature 清单
+            </div>
+          </div>
+        </div>
+        <div class="arch-description" id="arch-desc">点击任意组件查看说明</div>
+      </div>
+    </div>
+
+    <!-- Screen 2: Data flow -->
+    <div class="screen animate-in">
+      <h2 class="screen-heading">数据如何流向 Dashboard</h2>
+      <p>Dashboard 不是 VibeFlow 的一部分——它是一个独立的 HTTP 服务器，读取 state.json 和 runtime.json，然后在浏览器里渲染成好看的页面。</p>
+
+      <div class="flow-steps" style="flex-direction: column; align-items: stretch;">
+        <div class="step-card">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <strong>Dashboard HTTP 服务器</strong>
+            <p>运行 <code>python scripts/run-vibeflow-dashboard.py</code> 启动，监听本地 4317 端口。</p>
+          </div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <strong>轮询 state.json + runtime.json</strong>
+            <p>每 2 秒（或通过 Server-Sent Events 实时推送）读取最新状态。</p>
+          </div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <strong>构建快照</strong>
+            <p>合并 state、runtime、feature-list、phase-history，计算每个阶段的状态（pending/running/completed/blocked）。</p>
+          </div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <strong>渲染 + 推送</strong>
+            <p>生成 JSON 快照，通过 SSE（Server-Sent Events）推送给浏览器，浏览器更新 UI。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Screen 3: Architecture code -->
+    <div class="screen animate-in">
+      <h2 class="screen-heading">真实代码：Dashboard 快照构建</h2>
+      <p>Dashboard 的核心是 <code>build_dashboard_snapshot()</code> 函数——它聚合所有数据源，返回一个完整的快照对象。</p>
+
+      <div class="translation-block">
+        <div class="translation-code">
+          <span class="translation-label">CODE</span>
+          <pre><code><span class="code-keyword">def</span> <span class="code-function">build_dashboard_snapshot</span>(project_root):
+    state = load_state(project_root)
+    runtime = load_runtime(project_root)
+    detect_info = detect_phase(project_root)
+    flags = required_flags(contract[<span class="code-string">"workflow"</span>])
+    feature_summary = load_feature_summary(project_root)
+
+    <span class="code-keyword">for</span> key, label, phases <span class="code-keyword">in</span> PHASE_GROUPS:
+        macro_cards.append({
+            <span class="code-string">"key"</span>: key,
+            <span class="code-string">"label"</span>: label,
+            <span class="code-string">"status"</span>: build_macro_status(key, ...),
+            <span class="code-string">"phases"</span>: [...]
+        })
+
+    <span class="code-keyword">return</span> {
+        <span class="code-string">"project"</span>: project_root.name,
+        <span class="code-string">"current_phase"</span>: detect_info[<span class="code-string">"phase"</span>],
+        <span class="code-string">"workflow"</span>: macro_cards,
+        <span class="code-string">"features"</span>: feature_summary,
+        <span class="code-string">"events"</span>: events,
+        ...
+    }</code></pre>
+        </div>
+        <div class="translation-english">
+          <span class="translation-label">PLAIN ENGLISH</span>
+          <div class="translation-lines">
+            <p class="tl">Define a function that collects all VibeFlow state into one snapshot object.</p>
+            <p class="tl">Read state, runtime, feature list, and detect the current phase.</p>
+            <p class="tl">Loop through all phase groups (think, plan, build, etc.) and calculate their status.</p>
+            <p class="tl">Return a dictionary with everything the dashboard needs to render — phase, features, events, and more.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Screen 4: Quiz -->
+    <div class="screen animate-in">
+      <h2 class="screen-heading">小测验</h2>
+      <div class="quiz-container" id="quiz-5">
+        <div class="quiz-question-block" data-question="q1" data-correct="b">
+          <h3 class="quiz-question">Dashboard 的数据从哪里来？</h3>
+          <div class="quiz-options">
+            <button class="quiz-option" data-value="a" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>Dashboard 直接连接数据库实时查询</span>
+            </button>
+            <button class="quiz-option" data-value="b" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>读取 .vibeflow/state.json 和 runtime.json 文件</span>
+            </button>
+            <button class="quiz-option" data-value="c" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>从 Claude Code 的会话上下文直接获取</span>
+            </button>
+          </div>
+          <div class="quiz-feedback" id="q1-feedback"></div>
+        </div>
+
+        <button class="quiz-check-btn" onclick="checkQuiz('quiz-5')">检查答案</button>
+        <button class="quiz-reset-btn" onclick="resetQuiz('quiz-5')">再来一次</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== MODULE 6 ==================== -->
+<section class="module" id="module-6" style="background: var(--color-bg-warm);">
+  <div class="module-content">
+    <header class="module-header animate-in">
+      <span class="module-number">06</span>
+      <h1 class="module-title">驾驭 VibeFlow</h1>
+      <p class="module-subtitle">如何用它更好地指挥 AI 交付</p>
+    </header>
+
+    <!-- Screen 1: Commands overview -->
+    <div class="screen animate-in">
+      <h2 class="screen-heading">常用命令速查</h2>
+
+      <div class="pattern-cards stagger-children">
+        <div class="pattern-card animate-in" style="border-top-color: var(--color-actor-1);">
+          <div class="pattern-icon">🚀</div>
+          <h4 class="pattern-title">/vibeflow</h4>
+          <p class="pattern-desc">开始或继续一个完整的工作流。第一次运行会选 Full/Quick 模式。</p>
+        </div>
+        <div class="pattern-card animate-in" style="border-top-color: var(--color-actor-2);">
+          <div class="pattern-icon">⚡</div>
+          <h4 class="pattern-title">/vibeflow-quick</h4>
+          <p class="pattern-desc">直接进入 Quick Mode，适合小改动。不确定时别用这个。</p>
+        </div>
+        <div class="pattern-card animate-in" style="border-top-color: var(--color-actor-4);">
+          <div class="pattern-icon">📊</div>
+          <h4 class="pattern-title">/vibeflow-status</h4>
+          <p class="pattern-desc">在聊天窗口里打印当前状态摘要，不需要开浏览器。</p>
+        </div>
+        <div class="pattern-card animate-in" style="border-top-color: var(--color-actor-5);">
+          <div class="pattern-icon">🖥️</div>
+          <h4 class="pattern-title">/vibeflow-dashboard</h4>
+          <p class="pattern-desc">打开本地浏览器看板，实时看进度、事件、feature 状态。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Screen 2: Steering AI -->
+    <div class="screen animate-in">
+      <h2 class="screen-heading">如何用它更好地指挥 AI</h2>
+
+      <div class="step-cards">
+        <div class="step-card">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <strong>把需求说清楚，不要只说"加个功能"</strong>
+            <p>VibeFlow 的 Requirements 阶段会问你：输入是什么、输出是什么、边界在哪。提前想清楚这些，你的 AI 会更准。</p>
+          </div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <strong>Design 阶段认真审阅</strong>
+            <p>Autopilot 是根据 Design 执行 Build 的。如果设计里有模糊或错误的地方，Build 阶段就会出问题。</p>
+          </div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <strong>用 Dashboard 追踪进度，而不是盯着聊天窗口</strong>
+            <p>Dashboard 告诉你当前在哪个阶段、哪个功能卡住了。如果你看到 blocked，去看 runtime.json 的 reason 字段找原因。</p>
+          </div>
+        </div>
+        <div class="step-card">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <strong>遇到问题先看 state.json</strong>
+            <p>state.json 是系统真相。如果 autopilot 行为奇怪，先看看 checkpoint 是否被正确标记了。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout callout-accent">
+        <div class="callout-icon">💡</div>
+        <div class="callout-content">
+          <strong>VibeFlow 的核心价值</strong>
+          <p>它不只是让你少盯屏幕——更重要的是，它强迫你把需求想清楚、把方案设计明白、把验收标准定具体。这些"前期工作"做好了，后面的实现才不容易返工。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Screen 3: Debugging -->
+    <div class="screen animate-in">
+      <h2 class="screen-heading">调试技巧</h2>
+
+      <div class="pattern-cards">
+        <div class="pattern-card" style="border-top-color: var(--color-error);">
+          <div class="pattern-icon">🔍</div>
+          <h4 class="pattern-title">Autopilot 卡住了</h4>
+          <p class="pattern-desc">检查 runtime.json 的 stop_reason 字段和 invariant.reason。Dashboard 的事件时间线也会显示最后发生了什么。</p>
+        </div>
+        <div class="pattern-card" style="border-top-color: var(--color-actor-4);">
+          <div class="pattern-icon">📄</div>
+          <h4 class="pattern-title">Artifact 文件缺失</h4>
+          <p class="pattern-desc">检查 .vibeflow/state.json 的 artifacts 字段，确认文件路径是否正确。可能是路径配置问题。</p>
+        </div>
+        <div class="pattern-card" style="border-top-color: var(--color-actor-2);">
+          <div class="pattern-icon">🔗</div>
+          <h4 class="pattern-title">Feature 依赖没满足</h4>
+          <p class="pattern-desc">检查 feature-list.json 里 dependencies 字段。被依赖的功能必须先标记为 passing，依赖它的功能才能开始。</p>
+        </div>
+        <div class="pattern-card" style="border-top-color: var(--color-actor-5);">
+          <div class="pattern-icon">⚙️</div>
+          <h4 class="pattern-title">workflow.yaml 配置</h4>
+          <p class="pattern-desc">控制哪些阶段是 manual_only（必须手动）、哪些是 auto_runnable（可自动）。如果某个阶段没有自动跑，检查这里。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Screen 4: Final quiz -->
+    <div class="screen animate-in">
+      <h2 class="screen-heading">综合测验</h2>
+      <div class="quiz-container" id="quiz-6">
+        <div class="quiz-question-block" data-question="q1" data-correct="c">
+          <h3 class="quiz-question">你发现 Dashboard 显示 build-work 状态是 "blocked"。下一步应该做什么？</h3>
+          <div class="quiz-options">
+            <button class="quiz-option" data-value="a" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>重新运行 /vibeflow-work 试试</span>
+            </button>
+            <button class="quiz-option" data-value="b" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>直接删掉 state.json 重新开始</span>
+            </button>
+            <button class="quiz-option" data-value="c" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>检查 runtime.json 的 stop_reason 和事件时间线，找具体原因</span>
+            </button>
+          </div>
+          <div class="quiz-feedback" id="q1-feedback"></div>
+        </div>
+
+        <div class="quiz-question-block" data-question="q2" data-correct="b">
+          <h3 class="quiz-question">你想要 AI 自动帮你做 TDD（测试驱动开发），应该在哪个阶段明确要求？</h3>
+          <div class="quiz-options">
+            <button class="quiz-option" data-value="a" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>Design 阶段——在实现方案里写清楚测试策略</span>
+            </button>
+            <button class="quiz-option" data-value="b" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>Requirements 阶段——在验收标准里定义测试要求</span>
+            </button>
+            <button class="quiz-option" data-value="c" onclick="selectOption(this)">
+              <div class="quiz-option-radio"></div>
+              <span>Build 阶段——边写代码边加测试</span>
+            </button>
+          </div>
+          <div class="quiz-feedback" id="q2-feedback"></div>
+        </div>
+
+        <button class="quiz-check-btn" onclick="checkQuiz('quiz-6')">检查答案</button>
+        <button class="quiz-reset-btn" onclick="resetQuiz('quiz-6')">再来一次</button>
+      </div>
+    </div>
+
+    <!-- Final screen -->
+    <div class="screen animate-in">
+      <div class="module-divider">课程完成</div>
+      <div class="hero-visual">
+        <h3>🎉 你已经掌握了 VibeFlow 的核心概念</h3>
+        <p>现在你可以用它来让 AI 交付更有章法、更有追踪、更少返工。</p>
+      </div>
+      <div class="callout callout-info">
+        <div class="callout-icon">📚</div>
+        <div class="callout-content">
+          <strong>继续探索</strong>
+          <p>查看 VibeFlow 的 GitHub 仓库，运行 <code>/vibeflow</code> 在你自己的项目里试试，或者阅读 USAGE.md 了解更多细节。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== JAVASCRIPT ==================== -->
+<script>
+(function() {
+  // ==================== TOOLTIPS ====================
+  let activeTooltip = null;
+
+  function positionTooltip(term, tip) {
+    const rect = term.getBoundingClientRect();
+    const tipWidth = 300;
+    let left = rect.left + rect.width / 2 - tipWidth / 2;
+    left = Math.max(8, Math.min(left, window.innerWidth - tipWidth - 8));
+    let top = rect.top - 8;
+    tip.style.left = left + 'px';
+    document.body.appendChild(tip);
+    const tipHeight = tip.offsetHeight;
+    if (rect.top - tipHeight - 8 < 0) {
+      tip.style.top = (rect.bottom + 8) + 'px';
+      tip.classList.add('flip');
+    } else {
+      tip.style.top = (rect.top - tipHeight - 8) + 'px';
+      tip.classList.remove('flip');
+    }
+  }
+
+  document.querySelectorAll('.term').forEach(term => {
+    const tip = document.createElement('span');
+    tip.className = 'term-tooltip';
+    tip.textContent = term.dataset.definition;
+
+    term.addEventListener('mouseenter', () => {
+      if (activeTooltip && activeTooltip !== tip) {
+        activeTooltip.classList.remove('visible');
+        activeTooltip.remove();
+      }
+      positionTooltip(term, tip);
+      requestAnimationFrame(() => tip.classList.add('visible'));
+      activeTooltip = tip;
+    });
+
+    term.addEventListener('mouseleave', () => {
+      tip.classList.remove('visible');
+      setTimeout(() => { if (!tip.classList.contains('visible')) tip.remove(); }, 150);
+      activeTooltip = null;
+    });
+
+    term.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (activeTooltip && activeTooltip !== tip) {
+        activeTooltip.classList.remove('visible');
+        activeTooltip.remove();
+      }
+      if (tip.classList.contains('visible')) {
+        tip.classList.remove('visible');
+        tip.remove();
+        activeTooltip = null;
+      } else {
+        positionTooltip(term, tip);
+        requestAnimationFrame(() => tip.classList.add('visible'));
+        activeTooltip = tip;
+      }
+    });
+  });
+
+  document.addEventListener('click', () => {
+    if (activeTooltip) {
+      activeTooltip.classList.remove('visible');
+      activeTooltip.remove();
+      activeTooltip = null;
+    }
+  });
+
+  // ==================== SCROLL ANIMATIONS ====================
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { rootMargin: '0px 0px -10% 0px', threshold: 0.1 });
+
+  document.querySelectorAll('.animate-in').forEach(el => observer.observe(el));
+
+  // ==================== STAGGER CHILDREN ====================
+  document.querySelectorAll('.stagger-children').forEach(parent => {
+    Array.from(parent.children).forEach((child, i) => {
+      child.style.setProperty('--stagger-index', i);
+    });
+  });
+
+  // ==================== NAVIGATION ====================
+  const dots = document.querySelectorAll('.nav-dot');
+  const sections = document.querySelectorAll('.module');
+  const progressBar = document.querySelector('.progress-bar');
+  const visited = new Set(['module-1']);
+
+  function updateNav() {
+    const scrollTop = window.scrollY;
+    const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const progress = (scrollTop / scrollHeight) * 100;
+    progressBar.style.width = progress + '%';
+
+    let current = 'module-1';
+    sections.forEach(section => {
+      const rect = section.getBoundingClientRect();
+      if (rect.top <= window.innerHeight / 2) {
+        current = section.id;
+      }
+    });
+
+    dots.forEach(dot => {
+      dot.classList.remove('current');
+      const target = dot.dataset.target;
+      if (target === current) {
+        dot.classList.add('current');
+      }
+      if (visited.has(target)) {
+        dot.classList.add('visited');
+      }
+    });
+    visited.add(current);
+  }
+
+  window.addEventListener('scroll', () => {
+    requestAnimationFrame(updateNav);
+  }, { passive: true });
+
+  dots.forEach(dot => {
+    dot.addEventListener('click', () => {
+      const target = document.getElementById(dot.dataset.target);
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+  });
+
+  // Keyboard navigation
+  document.addEventListener('keydown', (e) => {
+    if (['INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
+    const currentIdx = Array.from(sections).findIndex(s => s.id === Array.from(dots).find(d => d.classList.contains('current'))?.dataset.target);
+    if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+      if (currentIdx < sections.length - 1) {
+        sections[currentIdx + 1].scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+    if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+      if (currentIdx > 0) {
+        sections[currentIdx - 1].scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  });
+
+  // ==================== QUIZ ====================
+  window.selectOption = function(btn) {
+    const block = btn.closest('.quiz-question-block');
+    block.querySelectorAll('.quiz-option').forEach(o => o.classList.remove('selected'));
+    btn.classList.add('selected');
+  };
+
+  window.checkQuiz = function(sectionId) {
+    const container = document.getElementById(sectionId);
+    const questions = container.querySelectorAll('.quiz-question-block');
+    let correct = 0;
+
+    questions.forEach(q => {
+      const selected = q.querySelector('.quiz-option.selected');
+      const feedback = q.querySelector('.quiz-feedback');
+      const correctValue = q.dataset.correct;
+
+      if (!selected) {
+        feedback.textContent = '请先选择一个答案！';
+        feedback.className = 'quiz-feedback show error';
+        return;
+      }
+
+      const explanations = {
+        q1: {
+          a: '不完全对——Quick Mode 有范围限制，涉及核心逻辑的改动需要 Full Mode。',
+          b: '正确！涉及 API 逻辑属于核心改动，应该用 Full Mode。Quick Mode 只适合小范围、低风险的改动。',
+          c: '不对——虽然 API 逻辑涉及改动，但还需要考虑范围大小。'
+        }
+      };
+
+      const sectionExplanations = explanations;
+
+      if (selected.dataset.value === correctValue) {
+        correct++;
+        selected.classList.add('correct');
+        const exp = sectionExplanations[q.dataset.question]?.[selected.dataset.value] || '完全正确！';
+        feedback.innerHTML = '<strong>正确！</strong> ' + exp;
+        feedback.className = 'quiz-feedback show success';
+      } else {
+        selected.classList.add('incorrect');
+        q.querySelector(`[data-value="${correctValue}"]`).classList.add('correct');
+        const exp = sectionExplanations[q.dataset.question]?.[selected.dataset.value] || '不太对。';
+        const correctExp = sectionExplanations[q.dataset.question]?.[correctValue] || '';
+        feedback.innerHTML = '<strong>不太对。</strong> ' + exp + (correctExp ? ' 正确答案：' + correctExp : '');
+        feedback.className = 'quiz-feedback show error';
+      }
+      q.querySelectorAll('.quiz-option').forEach(o => o.disabled = true);
+    });
+  };
+
+  window.resetQuiz = function(sectionId) {
+    const container = document.getElementById(sectionId);
+    container.querySelectorAll('.quiz-option').forEach(o => {
+      o.disabled = false;
+      o.classList.remove('selected', 'correct', 'incorrect');
+    });
+    container.querySelectorAll('.quiz-feedback').forEach(f => {
+      f.textContent = '';
+      f.className = 'quiz-feedback';
+    });
+  };
+
+  // ==================== CHAT ====================
+  window.chatData = {};
+
+  function initChat(chatId) {
+    const msgs = document.querySelectorAll(`#${chatId} .chat-message`);
+    window.chatData[chatId] = { index: 0, total: msgs.length };
+    updateChatProgress(chatId);
+  }
+
+  window.playChatNext = function(chatId) {
+    const data = window.chatData[chatId] || initChat(chatId);
+    const msgs = document.querySelectorAll(`#${chatId} .chat-message`);
+    if (data.index >= msgs.length) return;
+
+    const msg = msgs[data.index];
+    const sender = msg.dataset.sender;
+    const typing = document.querySelector(`#${chatId}`).parentElement.querySelector('.chat-typing');
+
+    if (typing) {
+      typing.style.display = 'flex';
+      setTimeout(() => {
+        typing.style.display = 'none';
+        msg.style.display = 'flex';
+        msg.style.animation = 'fadeSlideUp 0.3s var(--ease-out)';
+        data.index++;
+        updateChatProgress(chatId);
+      }, 800);
+    } else {
+      msg.style.display = 'flex';
+      msg.style.animation = 'fadeSlideUp 0.3s var(--ease-out)';
+      data.index++;
+      updateChatProgress(chatId);
+    }
+  };
+
+  window.playChatAll = function(chatId) {
+    const data = window.chatData[chatId] || initChat(chatId);
+    const interval = setInterval(() => {
+      if (data.index >= data.total) { clearInterval(interval); return; }
+      playChatNext(chatId);
+    }, 1200);
+  };
+
+  window.resetChat = function(chatId) {
+    const msgs = document.querySelectorAll(`#${chatId} .chat-message`);
+    msgs.forEach(m => { m.style.display = 'none'; });
+    window.chatData[chatId] = { index: 0, total: msgs.length };
+    updateChatProgress(chatId);
+  };
+
+  function updateChatProgress(chatId) {
+    const progress = document.getElementById(`${chatId}-progress`);
+    const data = window.chatData[chatId];
+    if (progress && data) {
+      progress.textContent = `${data.index} / ${data.total}`;
+    }
+  }
+
+  initChat('chat-1');
+
+  // ==================== FLOW ANIMATION ====================
+  const flowSteps = [
+    { from: 'fa-state', to: 'fa-autopilot', label: 'Autopilot 读取 state.json，发现 build-init 已完成。', highlight: 'fa-state', packet: false },
+    { from: 'fa-autopilot', to: 'fa-autopilot', label: 'Autopilot 调用 execute_build_config()，生成 work-config.json。', highlight: 'fa-autopilot', packet: false },
+    { from: 'fa-autopilot', to: 'fa-feature', label: 'Autopilot 加载 feature-list.json，准备执行功能。', highlight: 'fa-feature', packet: true },
+    { from: 'fa-feature', to: 'fa-result', label: '功能执行：运行验证命令 → 成功/失败写入 result 文件。', highlight: 'fa-feature', packet: true },
+    { from: 'fa-result', to: 'fa-state', label: 'checkpoint 更新 → detect_phase() 下一次调用时会推进到 review。', highlight: 'fa-state', packet: false }
+  ];
+
+  let flowStep = 0;
+
+  window.flowNext = function() {
+    if (flowStep >= flowSteps.length) return;
+    const step = flowSteps[flowStep];
+
+    document.querySelectorAll('.flow-actor').forEach(a => a.classList.remove('active'));
+    document.getElementById(step.highlight).classList.add('active');
+
+    const packet = document.getElementById('flow-packet');
+    packet.classList.add('visible');
+    setTimeout(() => packet.classList.remove('visible'), 800);
+
+    document.getElementById('flow-label').textContent = step.label;
+    document.getElementById('flow-progress').textContent = `第 ${flowStep + 1} / ${flowSteps.length} 步`;
+
+    flowStep++;
+  };
+
+  window.flowReset = function() {
+    flowStep = 0;
+    document.querySelectorAll('.flow-actor').forEach(a => a.classList.remove('active'));
+    document.getElementById('flow-packet').classList.remove('visible');
+    document.getElementById('flow-label').textContent = '点击"下一步"开始';
+    document.getElementById('flow-progress').textContent = '第 0 / 5 步';
+  };
+
+  // ==================== ARCH DIAGRAM ====================
+  window.showArchDesc = function(el) {
+    const desc = document.getElementById('arch-desc');
+    desc.textContent = el.dataset.desc || '点击任意组件查看说明';
+    desc.style.animation = 'fadeSlideUp 0.3s var(--ease-out)';
+  };
+
+  // ==================== INIT ====================
+  updateNav();
+})();
+</script>
+
+</body>
+</html>
