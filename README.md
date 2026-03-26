@@ -30,6 +30,39 @@ VibeFlow 是一个标准化AI工程交付编排框架。大模型擅长即兴，
 
 ---
 
+## 设计理念与技术栈
+
+VibeFlow 是一个面向 Claude Code 的 AI 工程交付框架。它把一次软件改动拆成明确阶段，并把状态、规格、任务和验证结果留在仓库里，让 AI 可以继续、恢复、审查和交接。
+
+### 核心设计
+
+| 概念 | 在 VibeFlow 中的定义 |
+|---|---|
+| AI 交付编排 | `Think -> Plan -> Requirements -> Design -> Build -> Review -> Test -> Ship / Reflect` 是一条标准交付链路 |
+| Spec-Driven | 先写 `requirements.md` 和 `design.md`，再进入实现与验证 |
+| 文件驱动 | `.vibeflow/state.json`、`workflow.yaml`、`feature-list.json` 决定当前阶段和执行状态 |
+| Agent Harness | router、skills、quality gates、safety rails 一起约束 AI 的执行边界 |
+| 自动续跑 | 进入 `build-init` 后，系统默认自动推进实现、审查、测试与收尾 |
+
+### 适合什么团队
+
+- 希望 AI 不只写代码，还能推进完整交付的团队
+- 希望保留需求、设计、评审、测试、发布痕迹的团队
+- 需要跨会话恢复、跨人交接、跨模型延续的团队
+- 需要在已有仓库上持续迭代，而不是只做新项目的团队
+
+如果你只想一次性生成代码，不想维护状态文件、规格文档和验证产物，这个框架就不适合你。
+
+### 技术栈
+
+- Claude Code plugin commands + local skills
+- Python scripts for router / workflow config / autopilot / dashboard
+- Markdown + JSON + YAML for state and delivery artifacts
+- Bash + PowerShell for installation and host integration
+- Review / system-test / QA / release artifacts as verification surface
+
+---
+
 ## 安装
 
 ### 一句安装命令

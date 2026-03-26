@@ -26,6 +26,39 @@ VibeFlow is a structured delivery framework for Claude Code. LLMs are brilliant 
 
 ---
 
+## Design Model and Tech Stack
+
+VibeFlow is an AI software delivery framework for Claude Code. It turns one software change into explicit stages and keeps state, specs, tasks, and verification results inside the repo so work can resume, review, and hand off cleanly.
+
+### Core Design
+
+| Concept | Definition inside VibeFlow |
+|---|---|
+| AI delivery orchestration | `Think -> Plan -> Requirements -> Design -> Build -> Review -> Test -> Ship / Reflect` is the standard delivery chain |
+| Spec-Driven | Implementation starts after `requirements.md` and `design.md` are in place |
+| File-driven | `.vibeflow/state.json`, `workflow.yaml`, and `feature-list.json` define phase and execution state |
+| Agent harness | router, skills, quality gates, and safety rails define how the model is allowed to operate |
+| Automatic continuation | after `build-init`, the system continues implementation, review, testing, and wrap-up by default |
+
+### Best Fit
+
+- Teams that want AI to drive full delivery, not only generate code
+- Teams that want durable traces for requirements, design, review, testing, and release
+- Teams that need cross-session recovery, handoff quality, and model-independent continuity
+- Teams that keep shipping inside existing repositories, not only greenfield projects
+
+If you only want one-shot code generation and do not want state files, specs, or verification artifacts, this framework is not a good fit.
+
+### Tech Stack
+
+- Claude Code plugin commands + local skills
+- Python scripts for router / workflow config / autopilot / dashboard
+- Markdown + JSON + YAML for state and delivery artifacts
+- Bash + PowerShell for installation and host integration
+- Review / system-test / QA / release artifacts as the verification surface
+
+---
+
 ## Install
 
 ### One-Line Install
