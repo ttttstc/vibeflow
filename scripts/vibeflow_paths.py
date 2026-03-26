@@ -248,6 +248,10 @@ def services_guide_path(project_root: Path) -> Path:
     return guides_dir(project_root) / "services.md"
 
 
+def project_rules_dir(project_root: Path) -> Path:
+    return project_root / "rules"
+
+
 def build_packets_root(project_root: Path) -> Path:
     return project_root / ".vibeflow" / "packets"
 
@@ -334,6 +338,7 @@ def path_contract(project_root: Path, state: dict | None = None) -> dict:
         "session_log": session_log_path(project_root),
         "build_guide": build_guide_path(project_root),
         "services_guide": services_guide_path(project_root),
+        "rules_dir": project_rules_dir(project_root),
         "change_root": change_root(project_root, loaded_state),
         "packets_dir": build_packets_dir(project_root, loaded_state),
         "packet_results_dir": build_packet_results_dir(project_root, loaded_state),

@@ -300,6 +300,7 @@ Ship -> Reflect
 | `.vibeflow/state.json` | Source of truth for phase, mode, active change, and checkpoints |
 | `.vibeflow/runtime.json` | Runtime overlay for current action, friendly guidance, recent events, and heartbeat |
 | `.vibeflow/codebase-map.json` | Reusable project-level code structure map |
+| `rules/` | Optional project custom constraints; when present they are treated as spec-side input and take precedence over root `CLAUDE.md` / `AGENT.md` guidance |
 | `feature-list.json` | Build-time source of truth for features and execution state |
 | `docs/changes/<change-id>/context.md` | Starting context, scope, and constraints |
 | `docs/changes/<change-id>/proposal.md` | Scope and value framing for this change |
