@@ -36,6 +36,7 @@ from vibeflow_packets import (  # noqa: E402
     write_feature_result,
 )
 from vibeflow_overview import refresh_current_state  # noqa: E402
+from vibeflow_rules import load_project_rules  # noqa: E402
 
 
 MANUAL_ONLY_PHASES = {
@@ -624,9 +625,30 @@ def review_spec_compliance(project_root: Path, state: dict, payload: dict) -> di
     notes: list[str] = []
     contract = path_contract(project_root, state)
     features = active_features(payload)
+    rules_context = load_project_rules(project_root)
+    expected_rule_ids = [
+        str(rule.get("id") or "").strip()
+        for rule in rules_context.get("files") or []
+        if str(rule.get("id") or "").strip()
+    ]
+    expected_rule_paths = [
+        str(rule.get("path") or "").strip()
+        for rule in rules_context.get("files") or []
+        if str(rule.get("path") or "").strip()
+    ]
 
     if not features:
         issues.append("No active features found in feature-list.json.")
+
+    if rules_context.get("enabled"):
+        notes.append(
+            f"- Project custom rules: {len(expected_rule_ids)} file(s) loaded from {rules_context.get('rules_dir', 'rules/')}"
+        )
+        guidance_files = normalize_command_list(rules_context.get("agent_guidance_files"))
+        if guidance_files:
+            notes.append(
+                "- Conflict precedence: rules/ overrides " + ", ".join(guidance_files)
+            )
 
     for feature in features:
         feature_id = feature.get("id")
@@ -642,6 +664,33 @@ def review_spec_compliance(project_root: Path, state: dict, payload: dict) -> di
                 f"Feature #{feature_id} ({title}): implementation packet is incomplete: "
                 + "; ".join(packet_issues)
             )
+
+        if rules_context.get("enabled"):
+            custom_rules = packet.get("custom_rules") if isinstance(packet.get("custom_rules"), dict) else {}
+            source_refs = packet.get("source_refs") if isinstance(packet.get("source_refs"), dict) else {}
+            packet_rule_ids = [
+                str(rule.get("id") or "").strip()
+                for rule in custom_rules.get("files") or []
+                if isinstance(rule, dict) and str(rule.get("id") or "").strip()
+            ]
+            packet_rule_paths = normalize_command_list(source_refs.get("rules"))
+
+            if not custom_rules.get("enabled"):
+                issues.append(
+                    f"Feature #{feature_id} ({title}): custom rules exist in rules/ but were not injected into the implementation packet."
+                )
+            elif packet_rule_ids != expected_rule_ids:
+                issues.append(
+                    f"Feature #{feature_id} ({title}): implementation packet custom rules differ from the current project rules."
+                )
+            elif packet_rule_paths != expected_rule_paths:
+                issues.append(
+                    f"Feature #{feature_id} ({title}): source_refs.rules does not match the current project rules."
+                )
+            elif not str(custom_rules.get("precedence_note") or "").strip():
+                issues.append(
+                    f"Feature #{feature_id} ({title}): custom rules precedence note is missing."
+                )
 
         result_path = contract["packet_results_dir"] / f"feature-{feature_id}.json"
         if not result_path.exists():
@@ -677,7 +726,7 @@ def review_spec_compliance(project_root: Path, state: dict, payload: dict) -> di
         lines.extend(["", "Issues:", "- None."])
 
     return {
-        "label": "Implementation Delivery Consistency",
+        "label": "Implementation Delivery & Rule Consistency" if rules_context.get("enabled") else "Implementation Delivery Consistency",
         "ok": not issues,
         "exit_code": 0 if not issues else 1,
         "body": "\n".join(lines).strip(),

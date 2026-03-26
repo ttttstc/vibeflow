@@ -23,6 +23,7 @@ phase_module = load_module("get-vibeflow-phase.py", "get_vibeflow_phase_v2")
 paths_module = load_module("vibeflow_paths.py", "vibeflow_paths_v2")
 st_module = load_module("check_st_readiness.py", "check_st_readiness_v2")
 migrate_module = load_module("migrate-vibeflow-v2.py", "migrate_vibeflow_v2")
+rules_module = load_module("vibeflow_rules.py", "vibeflow_rules_v2")
 
 
 detect_phase = phase_module.detect_phase
@@ -32,6 +33,7 @@ path_contract = paths_module.path_contract
 check_st_readiness = st_module.check_st_readiness
 mode_selection_required = paths_module.mode_selection_required
 selected_mode = paths_module.selected_mode
+load_project_rules = rules_module.load_project_rules
 
 
 def write(path: Path, content: str) -> None:
@@ -78,6 +80,7 @@ class TestVibeFlowV2:
         save_state(tmp_path, state)
 
         contract = path_contract(tmp_path, state)
+        assert contract["rules_dir"].name == "rules"
         assert contract["packets_dir"].name == state["active_change"]["id"]
         assert contract["packet_results_dir"].name == state["active_change"]["id"]
         assert contract["packets_dir"].parent.name == "packets"
@@ -92,6 +95,34 @@ class TestVibeFlowV2:
         assert contract["overview"]["product"].name == "PRODUCT.md"
         assert contract["overview"]["architecture"].name == "ARCHITECTURE.md"
         assert contract["overview"]["current_state"].name == "CURRENT-STATE.md"
+
+    def test_load_project_rules_reads_root_rules_and_tracks_guidance_precedence(self, tmp_path):
+        write(tmp_path / "rules" / "api-contract.md", "# API Contract\n\nDo not rename public response fields.\n")
+        write(
+            tmp_path / "rules" / "nested" / "ui.json",
+            json.dumps(
+                {
+                    "id": "ui-tone",
+                    "title": "UI Tone",
+                    "rules": ["Avoid generic placeholder copy."],
+                },
+                ensure_ascii=False,
+            ),
+        )
+        write(tmp_path / "CLAUDE.md", "# Global Guidance\n\nPrefer concise commits.\n")
+        write(tmp_path / "notes.txt", "not a rules file")
+
+        rules = load_project_rules(tmp_path)
+
+        assert rules["enabled"] is True
+        assert rules["rules_dir"] == "rules"
+        assert rules["agent_guidance_files"] == ["CLAUDE.md"]
+        assert "override CLAUDE.md" in rules["precedence_note"]
+        assert [item["path"] for item in rules["files"]] == [
+            "rules/api-contract.md",
+            "rules/nested/ui.json",
+        ]
+        assert [item["id"] for item in rules["files"]] == ["rules-api-contract", "ui-tone"]
 
     def test_init_project_creates_overview_docs(self, tmp_path):
         project_root = tmp_path / "overview-project"

@@ -10,6 +10,7 @@
 
 A target project is expected to accumulate these artifacts over time:
 
+- `rules/` for optional project-level custom constraints that should override root agent guidance files when they conflict
 - `.vibeflow/state.json`
 - `.vibeflow/workflow.yaml`
 - `.vibeflow/work-config.json`

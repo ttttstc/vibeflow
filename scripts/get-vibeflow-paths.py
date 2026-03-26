@@ -31,6 +31,7 @@ def main():
         "session_log": str(contract["session_log"]),
         "build_guide": str(contract["build_guide"]),
         "services_guide": str(contract["services_guide"]),
+        "rules_dir": str(contract["rules_dir"]),
         "change_root": str(contract["change_root"]),
         "packets_dir": str(contract["packets_dir"]),
         "packet_results_dir": str(contract["packet_results_dir"]),

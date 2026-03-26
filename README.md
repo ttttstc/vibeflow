@@ -282,6 +282,7 @@ VibeFlow 不只有一条固定强度的流程。
 | `.vibeflow/state.json` | 当前工作流真相：模式、阶段、工作包、checkpoint |
 | `.vibeflow/runtime.json` | 运行态覆盖层：当前动作、友好提示、最近事件、heartbeat |
 | `.vibeflow/codebase-map.json` | 项目级代码结构地图，给现有项目改动复用 |
+| `rules/` | 项目自定义约束目录；存在时会作为 spec 补充输入，并优先于根目录 `CLAUDE.md` / `AGENT.md` |
 | `feature-list.json` | Build 阶段的功能清单和执行真相 |
 | `docs/changes/<change-id>/context.md` | 这次工作的起点、边界和目标 |
 | `docs/changes/<change-id>/proposal.md` | 这次方案的范围和价值判断 |

@@ -406,6 +406,19 @@ class TestVibeFlowAutopilot:
         write_text(change_root / "requirements.md", "# Requirements\n\n- FR-001 Auth flow\n- FR-002 Audit trail\n")
         write_text(change_root / "design.md", "# Design\n\n## 4.1 Auth\n\nImplement auth.\n\n## 4.2 Audit\n\nImplement audit.\n")
         write_text(change_root / "design-review.md", "# Design Review\n\nApproved.\n")
+        write_text(project_root / "rules" / "implementation.md", "# Implementation Rules\n\nPrefer explicit adapters over inline API glue.\n")
+        write_text(
+            project_root / "rules" / "api.json",
+            json.dumps(
+                {
+                    "id": "api-contract",
+                    "title": "API Contract",
+                    "rules": ["Do not rename public response fields without a migration note."],
+                },
+                ensure_ascii=False,
+            ),
+        )
+        write_text(project_root / "CLAUDE.md", "# Global Guidance\n\nKeep examples short.\n")
         write_text(
             project_root / ".vibeflow" / "workflow.yaml",
             'name: "Packet Build Init"\ntemplate: "api-standard"\n',
@@ -435,8 +448,16 @@ class TestVibeFlowAutopilot:
         packet = read_json(packet_path)
         assert packet["feature"]["id"] == 1
         assert packet["objective"] == "Implement auth flow"
+        assert packet["custom_rules"]["enabled"] is True
+        assert packet["custom_rules"]["agent_guidance_files"] == ["CLAUDE.md"]
+        assert [item["id"] for item in packet["custom_rules"]["files"]] == [
+            "api-contract",
+            "rules-implementation",
+        ]
+        assert packet["source_refs"]["rules"] == ["rules/api.json", "rules/implementation.md"]
         assert packet["source_snippets"]["requirements_summary"]
         assert packet["source_snippets"]["design_summary"]
+        assert packet["source_snippets"]["rules_summary"]
 
     def test_autopilot_waits_at_manual_phase(self, tmp_path):
         project_root = tmp_path / "manual-stop-project"
@@ -589,6 +610,35 @@ class TestVibeFlowAutopilot:
         review_text = review_artifact.read_text(encoding="utf-8")
         assert "Feature #2 (Feature B): implementation result file is missing." in review_text
         assert "FAIL — Fix review issues before system testing." in review_text
+
+    def test_review_blocks_when_project_rules_are_missing_from_packet(self, tmp_path):
+        project_root = create_parallel_project(tmp_path)
+        write_text(project_root / "rules" / "api.md", "# API Rules\n\nKeep the summary payload stable.\n")
+
+        build_result = run_build_work(project_root, "--max-workers", 2)
+        assert build_result["ok"] is True
+
+        state = read_json(project_root / ".vibeflow" / "state.json")
+        packet_dir = project_root / ".vibeflow" / "packets" / state["active_change"]["id"]
+        packet_path = packet_dir / "feature-1.json"
+        packet = read_json(packet_path)
+        packet.pop("custom_rules", None)
+        packet["source_refs"].pop("rules", None)
+        write_json(packet_path, packet)
+
+        state["current_phase"] = "review"
+        state["checkpoints"]["build_work"] = True
+        state["checkpoints"]["review"] = False
+        write_json(project_root / ".vibeflow" / "state.json", state)
+
+        result = run_autopilot(project_root, expect_ok=False)
+        assert result["status"] == "blocked"
+        assert result["final_phase"] == "review"
+
+        review_artifact = project_root / state["artifacts"]["review"]
+        assert review_artifact.exists()
+        review_text = review_artifact.read_text(encoding="utf-8")
+        assert "custom rules exist in rules/ but were not injected into the implementation packet." in review_text
 
     def test_parallel_build_falls_back_to_serial_when_file_scope_overlaps(self, tmp_path):
         project_root = create_conflicting_parallel_project(tmp_path)
