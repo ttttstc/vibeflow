@@ -158,13 +158,13 @@ Detected phases:
 - `docs/changes/<change-id>/ucd.md` — UCD artifact (when UI applies)
 - `docs/changes/<change-id>/design.md` — Technical design document
 - `docs/changes/<change-id>/design-review.md` — Engineering + design review conclusions
-- `docs/changes/<change-id>/tasks.md` — Build task breakdown
+- `docs/changes/<change-id>/tasks.md` — Build task breakdown and human-readable index
 - `docs/changes/<change-id>/verification/review.md` — Global review report
 - `docs/changes/<change-id>/verification/system-test.md` — System test report
 - `docs/changes/<change-id>/verification/qa.md` — QA test report
 - `docs/plans/*-brainstorming.md` — Brainstorming output (optional)
 - `docs/test-cases/feature-*.md` — Feature test case documents
-- `feature-list.json` — Feature inventory (single source of truth during Build)
+- `feature-list.json` — Feature inventory (single source of truth during Build, ideally derived from `design.md` execution contracts)
 - `RELEASE_NOTES.md` — Release notes
 
 ## Templates

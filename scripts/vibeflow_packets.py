@@ -15,7 +15,17 @@ from vibeflow_rules import load_project_rules
 
 PACKET_VERSION = 1
 SUMMARY_CHAR_LIMIT = 480
-SOURCE_REF_KEYS = ("think", "plan", "requirements", "design", "tasks", "build_guide", "services_guide", "rules")
+SOURCE_REF_KEYS = (
+    "think",
+    "plan",
+    "requirements",
+    "design",
+    "build_contract",
+    "tasks",
+    "build_guide",
+    "services_guide",
+    "rules",
+)
 
 
 def normalize_string_list(value) -> list[str]:
@@ -49,12 +59,25 @@ def _task_anchor(feature_id: int | str) -> str:
     return f"feature-{feature_id}"
 
 
-def _default_source_refs(contract: dict, feature_id: int | str, rules_refs: list[str] | None = None) -> dict[str, list[str]]:
+def _section_ref(path: Path, section: str) -> str:
+    normalized = str(section).strip().replace(".", "-")
+    return f"{path}#section-{normalized}" if normalized else str(path)
+
+
+def _default_source_refs(contract: dict, feature: dict, rules_refs: list[str] | None = None) -> dict[str, list[str]]:
+    feature_id = feature.get("id")
+    design_section = str(feature.get("design_section") or "").strip()
+    requirement_refs = normalize_string_list(feature.get("requirements_refs"))
     default_refs = {
         "think": [str(contract["artifacts"]["think"])],
         "plan": [str(contract["artifacts"]["plan"])],
-        "requirements": [str(contract["artifacts"]["requirements"])],
-        "design": [str(contract["artifacts"]["design"])],
+        "requirements": (
+            [f"{contract['artifacts']['requirements']}#{ref}" for ref in requirement_refs]
+            if requirement_refs
+            else [str(contract["artifacts"]["requirements"])]
+        ),
+        "design": [_section_ref(contract["artifacts"]["design"], design_section)],
+        "build_contract": [f"{contract['artifacts']['design']}#build-contract"],
         "tasks": [f"{contract['artifacts']['tasks']}#{_task_anchor(feature_id)}"],
         "build_guide": [str(contract["build_guide"])],
         "services_guide": [str(contract["services_guide"])],
@@ -67,11 +90,11 @@ def _default_source_refs(contract: dict, feature_id: int | str, rules_refs: list
 def _normalize_source_refs(
     raw_source_refs,
     contract: dict,
-    feature_id: int | str,
+    feature: dict,
     *,
     rules_refs: list[str] | None = None,
 ) -> dict[str, list[str]]:
-    normalized = _default_source_refs(contract, feature_id, rules_refs=rules_refs)
+    normalized = _default_source_refs(contract, feature, rules_refs=rules_refs)
     if not isinstance(raw_source_refs, dict):
         return normalized
 
@@ -178,10 +201,16 @@ def ensure_feature_contract(feature: dict, project_root: Path, state: dict, *, r
 
     normalized["risk_notes"] = normalize_string_list(normalized.get("risk_notes"))
     normalized["required_configs"] = normalize_string_list(normalized.get("required_configs"))
+    normalized["requirements_refs"] = normalize_string_list(normalized.get("requirements_refs") or normalized.get("requirements"))
+    normalized["design_section"] = str(normalized.get("design_section") or "").strip()
+    normalized["integration_points"] = normalize_string_list(normalized.get("integration_points"))
+    normalized["build_contract_ref"] = (
+        str(normalized.get("build_contract_ref") or "").strip() or f"{contract['artifacts']['design']}#build-contract"
+    )
     normalized["source_refs"] = _normalize_source_refs(
         normalized.get("source_refs"),
         contract,
-        feature_id,
+        normalized,
         rules_refs=rules_refs,
     )
     normalized["custom_rules"] = _normalize_custom_rules(loaded_rules)
@@ -235,6 +264,12 @@ def build_feature_packet(project_root: Path, state: dict, feature: dict, *, rule
         "done_criteria": normalized.get("done_criteria") or [],
         "risk_notes": normalized.get("risk_notes") or [],
         "required_configs": normalized.get("required_configs") or [],
+        "design_contract": {
+            "build_contract_ref": normalized.get("build_contract_ref") or "",
+            "design_section": normalized.get("design_section") or "",
+            "requirements_refs": normalized.get("requirements_refs") or [],
+            "integration_points": normalized.get("integration_points") or [],
+        },
         "custom_rules": normalized.get("custom_rules") or {},
         "source_refs": normalized.get("source_refs") or {},
         "source_snippets": snippets,
@@ -264,7 +299,7 @@ def packet_validation_issues(packet: dict) -> list[str]:
         issues.append("verification_commands or verification_steps must contain at least one item.")
 
     source_refs = packet.get("source_refs") if isinstance(packet.get("source_refs"), dict) else {}
-    for key in ("requirements", "design", "tasks"):
+    for key in ("requirements", "design", "build_contract", "tasks"):
         if not normalize_string_list(source_refs.get(key)):
             issues.append(f"source_refs.{key} is required.")
 

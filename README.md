@@ -283,12 +283,12 @@ VibeFlow 不只有一条固定强度的流程。
 | `.vibeflow/runtime.json` | 运行态覆盖层：当前动作、友好提示、最近事件、heartbeat |
 | `.vibeflow/codebase-map.json` | 项目级代码结构地图，给现有项目改动复用 |
 | `rules/` | 项目自定义约束目录；存在时会作为 spec 补充输入，并优先于根目录 `CLAUDE.md` / `AGENT.md` |
-| `feature-list.json` | Build 阶段的功能清单和执行真相 |
+| `feature-list.json` | Build 阶段的功能清单和执行真相，优先由 `design.md` 中的执行契约派生 |
 | `docs/changes/<change-id>/context.md` | 这次工作的起点、边界和目标 |
 | `docs/changes/<change-id>/proposal.md` | 这次方案的范围和价值判断 |
 | `docs/changes/<change-id>/requirements.md` | 本次需求定义 |
-| `docs/changes/<change-id>/design.md` | 本次实现方案 |
-| `docs/changes/<change-id>/tasks.md` | 可落地任务清单 |
+| `docs/changes/<change-id>/design.md` | 本次实现方案，也是 Build Contract / Implementation Contract 的权威来源 |
+| `docs/changes/<change-id>/tasks.md` | 可落地任务清单和说明性索引，不再承载主要执行事实 |
 | `docs/changes/<change-id>/codebase-impact.md` | 本次变更影响到哪些模块和测试 |
 | `docs/changes/<change-id>/verification/review.md` | 全局审查结果 |
 | `docs/changes/<change-id>/verification/system-test.md` | 系统测试结果 |

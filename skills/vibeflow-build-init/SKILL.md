@@ -35,6 +35,11 @@ description: "设计文档存在但 feature-list.json 尚未创建时使用 — 
 ### 3. 生成 feature-list.json
 创建 `feature-list.json`，根结构：
 
+**权威来源规则：**
+- 如 `design.md` 中存在 `Build Contract` + `Implementation Contract` TOML 代码块，必须以这些设计契约为权威来源生成 `feature-list.json`
+- 只有旧项目或设计文档尚未升级时，才回退到 `tasks.md` / 默认值推断
+- 如检测到设计契约但解析失败、缺少 `Build Contract`、或 feature 契约不完整，必须阻塞 build-init，不得悄悄回退到 `tasks.md`
+
 ```json
 {
   "project": "项目名",
@@ -65,12 +70,15 @@ description: "设计文档存在但 feature-list.json 尚未创建时使用 — 
 - `assumptions[]` — 复制 ASM-xxx 项
 - NFR-xxx -> 创建 `category: "non-functional"` 的功能条目，带可度量的 `verification_steps`
 
+如设计契约已经声明 `constraints[]`、`assumptions[]`、`required_configs[]`，优先采用设计文档中的执行版本；SRS 作为追溯和补全来源。
+
 ### 5. 分解需求为功能
-从 SRS 文档和设计文档的**开发计划**（任务分解章节），填充 `features[]`：
+优先从设计文档中每个 feature 的 `Implementation Contract` 填充 `features[]`；如项目仍是旧格式，再从 SRS 文档和设计文档的**开发计划**（任务分解章节）回退生成。
 
 - 每个 FR-xxx -> 一个或多个功能条目，含 `id`、`category`、`title`、`description`、`priority`、`status`（始终为 `"failing"`）、`verification_steps`、`dependencies`
 - `verification_steps` 应追溯到 SRS 验收标准（Given/When/Then）
 - UI 功能：设置 `"ui": true`，可选 `"ui_entry": "/路径"`
+- 设计契约中的 `file_scope`、`requirements_refs`、`integration_points`、`required_configs`、`autopilot_commands` 必须原样保留到 feature 条目或 packet 中
 
 每个功能条目：
 ```json
@@ -111,7 +119,13 @@ description: "设计文档存在但 feature-list.json 尚未创建时使用 — 
 - 文件范围
 - 验证方式
 - 完成定义
-- 相关文档引用（requirements / design / tasks）
+- 相关文档引用（requirements / design section / build contract / tasks）
+
+如果 feature 来自设计契约，任务包必须包含：
+- `design_contract.design_section`
+- `design_contract.build_contract_ref`
+- `design_contract.requirements_refs`
+- `design_contract.integration_points`
 
 这些任务包是 Build 阶段后续独立实施单元的正式输入，不应依赖长会话上下文记忆。
 
