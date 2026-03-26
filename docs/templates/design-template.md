@@ -54,6 +54,31 @@ graph LR
 [Justify against SRS constraints and NFRs]
 [Explain how NFR thresholds will be met by this architecture]
 
+### 3.5 Build Contract
+[This section is the authoritative build handoff consumed by `build-init`. Keep it parseable.]
+
+```toml
+project = "<project-name>"
+language = "python"
+test_framework = "pytest"
+coverage_tool = "pytest-cov"
+mutation_tool = "mutmut"
+constraints = [
+  "One implementation constraint per string.",
+]
+assumptions = [
+  "One build assumption per string.",
+]
+
+[[required_configs]]
+name = "OPENAI_API_KEY"
+type = "env"
+description = "Required for the external inference client."
+key = "OPENAI_API_KEY"
+check_hint = "Set in your local .env before running feature 4."
+required_by = [4]
+```
+
 ## 4. Key Feature Designs
 
 > **Instructions**: Create one subsection per key feature (or feature group). Each subsection MUST include at least: a class diagram and one behavioral diagram (sequence or flow). For complex features, include all four views.
@@ -110,6 +135,37 @@ flowchart TD
 
 #### 4.N.5 Design Notes
 [Key design decisions, edge cases, error handling strategy for this feature]
+
+#### 4.N.6 Implementation Contract
+[This block is required for every buildable feature. `build-init` derives `feature-list.json` and packets from it.]
+
+```toml
+feature_id = 1
+title = "<feature title>"
+category = "core"
+description = "<what this feature delivers>"
+objective = "<single-sentence implementation objective>"
+business_intent = "<why this feature matters>"
+priority = "high"
+status = "failing"
+dependencies = []
+file_scope = ["src/module.py", "tests/test_module.py"]
+verification_commands = ["python -m pytest tests/test_module.py -q"]
+verification_steps = [
+  "Describe the verification scenario with action plus expected outcome.",
+]
+done_criteria = [
+  "Describe the concrete definition of done for this feature.",
+]
+requirements_refs = ["FR-001"]
+integration_points = ["module.function_name", "POST /api/example"]
+out_of_scope = ["Optional exclusions for this feature."]
+risk_notes = ["Optional implementation risk."]
+required_configs = ["OPENAI_API_KEY"]
+autopilot_commands = ["python -m pytest tests/test_module.py -q"]
+autopilot_workdir = "."
+autopilot_timeout_sec = 300
+```
 
 [Repeat section 4.N for each key feature or feature group]
 
@@ -182,6 +238,8 @@ graph LR
 ### 11.2 Task Decomposition & Priority
 
 > **Instructions**: Break down features into implementation tasks, ordered by priority and dependency. This feeds directly into `feature-list.json` during Init phase.
+
+The table below is explanatory planning context. The executable handoff for Build is the `Build Contract` block plus every feature's `Implementation Contract` block above.
 
 | Priority | Feature(s) | Dependencies | Milestone | Rationale |
 |---|---|---|---|---|

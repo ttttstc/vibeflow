@@ -35,6 +35,7 @@ from vibeflow_packets import (  # noqa: E402
     sync_feature_packets,
     write_feature_result,
 )
+from vibeflow_design_contracts import load_design_execution_contracts  # noqa: E402
 from vibeflow_overview import refresh_current_state  # noqa: E402
 from vibeflow_rules import load_project_rules  # noqa: E402
 
@@ -88,8 +89,8 @@ def load_phase_module():
     return _PHASE_MODULE
 
 
-def detect_phase(project_root: Path, verbose: bool = False) -> dict:
-    return load_phase_module().detect_phase(project_root, verbose=verbose)
+def detect_phase(project_root: Path, verbose: bool = False, sync_runtime: bool = False) -> dict:
+    return load_phase_module().detect_phase(project_root, verbose=verbose, sync_runtime=sync_runtime)
 
 
 def read_json(path: Path, default):
@@ -320,6 +321,29 @@ def extract_features_from_tasks(tasks_path: Path) -> list[dict]:
 
 
 def create_default_feature_payload(project_root: Path, state: dict) -> dict:
+    contract_data = load_design_execution_contracts(project_root, state)
+    if contract_data.get("detected"):
+        if contract_data.get("issues"):
+            raise ValueError("Invalid design execution contracts: " + "; ".join(contract_data.get("issues") or []))
+
+        build_contract = contract_data.get("build_contract") or {}
+        tech_stack = build_contract.get("tech_stack") or {}
+        return {
+            "project": str(build_contract.get("project") or project_root.name).strip() or project_root.name,
+            "created": datetime.now().strftime("%Y-%m-%d"),
+            "tech_stack": {
+                "language": str(tech_stack.get("language") or infer_language(project_root, {})).strip() or infer_language(project_root, {}),
+                "test_framework": str(tech_stack.get("test_framework") or "TODO").strip() or "TODO",
+                "coverage_tool": str(tech_stack.get("coverage_tool") or "TODO").strip() or "TODO",
+                "mutation_tool": str(tech_stack.get("mutation_tool") or "TODO").strip() or "TODO",
+            },
+            "quality_gates": read_quality_gates_from_workflow(project_root),
+            "constraints": normalize_command_list(build_contract.get("constraints")),
+            "assumptions": normalize_command_list(build_contract.get("assumptions")),
+            "required_configs": build_contract.get("required_configs") or [],
+            "features": contract_data.get("features") or [],
+        }
+
     contract = path_contract(project_root, state)
     features = extract_features_from_tasks(contract["artifacts"]["tasks"])
     if not features:
@@ -845,15 +869,31 @@ def write_review_artifact(path: Path, spec_checks: list[dict], quality_checks: l
 def execute_build_init(project_root: Path, state: dict, runtime: dict) -> dict:
     feature_path = feature_list_path(project_root)
     if not feature_path.exists():
-        payload = create_default_feature_payload(project_root, state)
+        try:
+            payload = create_default_feature_payload(project_root, state)
+        except ValueError as exc:
+            detail = str(exc)
+            append_runtime_event(runtime, kind="phase", title="Build Init failed", detail=detail, phase="build-init", status="error")
+            record_phase_run(runtime, phase="build-init", status="failed", detail=detail)
+            append_session_log(project_root, f"Build init failed: {detail}")
+            return {"ok": False, "detail": detail}
         save_feature_payload(project_root, payload)
-        detail = f"Created {feature_path.name} with {len(payload.get('features', []))} feature(s)."
+        source = "design execution contracts" if load_design_execution_contracts(project_root, state).get("detected") else "tasks/defaults"
+        detail = f"Created {feature_path.name} with {len(payload.get('features', []))} feature(s) from {source}."
     else:
         payload = load_feature_payload(project_root)
         if not payload.get("features"):
-            payload = create_default_feature_payload(project_root, state)
+            try:
+                payload = create_default_feature_payload(project_root, state)
+            except ValueError as exc:
+                detail = str(exc)
+                append_runtime_event(runtime, kind="phase", title="Build Init failed", detail=detail, phase="build-init", status="error")
+                record_phase_run(runtime, phase="build-init", status="failed", detail=detail)
+                append_session_log(project_root, f"Build init failed: {detail}")
+                return {"ok": False, "detail": detail}
             save_feature_payload(project_root, payload)
-            detail = f"Filled empty {feature_path.name} from tasks/defaults."
+            source = "design execution contracts" if load_design_execution_contracts(project_root, state).get("detected") else "tasks/defaults"
+            detail = f"Filled empty {feature_path.name} from {source}."
         else:
             detail = f"{feature_path.name} already exists."
 

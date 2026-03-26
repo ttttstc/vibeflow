@@ -374,6 +374,12 @@ Skill: vibeflow-plan-design-review
 
 保存到 `docs/changes/<change-id>/design.md`。
 
+**执行交接硬要求：**
+- 设计文档必须包含且只包含一个可解析的 `Build Contract` TOML 代码块
+- 每个可实施 feature 必须包含一个可解析的 `Implementation Contract` TOML 代码块
+- `Implementation Contract` 至少要写出：`feature_id`、`title`、`priority`、`dependencies`、`file_scope`、`verification_commands` 或 `verification_steps`
+- Build 阶段以这些 TOML 契约作为权威输入；`tasks.md` 只作为说明性索引，不再是主事实来源
+
 ## 步骤 8：过渡到初始化
 
 设计文档保存并提交后：

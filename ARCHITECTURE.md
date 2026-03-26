@@ -403,6 +403,7 @@ Produces SRS, UCD, and design documents.
 
 ### 10.3 Build
 Produces feature inventory, implementation, progress logs, and per-feature evidence.
+When `design.md` contains a `Build Contract` plus per-feature `Implementation Contract` blocks, Build Init derives `feature-list.json` and implementation packets from those contracts instead of inferring from `tasks.md`.
 
 ### 10.4 Review and Test
 Produces global review notes, system test reports, and optional QA evidence.
