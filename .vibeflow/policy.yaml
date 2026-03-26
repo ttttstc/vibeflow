@@ -1,0 +1,50 @@
+version: 1
+phases:
+  think:
+    required_artifacts: ["think"]
+    required_checkpoints: []
+    required_approvals: ["think"]
+    completion_evidence: ["artifact:think"]
+    blocking_conditions: []
+  plan:
+    required_artifacts: ["plan"]
+    required_checkpoints: []
+    required_approvals: ["plan"]
+    completion_evidence: ["artifact:plan"]
+    blocking_conditions: []
+  requirements:
+    required_artifacts: ["requirements"]
+    required_checkpoints: []
+    required_approvals: ["requirements"]
+    completion_evidence: ["artifact:requirements"]
+    blocking_conditions: []
+  design:
+    required_artifacts: ["design", "design_review"]
+    required_checkpoints: []
+    required_approvals: ["design"]
+    completion_evidence: ["artifact:design", "artifact:design_review"]
+    blocking_conditions: []
+  build-init:
+    required_artifacts: ["feature_list"]
+    required_checkpoints: []
+    required_approvals: []
+    completion_evidence: ["active_features", "build_init_ready_signal"]
+    blocking_conditions: []
+  review:
+    required_artifacts: ["review"]
+    required_checkpoints: []
+    required_approvals: ["review"]
+    completion_evidence: ["artifact:review"]
+    blocking_conditions: []
+  test-system:
+    required_artifacts: ["system_test"]
+    required_checkpoints: []
+    required_approvals: ["test_system"]
+    completion_evidence: ["artifact:system_test"]
+    blocking_conditions: []
+  ship:
+    required_artifacts: ["release_notes"]
+    required_checkpoints: []
+    required_approvals: ["ship"]
+    completion_evidence: ["release_notes_exists"]
+    blocking_conditions: []

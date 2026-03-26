@@ -35,6 +35,11 @@ def write_json(path: Path, data: object) -> None:
     path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
+def write_text(path: Path, content: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content, encoding="utf-8")
+
+
 def fetch_text(url: str) -> str:
     with urllib.request.urlopen(url) as response:
         return response.read().decode("utf-8")
@@ -87,3 +92,17 @@ class TestVibeFlowDashboard:
         snapshot_after = build_dashboard_snapshot(project_root)
         assert snapshot_before["token"] != snapshot_after["token"]
         assert snapshot_after["friendly_message"] == "正在准备新的演示快照。"
+
+    def test_dashboard_surfaces_invariant_stop_reason(self, tmp_path):
+        project_root = copy_sample_project(tmp_path, "dashboard-invariant")
+        state_path = project_root / ".vibeflow" / "state.json"
+        state = read_json(state_path)
+        state["checkpoints"]["review"] = False
+        write_json(state_path, state)
+        write_text(project_root / state["artifacts"]["review"], "# Review\n\nPending approval.\n")
+
+        snapshot = build_dashboard_snapshot(project_root)
+        assert snapshot["current_phase"] == "review"
+        assert snapshot["reason_code"] == "missing_approval"
+        assert snapshot["invariant"]["phase"] == "review"
+        assert "review checkpoint" in snapshot["reason"]
