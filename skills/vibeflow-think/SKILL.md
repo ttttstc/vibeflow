@@ -1,14 +1,14 @@
 ---
 name: vibeflow-think
-description: 在VibeFlow项目中用于Think阶段，定义问题、边界、机会扫描和选择工作流程模板。
+description: Think 阶段用于寻找灵感和确定方向。通过问题框定和 DeepResearch 竞品调研，明确项目方向后进入 Plan 阶段进行详细分析。
 ---
 
 ## 目标
 
-产生阶段1 MVP产物：
+产出 Think 阶段的简洁方向声明：
 
-- `docs/changes/<change-id>/context.md`
-- 模板确认后的`.vibeflow/workflow.yaml`
+- `docs/deepresearch/<领域>-<timestamp>.md`（如执行了 DeepResearch）
+- 方向声明（内嵌于 Plan 阶段的 context.md）
 
 ## 首先重用
 
@@ -44,6 +44,8 @@ Skill: vibeflow-office-hours
 
 ## Think流程
 
+Think 阶段的核心目标是**寻找灵感、确定方向**。其他分析工作放到 Plan 阶段。
+
 ### 1. 问题框定
 
 推动对话朝向：
@@ -51,18 +53,16 @@ Skill: vibeflow-office-hours
 - 要解决的实际问题
 - 用户是谁
 - 明确不在范围内的内容
-- 最小有用的第一个版本
 
 ### 2. DeepResearch（可选）
 
-在进入机会扫描前，用户可选择运行深度竞品调研：
+运行深度竞品调研，寻找灵感和差异化方向：
 
 Skill: vibeflow-deepresearch
 
 **何时使用：**
 - 进入不熟悉领域时
-- 需要系统性了解同领域竞品
-- 需要获取技术选型参考
+- 需要灵感时
 - 需要寻找差异化机会点
 
 **流程：**
@@ -74,88 +74,31 @@ Skill: vibeflow-deepresearch
   → 归档至 docs/deepresearch/<领域>-<timestamp>.md
 ```
 
-**与机会扫描的关系：**
-DeepResearch 报告为机会扫描提供竞品情报输入，帮助识别差异化机会。
+### 3. 确定方向
 
-**如用户跳过此步骤**，直接进入机会扫描。
-
-### 3. 复杂度和风险扫描
-
-陈述：
-
-- 项目类型
-- 预期规模
-- 主要风险
-
-### 4. 机会扫描
-
-产生：
-
-- 一个10倍版本
-- 最小可行版本
-- 一个大约30分钟能完成的快速增值
-
-### 5. 模板推荐
-
-从`templates/`中选择一个静态模板：
-
-| 模板 | 使用场景 |
-|------|----------|
-| `prototype` | 快速验证、减少关卡、速度优于严格性 |
-| `web-standard` | UI密集型产品或通用全栈应用 |
-| `api-standard` | 后端或集成优先系统，不需要大量UI工作 |
-| `enterprise` | 严格审查、可审计性和更高的质量阈值 |
-
-### 6. 编写 think 输出
-
-先运行 `python scripts/get-vibeflow-paths.py --json` 确认当前工作包路径，然后使用完全相同的结构编写 `docs/changes/<change-id>/context.md`：
+基于问题框定和 DeepResearch（如有），产出简短的**方向声明**：
 
 ```markdown
-# Think Output
+## Direction
 
-## Problem Statement
-[1-3 sentences]
+**项目方向**: [1-2 句话描述要做什么]
 
-## Boundaries
-### In Scope
-- [...]
+**差异化焦点**: [从竞品分析中发现的差异化机会]
 
-### Out of Scope
-- [...]
-
-## User Profile
-- Primary user: [...]
-- Usage scenario: [...]
-- Success criteria: [...]
-
-## Complexity Assessment
-- Project type: [...]
-- Scale: [...]
-- Key risks:
-  - [...]
-
-## Opportunity Scan
-- 10x version: [...]
-- Minimum viable version: [...]
-- Quick value add: [...]
-
-## Recommended Template
-[prototype | web-standard | api-standard | enterprise]
-Reason: [...]
+**灵感来源**: [竞品启发/市场洞察]
 ```
 
-### 7. 确认并创建工作流程
+### 4. 进入 Plan
 
-编写 `context.md` 后：
+完成方向确定后，调用 `vibeflow-plan` 进入 Plan 阶段。
 
-- 如果用户尚未明确选择，请请求模板确认
-- 创建`.vibeflow/`
-- 将`templates/<template>.yaml`复制到`.vibeflow/workflow.yaml`
-- 将`created_at`设置为当前日期
+Plan 阶段负责：
+- 复杂度/风险扫描
+- 价值评估
+- 模板选择
+- 完整的需求和设计文档
 
 ## 硬规则
 
-- 不要动态创建新的工作流程模式。
-- 不要发明新的模板。
-- 保持此技能薄而聚焦于编排。
-- 如果仓库方向与当前推荐的模板明显冲突，在编写`workflow.yaml`之前解释冲突。
+- Think 阶段保持轻量，只做灵感寻找和方向确定
+- 其他分析工作留给 Plan 阶段
