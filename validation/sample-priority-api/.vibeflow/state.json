@@ -8,8 +8,7 @@
     "root": "docs/changes/2026-03-21-sample-priority-api"
   },
   "artifacts": {
-    "think": "docs/changes/2026-03-21-sample-priority-api/context.md",
-    "plan": "docs/changes/2026-03-21-sample-priority-api/proposal.md",
+    "spark": "docs/changes/2026-03-21-sample-priority-api/context.md",
     "requirements": "docs/changes/2026-03-21-sample-priority-api/requirements.md",
     "ucd": "docs/changes/2026-03-21-sample-priority-api/ucd.md",
     "design": "docs/changes/2026-03-21-sample-priority-api/design.md",
@@ -21,8 +20,7 @@
   },
   "checkpoints": {
     "quick_ready": false,
-    "think": true,
-    "plan": true,
+    "spark": true,
     "requirements": true,
     "design": true,
     "build_init": true,

@@ -17,9 +17,7 @@
 
 ```
 increment --> increment-handler
-think --> vibeflow-think
-template-selection --> new-vibeflow-config.py + new-vibeflow-work-config.py
-plan --> vibeflow-plan (value review only; eng/design review in design phase)
+spark --> vibeflow-spark (问题框定 + DeepResearch + 复杂度扫描 + CEO价值评估)
 requirements --> vibeflow-requirements
 design --> vibeflow-design (UCD + user approval + eng review + design review + scope decision)
 build-init --> vibeflow-build-init

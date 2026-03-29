@@ -23,7 +23,7 @@ all_features_passing = _get_vibeflow_phase.all_features_passing
 
 
 class TestDetectPhase:
-    """Test detect_phase() across all 16 branches."""
+    """Test detect_phase() across all branches for 6-phase workflow."""
 
     def test_increment(self, tmp_path):
         (tmp_path / '.vibeflow').mkdir()
@@ -31,37 +31,32 @@ class TestDetectPhase:
         result = detect_phase(tmp_path)
         assert result['phase'] == 'increment'
 
-    def test_think_missing(self, tmp_path):
+    def test_spark_missing(self, tmp_path):
+        """When no spark.md exists, should detect spark phase."""
         (tmp_path / '.vibeflow').mkdir()
         result = detect_phase(tmp_path)
-        assert result['phase'] == 'think'
-
-    def test_template_selection_missing(self, tmp_path):
-        (tmp_path / '.vibeflow').mkdir()
-        (tmp_path / '.vibeflow' / 'think-output.md').write_text('think')
-        result = detect_phase(tmp_path)
-        assert result['phase'] == 'template-selection'
-
-    def test_plan_missing(self, tmp_path):
-        (tmp_path / '.vibeflow').mkdir()
-        (tmp_path / '.vibeflow' / 'think-output.md').write_text('think')
-        (tmp_path / '.vibeflow' / 'workflow.yaml').write_text('template: "prototype"')
-        result = detect_phase(tmp_path)
-        assert result['phase'] == 'plan'
+        assert result['phase'] == 'spark'
 
     def test_requirements_missing(self, tmp_path):
+        """When spark.md exists but no SRS, should detect requirements phase."""
         (tmp_path / '.vibeflow').mkdir()
-        (tmp_path / '.vibeflow' / 'think-output.md').write_text('think')
-        (tmp_path / '.vibeflow' / 'workflow.yaml').write_text('template: "prototype"')
-        (tmp_path / '.vibeflow' / 'plan.md').write_text('plan complete')
+        (tmp_path / '.vibeflow' / 'spark.md').write_text('spark complete')
         result = detect_phase(tmp_path)
         assert result['phase'] == 'requirements'
 
-    def test_design_eng_review_missing(self, tmp_path):
+    def test_design_missing(self, tmp_path):
+        """When spark.md exists and SRS exists but no design doc, should detect design phase."""
         (tmp_path / '.vibeflow').mkdir()
-        (tmp_path / '.vibeflow' / 'think-output.md').write_text('think')
-        (tmp_path / '.vibeflow' / 'workflow.yaml').write_text('template: "prototype"')
-        (tmp_path / '.vibeflow' / 'plan.md').write_text('plan complete')
+        (tmp_path / '.vibeflow' / 'spark.md').write_text('spark complete')
+        (tmp_path / 'docs' / 'plans').mkdir(parents=True)
+        (tmp_path / 'docs' / 'plans' / 'test-srs.md').write_text('srs')
+        result = detect_phase(tmp_path)
+        assert result['phase'] == 'design'
+
+    def test_design_eng_review_missing(self, tmp_path):
+        """When design exists but plan-eng-review.md is missing, should detect design phase."""
+        (tmp_path / '.vibeflow').mkdir()
+        (tmp_path / '.vibeflow' / 'spark.md').write_text('spark complete')
         (tmp_path / 'docs' / 'plans').mkdir(parents=True)
         (tmp_path / 'docs' / 'plans' / 'test-srs.md').write_text('srs')
         (tmp_path / 'docs' / 'plans' / 'test-design.md').write_text('design')
@@ -70,10 +65,9 @@ class TestDetectPhase:
         assert 'plan-eng-review' in result['reason']
 
     def test_design_design_review_missing(self, tmp_path):
+        """When design exists and eng-review exists but plan-design-review.md is missing."""
         (tmp_path / '.vibeflow').mkdir()
-        (tmp_path / '.vibeflow' / 'think-output.md').write_text('think')
-        (tmp_path / '.vibeflow' / 'workflow.yaml').write_text('template: "prototype"')
-        (tmp_path / '.vibeflow' / 'plan.md').write_text('plan complete')
+        (tmp_path / '.vibeflow' / 'spark.md').write_text('spark complete')
         (tmp_path / 'docs' / 'plans').mkdir(parents=True)
         (tmp_path / 'docs' / 'plans' / 'test-srs.md').write_text('srs')
         (tmp_path / 'docs' / 'plans' / 'test-design.md').write_text('design')
@@ -82,24 +76,12 @@ class TestDetectPhase:
         assert result['phase'] == 'design'
         assert 'plan-design-review' in result['reason']
 
-    def test_design_missing(self, tmp_path):
-        (tmp_path / '.vibeflow').mkdir()
-        (tmp_path / '.vibeflow' / 'think-output.md').write_text('think')
-        (tmp_path / '.vibeflow' / 'workflow.yaml').write_text('template: "prototype"')
-        (tmp_path / '.vibeflow' / 'plan.md').write_text('plan complete')
-        (tmp_path / 'docs' / 'plans').mkdir(parents=True)
-        (tmp_path / 'docs' / 'plans' / 'test-srs.md').write_text('srs')
-        result = detect_phase(tmp_path)
-        assert result['phase'] == 'design'
-
     def test_build_init_missing(self, tmp_path):
+        """When design and reviews exist but feature-list.json is missing."""
         (tmp_path / '.vibeflow').mkdir()
-        (tmp_path / '.vibeflow' / 'think-output.md').write_text('think')
-        (tmp_path / '.vibeflow' / 'workflow.yaml').write_text('template: "prototype"')
-        (tmp_path / '.vibeflow' / 'plan.md').write_text('plan complete')
+        (tmp_path / '.vibeflow' / 'spark.md').write_text('spark complete')
         (tmp_path / 'docs' / 'plans').mkdir(parents=True)
         (tmp_path / 'docs' / 'plans' / 'test-srs.md').write_text('srs')
-        (tmp_path / 'docs' / 'plans' / 'test-ucd.md').write_text('ucd')
         (tmp_path / 'docs' / 'plans' / 'test-design.md').write_text('design')
         (tmp_path / '.vibeflow' / 'plan-eng-review.md').write_text('eng review')
         (tmp_path / '.vibeflow' / 'plan-design-review.md').write_text('design review')
@@ -107,13 +89,11 @@ class TestDetectPhase:
         assert result['phase'] == 'build-init'
 
     def test_build_config_missing(self, tmp_path):
+        """When feature-list.json exists but work-config.json is missing."""
         (tmp_path / '.vibeflow').mkdir()
-        (tmp_path / '.vibeflow' / 'think-output.md').write_text('think')
-        (tmp_path / '.vibeflow' / 'workflow.yaml').write_text('template: "prototype"')
-        (tmp_path / '.vibeflow' / 'plan.md').write_text('plan complete')
+        (tmp_path / '.vibeflow' / 'spark.md').write_text('spark complete')
         (tmp_path / 'docs' / 'plans').mkdir(parents=True)
         (tmp_path / 'docs' / 'plans' / 'test-srs.md').write_text('srs')
-        (tmp_path / 'docs' / 'plans' / 'test-ucd.md').write_text('ucd')
         (tmp_path / 'docs' / 'plans' / 'test-design.md').write_text('design')
         (tmp_path / '.vibeflow' / 'plan-eng-review.md').write_text('eng review')
         (tmp_path / '.vibeflow' / 'plan-design-review.md').write_text('design review')
@@ -122,23 +102,17 @@ class TestDetectPhase:
         assert result['phase'] == 'build-config'
 
     def test_build_work_features_not_passing(self, tmp_path):
+        """When work-config exists but features are not all passing."""
         (tmp_path / '.vibeflow').mkdir()
-        (tmp_path / '.vibeflow' / 'think-output.md').write_text('think')
-        (tmp_path / '.vibeflow' / 'workflow.yaml').write_text('template: "prototype"')
-        (tmp_path / '.vibeflow' / 'plan.md').write_text('plan complete')
+        (tmp_path / '.vibeflow' / 'spark.md').write_text('spark complete')
         (tmp_path / '.vibeflow' / 'work-config.json').write_text('{}')
         (tmp_path / 'docs' / 'plans').mkdir(parents=True)
         (tmp_path / 'docs' / 'plans' / 'test-srs.md').write_text('srs')
-        (tmp_path / 'docs' / 'plans' / 'test-ucd.md').write_text('ucd')
         (tmp_path / 'docs' / 'plans' / 'test-design.md').write_text('design')
         (tmp_path / '.vibeflow' / 'plan-eng-review.md').write_text('eng review')
         (tmp_path / '.vibeflow' / 'plan-design-review.md').write_text('design review')
         (tmp_path / 'docs' / 'plans' / 'test-st-report.md').write_text('st')
         (tmp_path / '.vibeflow' / 'review-report.md').write_text('review')
-        (tmp_path / 'feature-list.json').write_text(json.dumps({
-            'features': [{'id': 'f1', 'status': 'passing', 'deprecated': False}]
-        }))
-        # Build-work requires features NOT all passing, so set one to failing
         (tmp_path / 'feature-list.json').write_text(json.dumps({
             'features': [{'id': 'f1', 'status': 'failing', 'deprecated': False}]
         }))
@@ -146,18 +120,15 @@ class TestDetectPhase:
         assert result['phase'] == 'build-work'
 
     def test_review_missing(self, tmp_path):
+        """When features all passing but review-report.md is missing."""
         (tmp_path / '.vibeflow').mkdir()
-        (tmp_path / '.vibeflow' / 'think-output.md').write_text('think')
-        (tmp_path / '.vibeflow' / 'workflow.yaml').write_text('template: "prototype"')
-        (tmp_path / '.vibeflow' / 'plan.md').write_text('plan complete')
+        (tmp_path / '.vibeflow' / 'spark.md').write_text('spark complete')
         (tmp_path / '.vibeflow' / 'work-config.json').write_text('{}')
         (tmp_path / 'docs' / 'plans').mkdir(parents=True)
         (tmp_path / 'docs' / 'plans' / 'test-srs.md').write_text('srs')
-        (tmp_path / 'docs' / 'plans' / 'test-ucd.md').write_text('ucd')
         (tmp_path / 'docs' / 'plans' / 'test-design.md').write_text('design')
         (tmp_path / '.vibeflow' / 'plan-eng-review.md').write_text('eng review')
         (tmp_path / '.vibeflow' / 'plan-design-review.md').write_text('design review')
-        (tmp_path / 'docs' / 'plans' / 'test-st-report.md').write_text('st')
         (tmp_path / 'feature-list.json').write_text(json.dumps({
             'features': [{'id': 'f1', 'status': 'passing', 'deprecated': False}]
         }))
@@ -165,15 +136,13 @@ class TestDetectPhase:
         assert result['phase'] == 'review'
 
     def test_test_system_missing(self, tmp_path):
+        """When review-report exists but system test report is missing."""
         (tmp_path / '.vibeflow').mkdir()
-        (tmp_path / '.vibeflow' / 'think-output.md').write_text('think')
-        (tmp_path / '.vibeflow' / 'workflow.yaml').write_text('template: "prototype"')
-        (tmp_path / '.vibeflow' / 'plan.md').write_text('plan complete')
+        (tmp_path / '.vibeflow' / 'spark.md').write_text('spark complete')
         (tmp_path / '.vibeflow' / 'work-config.json').write_text('{}')
         (tmp_path / '.vibeflow' / 'review-report.md').write_text('review')
         (tmp_path / 'docs' / 'plans').mkdir(parents=True)
         (tmp_path / 'docs' / 'plans' / 'test-srs.md').write_text('srs')
-        (tmp_path / 'docs' / 'plans' / 'test-ucd.md').write_text('ucd')
         (tmp_path / 'docs' / 'plans' / 'test-design.md').write_text('design')
         (tmp_path / '.vibeflow' / 'plan-eng-review.md').write_text('eng review')
         (tmp_path / '.vibeflow' / 'plan-design-review.md').write_text('design review')
@@ -184,17 +153,16 @@ class TestDetectPhase:
         assert result['phase'] == 'test-system'
 
     def test_test_qa_missing_ui_workflow(self, tmp_path):
+        """When UI workflow requires QA but qa-report.md is missing."""
         (tmp_path / '.vibeflow').mkdir()
-        (tmp_path / '.vibeflow' / 'think-output.md').write_text('think')
+        (tmp_path / '.vibeflow' / 'spark.md').write_text('spark complete')
         (tmp_path / '.vibeflow' / 'workflow.yaml').write_text(
             'template: "web-standard"\nqa:\n    required: true'
         )
-        (tmp_path / '.vibeflow' / 'plan.md').write_text('plan complete')
         (tmp_path / '.vibeflow' / 'work-config.json').write_text('{}')
         (tmp_path / '.vibeflow' / 'review-report.md').write_text('review')
         (tmp_path / 'docs' / 'plans').mkdir(parents=True)
         (tmp_path / 'docs' / 'plans' / 'test-srs.md').write_text('srs')
-        (tmp_path / 'docs' / 'plans' / 'test-ucd.md').write_text('ucd')
         (tmp_path / 'docs' / 'plans' / 'test-design.md').write_text('design')
         (tmp_path / '.vibeflow' / 'plan-eng-review.md').write_text('eng review')
         (tmp_path / '.vibeflow' / 'plan-design-review.md').write_text('design review')
@@ -206,15 +174,14 @@ class TestDetectPhase:
         assert result['phase'] == 'test-qa'
 
     def test_ship_missing(self, tmp_path):
+        """When ship is required but RELEASE_NOTES.md is missing."""
         (tmp_path / '.vibeflow').mkdir()
-        (tmp_path / '.vibeflow' / 'think-output.md').write_text('think')
+        (tmp_path / '.vibeflow' / 'spark.md').write_text('spark complete')
         (tmp_path / '.vibeflow' / 'workflow.yaml').write_text('template: "prototype"\nship:\n  required: true')
-        (tmp_path / '.vibeflow' / 'plan.md').write_text('plan complete')
         (tmp_path / '.vibeflow' / 'work-config.json').write_text('{}')
         (tmp_path / '.vibeflow' / 'review-report.md').write_text('review')
         (tmp_path / 'docs' / 'plans').mkdir(parents=True)
         (tmp_path / 'docs' / 'plans' / 'test-srs.md').write_text('srs')
-        (tmp_path / 'docs' / 'plans' / 'test-ucd.md').write_text('ucd')
         (tmp_path / 'docs' / 'plans' / 'test-design.md').write_text('design')
         (tmp_path / '.vibeflow' / 'plan-eng-review.md').write_text('eng review')
         (tmp_path / '.vibeflow' / 'plan-design-review.md').write_text('design review')
@@ -226,15 +193,14 @@ class TestDetectPhase:
         assert result['phase'] == 'ship'
 
     def test_reflect_missing(self, tmp_path):
+        """When reflect is required but no retrospective file exists."""
         (tmp_path / '.vibeflow').mkdir()
-        (tmp_path / '.vibeflow' / 'think-output.md').write_text('think')
+        (tmp_path / '.vibeflow' / 'spark.md').write_text('spark complete')
         (tmp_path / '.vibeflow' / 'workflow.yaml').write_text('template: "prototype"\nship:\n  required: true\nreflect:\n  required: true')
-        (tmp_path / '.vibeflow' / 'plan.md').write_text('plan complete')
         (tmp_path / '.vibeflow' / 'work-config.json').write_text('{}')
         (tmp_path / '.vibeflow' / 'review-report.md').write_text('review')
         (tmp_path / 'docs' / 'plans').mkdir(parents=True)
         (tmp_path / 'docs' / 'plans' / 'test-srs.md').write_text('srs')
-        (tmp_path / 'docs' / 'plans' / 'test-ucd.md').write_text('ucd')
         (tmp_path / 'docs' / 'plans' / 'test-design.md').write_text('design')
         (tmp_path / '.vibeflow' / 'plan-eng-review.md').write_text('eng review')
         (tmp_path / '.vibeflow' / 'plan-design-review.md').write_text('design review')
@@ -247,16 +213,15 @@ class TestDetectPhase:
         assert result['phase'] == 'reflect'
 
     def test_done_all_complete(self, tmp_path):
+        """When all phases are complete."""
         (tmp_path / '.vibeflow').mkdir()
-        (tmp_path / '.vibeflow' / 'think-output.md').write_text('think')
+        (tmp_path / '.vibeflow' / 'spark.md').write_text('spark complete')
         (tmp_path / '.vibeflow' / 'workflow.yaml').write_text('template: "prototype"')
-        (tmp_path / '.vibeflow' / 'plan.md').write_text('plan complete')
         (tmp_path / '.vibeflow' / 'work-config.json').write_text('{}')
         (tmp_path / '.vibeflow' / 'review-report.md').write_text('review')
         (tmp_path / '.vibeflow' / 'retro-2026-01-01.md').write_text('retro')
         (tmp_path / 'docs' / 'plans').mkdir(parents=True)
         (tmp_path / 'docs' / 'plans' / 'test-srs.md').write_text('srs')
-        (tmp_path / 'docs' / 'plans' / 'test-ucd.md').write_text('ucd')
         (tmp_path / 'docs' / 'plans' / 'test-design.md').write_text('design')
         (tmp_path / '.vibeflow' / 'plan-eng-review.md').write_text('eng review')
         (tmp_path / '.vibeflow' / 'plan-design-review.md').write_text('design review')
@@ -331,7 +296,7 @@ class TestAllFeaturesPassing:
 class TestVerbose:
     def test_verbose_returns_checks(self, tmp_path):
         (tmp_path / '.vibeflow').mkdir()
-        (tmp_path / '.vibeflow' / 'think-output.md').write_text('think')
+        (tmp_path / '.vibeflow' / 'spark.md').write_text('spark')
         result = detect_phase(tmp_path, verbose=True)
         assert 'checks' in result
         assert len(result['checks']) > 0
