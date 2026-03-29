@@ -1,3 +1,3 @@
-description: 开始 Plan 阶段（CEO 价值评估 + 范围审查）
+description: 开始 Plan 阶段（已合并到 Spark）
 ---
-调用 `skills/vibeflow-plan/SKILL.md` 开始 Plan 阶段。两步审查：价值判断 → 范围确认。
+vibeflow-plan 已合并到 vibeflow-spark。使用 `/vibeflow-spark` 启动。
