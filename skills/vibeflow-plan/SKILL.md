@@ -1,46 +1,93 @@
 ---
 name: vibeflow-plan
-description: "Plan 阶段 — CEO/Founder 视角的价值评估通过后，进入 requirements 和 design 阶段（eng/design review 在 design 阶段末尾执行）"
+description: "Plan 阶段 — 承接 Think 的详细分析，进行复杂度评估、模板选择、价值判断，通过后进入 requirements 和 design 阶段"
 ---
 
-# Plan — 价值评估（唯一关卡）
+# Plan — Think 简化后的详细分析阶段
 
-在 Think 阶段完成后，以 CEO/Founder 视角评估商业价值。**Fail-fast：不值得做的事尽早终止，不浪费工程资源。**
+Think 阶段只做"寻找灵感、确定方向"，Plan 阶段承接所有详细分析工作。
 
-eng 和 design review 在 design 阶段末尾执行（详情见 vibeflow-design）。
+**启动宣告：** "正在使用 vibeflow-plan 运行 Plan 阶段——复杂度分析、模板选择、价值评估。"
 
-**启动宣告：** "正在使用 vibeflow-plan 运行 Plan 阶段——价值评估（唯一关卡）。eng/design review 在 design 阶段末尾执行。"
+---
 
-## 核心原则
+## Plan 流程
 
-### 第一关：价值判断（CEO 视角）
+### 1. 复杂度/风险扫描
 
-在投入任何执行层工作之前，必须先回答：
+基于 Think 阶段的方向声明，进行详细的复杂度评估：
+
+```
+**复杂度评估：**
+- 项目类型: [工具/平台/应用/库/...]
+- 预期规模: [小/中/大/企业级]
+- 技术风险: [高/中/低]
+- 主要风险点:
+  - [...]
+```
+
+### 2. 模板选择
+
+根据复杂度评估，从 `templates/` 中选择模板：
+
+| 模板 | 适用场景 |
+|------|----------|
+| `prototype` | 快速验证、减少关卡、速度优于严格性 |
+| `web-standard` | UI密集型产品或通用全栈应用 |
+| `api-standard` | 后端或集成优先系统，不需要大量UI工作 |
+| `enterprise` | 严格审查、可审计性和更高的质量阈值 |
+
+### 3. 价值判断（唯一关卡）
+
+以 CEO/Founder 视角评估商业价值：
+
+Skill: vibeflow-plan-value-review
+
+**核心问题：**
 - 这个项目**值得做**吗？
 - 市场规模和竞争格局如何？
 - 产品-市场契合度有多强？
 - 单位经济学是否成立？
 - 战略价值 vs 执行成本的权衡？
 
-**注意：** eng 和 design review 不在 plan 阶段执行。设计文档存在之前，这些 review 只能评审抽象方向而非具体实现。因此 plan 阶段只做价值判断，eng/design review 移到 design 阶段末尾（有具体 design doc 可审时再执行）。
+**注意：** eng 和 design review 在 design 阶段末尾执行（详情见 vibeflow-design）。
 
----
+### 4. 产出 context.md
 
-## Step 1：价值判断
+先运行 `python scripts/get-vibeflow-paths.py --json` 确认当前工作包路径，然后编写 `docs/changes/<change-id>/context.md`：
 
-### 1.1 调用 vibeflow-plan-value-review
+```markdown
+# Think Output
 
-使用 `Skill` 工具调用：
+## Problem Statement
+[1-3 sentences]
 
+## Boundaries
+### In Scope
+- [...]
+
+### Out of Scope
+- [...]
+
+## User Profile
+- Primary user: [...]
+- Usage scenario: [...]
+- Success criteria: [...]
+
+## Complexity Assessment
+- Project type: [...]
+- Scale: [...]
+- Key risks:
+  - [...]
+
+## Recommended Template
+[prototype | web-standard | api-standard | enterprise]
+Reason: [...]
 ```
-Skill: vibeflow-plan-value-review
-```
 
----
+### 5. 价值决策 & 产出 proposal.md
 
-### 1.2 提取价值审查结论
-
-先运行 `python scripts/get-vibeflow-paths.py --json` 获取当前工作包路径，再将结论收敛到 `docs/changes/<change-id>/proposal.md`：
+将价值审查结论收敛到 `docs/changes/<change-id>/proposal.md`：
 
 ```markdown
 # Proposal
@@ -63,45 +110,24 @@ Skill: vibeflow-plan-value-review
 **理由**：
 - [支持的理由]
 - [风险/担忧]
-
-## 后续行动
-
-- [如果通过：进入 requirements 和 design 阶段（eng/design review 在 design 末尾执行）]
-- [如果拒绝：项目终止，记录原因]
 ```
 
-### 1.3 价值决策判断
+**价值决策判断：**
 
 | vibeflow-plan-value-review 结论 | VibeFlow 决策 | 行动 |
 |-----------------------|---------------|------|
-| EXPANSION / SELECTIVE（推荐做） | **通过** | 进入 requirements |
-| HOLD（可以但有风险） | **通过+警示** | 进入 requirements，记录风险 |
-| REDUCTION（缩减范围后可行） | **条件通过** | 与用户确认缩减方案后再继续 |
-| 拒绝（不值得做） | **拒绝** | 项目终止，不进入 requirements |
+| EXPANSION / SELECTIVE | **通过** | 进入 requirements |
+| HOLD | **通过+警示** | 进入 requirements，记录风险 |
+| REDUCTION | **条件通过** | 与用户确认缩减方案后再继续 |
+| 拒绝 | **拒绝** | 项目终止 |
 
-### 1.4 用户确认（价值关）
+### 6. 创建 workflow.yaml
 
-通过 `AskUserQuestion` 展示价值评估结论：
-- 价值评估结论是否接受
-- 是否继续进入 requirements
+价值评审通过后：
 
-**如果拒绝**：标记项目为 `terminated` 状态（更新 `phase-history.json`），阶段结束。
-
-### 1.5 写入 proposal 完成标记
-
-价值评审通过后，将通过结论写入 `docs/changes/<change-id>/proposal.md` 的最终版本，并同步 `.vibeflow/state.json`：
-
-```markdown
-## Approval
-
-**日期**：YYYY-MM-DD
-**价值审查**：通过（模式：XXX）
-**进入 requirements**：是
-
-**说明**：eng/design review 在 design 阶段末尾执行（见 vibeflow-design）
-```
-
-`proposal.md` 存在且 `.vibeflow/state.json` 中 `checkpoints.plan=true` 时，触发 phase detector 进入 requirements。
+- 创建 `.vibeflow/`
+- 将 `templates/<template>.yaml` 复制到 `.vibeflow/workflow.yaml`
+- 将 `created_at` 设置为当前日期
 
 ---
 
@@ -109,7 +135,11 @@ Skill: vibeflow-plan-value-review
 
 | 文件 | 内容 | 必须存在才进入 requirements |
 |------|------|--------------------------|
-| `docs/changes/<change-id>/proposal.md` | 价值评估结论 + Plan 完成标记 | ✅ |
+| `docs/changes/<change-id>/context.md` | 完整上下文 + 复杂度 + 模板 | ✅ |
+| `docs/changes/<change-id>/proposal.md` | 价值评估结论 + 决策 | ✅ |
+| `.vibeflow/workflow.yaml` | 选定的模板配置 | ✅ |
+
+---
 
 ## 记录到 phase-history
 
@@ -119,6 +149,8 @@ Skill: vibeflow-plan-value-review
 {
   "timestamp": "...",
   "phase": "plan",
+  "complexity": "...",
+  "template": "...",
   "value_decision": "passed / rejected",
   "value_review_mode": "...",
   "reason": "..."
@@ -127,22 +159,13 @@ Skill: vibeflow-plan-value-review
 
 ---
 
-## 红线
-
-| 合理化借口 | 正确响应 |
-|---|---|
-| "Think 阶段已经评估过价值了" | Think 探索问题，Plan 的价值判断评估商业可行性——维度不同 |
-| "时间紧迫，跳过价值评估" | 错误方向比速度慢更昂贵——fail-fast 是加速，不是拖延 |
-| "这个想法显然有价值" | 最危险的假设是你不知道自己在假设的那些——价值需要被验证，不是被假定 |
-| "eng/design review 应该在 plan 阶段" | 在无具体设计稿时这些 review 只能评审抽象方向，在 design 末尾执行才能审具体实现 |
-
----
-
 ## 集成
 
 **调用者：** vibeflow-router（plan 阶段）
-**依赖：** `docs/changes/<change-id>/context.md`、`.vibeflow/workflow.yaml`
+**依赖：** Think 阶段的 Direction 声明、`docs/deepresearch/` 下相关报告（如有）
 **产出：**
-- `docs/changes/<change-id>/proposal.md`（CEO 价值审查 + 阶段完成标记）
+- `docs/changes/<change-id>/context.md`
+- `docs/changes/<change-id>/proposal.md`
+- `.vibeflow/workflow.yaml`
 **Gate：** 价值审查失败 = 项目终止；价值评审通过 = 进入 requirements
 **链接到：** vibeflow-requirements（通过时）/ 项目终止（拒绝时）
