@@ -5,7 +5,7 @@ description: VibeFlow框架入口。运行 /vibeflow 开始新项目或继续现
 
 # VibeFlow框架
 
-VibeFlow是一个结构化的七阶段工作流程，用于有目的性地、有质量关卡地、持续反思地构建软件。
+VibeFlow是一个结构化的六阶段工作流程，用于有目的性地、有质量关卡地、持续反思地构建软件。
 
 ## 入口选择
 
@@ -47,7 +47,7 @@ VibeFlow是一个结构化的七阶段工作流程，用于有目的性地、有
 - 重要系统变更（支付、认证等）
 - 不确定复杂度的任务
 
-**完整流程**：Think → Plan → Requirements → Design → Build → Review → Test → Ship
+**完整流程**：Spark → Requirements → Design → Build → Review → Test
 
 **入口**：`/vibeflow`（选择 Full Mode）
 
@@ -55,17 +55,16 @@ VibeFlow是一个结构化的七阶段工作流程，用于有目的性地、有
 
 VibeFlow是一个严谨的软件开发框架，强调在构建之前思考、在每个阶段验证、持续改进。它专为质量、可维护性和清晰进度重要的项目而设计。
 
-### 七个阶段
+### 六个阶段
 
 | 阶段 | 目的 | 关键产出物 |
 |------|------|-----------|
-| 1. Think（思考） | 定义问题、边界和机会 | `docs/changes/<change-id>/context.md` |
-| 2. Plan（计划） | 选择模板、界定功能范围、获得批准 | `docs/changes/<change-id>/proposal.md`、`requirements.md`、`design.md` |
-| 3. Build（构建） | 通过TDD、质量关卡、规范审查实现功能 | `feature-list.json` |
-| 4. Review（审查） | 跨功能的整体变更分析 | 审查报告 |
-| 5. Test（测试） | 系统测试和QA验证 | 测试报告 |
-| 6. Ship（发布） | 准备和发布发布产物 | 发布产物 |
-| 7. Reflect（反思） | 回顾和下次迭代输入 | `.vibeflow/logs/retro-*.md` |
+| 1. Spark（灵感迸发） | 灵感探索、问题框定、DeepResearch、复杂度扫描、CEO 价值评估 | `docs/changes/<change-id>/context.md` |
+| 2. Requirements（需求） | 需求规格说明书 | `docs/changes/<change-id>/requirements.md` |
+| 3. Design（设计） | 技术设计 + 三视角评审 | `docs/changes/<change-id>/design.md` |
+| 4. Build（构建） | 通过TDD、质量关卡、规范审查实现功能 | `feature-list.json` |
+| 5. Review（审查） | 跨功能的整体变更分析 | 审查报告 |
+| 6. Test（测试） | 系统测试和QA验证 | 测试报告 |
 
 ### 价值主张
 
@@ -81,21 +80,25 @@ VibeFlow是一个严谨的软件开发框架，强调在构建之前思考、在
 
 对于新项目或首次设置，按顺序运行以下命令：
 
-### 步骤1：开始Think阶段
+### 步骤1：开始Spark阶段
 
 ```
-使用vibeflow-think skill来定义问题并选择工作流程模板。
+使用vibeflow-spark skill来探索灵感、确定方向并进行价值评估。
 ```
 
-### 步骤2：运行Plan阶段
+### 步骤2：运行Requirements阶段
 
 ```
-使用vibeflow-plan-review获得执行范围批准，然后
-使用vibeflow-requirements编写需求规范，然后
+使用vibeflow-requirements编写需求规范。
+```
+
+### 步骤3：运行Design阶段
+
+```
 使用vibeflow-design编写技术设计。
 ```
 
-### 步骤3：初始化Build阶段
+### 步骤4：初始化Build阶段
 
 ```
 Design 确认后进入 Build。
@@ -169,53 +172,68 @@ cat feature-list.json
 
 ---
 
-## 七阶段工作流程概述
+## 六阶段工作流程概述
 
-### 阶段1：Think（思考）
+### 阶段1：Spark（灵感迸发）
 
-**目的**：定义问题、理解边界、扫描机会、选择工作流程模板。
+**目的**：灵感探索、问题框定、方向确定、DeepResearch（按需）、复杂度扫描、CEO 价值评估。
 
 **何时进入**：项目开始或面对不清晰的问题时。
 
 **关键产出物**：`docs/changes/<change-id>/context.md`
 
 **使用的技能**：
-- `vibeflow-think`
+- `vibeflow-spark`
+- `vibeflow-deepresearch`（按需）
 
-**退出标准**：问题陈述已写好、边界已定义、机会已扫描、模板已选择。
+**退出标准**：问题框定完成、方向明确、价值评估通过（EXPANSION/SELECTIVE/HOLD），自动进入 Requirements。
 
 ---
 
-### 阶段2：Plan（计划）
+### 阶段2：Requirements（需求）
 
-**目的**：获得组织对范围的认可、编写需求、产生技术设计。
+**目的**：编写需求规格说明书。
 
-**何时进入**：Think阶段完成后。
+**何时进入**：Spark 阶段价值评估通过后。
 
 **关键产出物**：
-- `docs/changes/<change-id>/requirements.md`（需求）
-- `docs/changes/<change-id>/design.md`（技术设计，含 UI/UX 章节）
+- `docs/changes/<change-id>/requirements.md`
 
 **使用的技能**：
-- `vibeflow-plan-review` - 执行范围审查
-- `vibeflow-requirements` - 需求规范（SRS）
-- `vibeflow-design` - 技术设计文档（含 UCD 内联）
+- `vibeflow-requirements`
 
-**退出标准**：利益相关者批准的需求和设计。
+**退出标准**：需求文档完成并批准。
 
 ---
 
-### 阶段3：Build（构建）
+### 阶段3：Design（设计）
+
+**目的**：技术设计 + 三视角评审。
+
+**何时进入**：Requirements 阶段完成后。
+
+**关键产出物**：
+- `docs/changes/<change-id>/design.md`
+- `docs/changes/<change-id>/design-review.md`
+
+**使用的技能**：
+- `vibeflow-design`
+
+**退出标准**：技术设计完成，通过 eng review 和 design review。
+
+---
+
+### 阶段4：Build（构建）
 
 **目的**：从 `build-init` 起默认自动接管后半程执行链路。
 
-**何时进入**：Plan阶段批准后。
+**何时进入**：Design 阶段批准后。
 
 **关键产出物**：`feature-list.json`
 
 **默认执行方式**：
 - 进入 `build-init` 后，不再逐段停顿等待用户
-- router 会持续执行 `build-init -> build-config -> build-work -> review -> test -> ship -> reflect`
+- router 会持续执行 `build-init -> build-config -> build-work -> review -> test`
 - 直到 `done`、阻塞、或需要人工确认
 
 **子技能（默认作为内部子步骤 / fallback）**：
@@ -228,11 +246,11 @@ cat feature-list.json
 
 **并行执行**：Quality Gates 通过后，Feature-ST 和 Spec-Review 通过 Agent 工具并行执行。
 
-**退出标准**：`feature-list.json`中的所有功能标记为完成并通过，然后自动继续进入 Review/Test/Ship/Reflect。
+**退出标准**：`feature-list.json`中的所有功能标记为完成并通过，然后自动继续进入 Review/Test。
 
 ---
 
-### 阶段4：Review（审查）
+### 阶段5：Review（审查）
 
 **目的**：跨整个分支或差异的整体变更审查，发现跨功能问题。
 
@@ -247,7 +265,7 @@ cat feature-list.json
 
 ---
 
-### 阶段5：Test（测试）
+### 阶段6：Test（测试）
 
 **目的**：系统级测试和QA验证，确保整个系统端到端工作。
 
@@ -260,32 +278,6 @@ cat feature-list.json
 **并行执行**：回归测试通过后，集成测试、E2E 场景、NFR 验证、探索性测试通过 Agent 工具四路并行执行。
 
 **退出标准**：所有系统测试通过，QA报告生成没有阻塞性问题。
-
----
-
-### 阶段6：Ship（发布）
-
-**目的**：准备发布产物并发布交付物。
-
-**何时进入**：Test阶段通过后。
-
-**使用的技能**：
-- `vibeflow-ship`
-
-**退出标准**：发布产物已创建，发布输出已记录。
-
----
-
-### 阶段7：Reflect（反思）
-
-**目的**：回顾性分析，捕获经验教训并为下次迭代产生输入。
-
-**何时进入**：Ship阶段完成后。
-
-**使用的技能**：
-- `vibeflow-reflect`
-
-**退出标准**：回顾文档已创建，下次迭代建议已记录。
 
 ---
 
@@ -356,7 +348,7 @@ VibeFlow支持四种工作流程模板。根据项目范围、团队规模和治
 
 **问题**：不定义问题就直接跳入代码会导致范围蔓延、优先级不清和返工。
 
-**预防**：在任何实现之前始终完成 Think 阶段。`docs/changes/<change-id>/context.md` 产物必须存在并经过审查。
+**预防**：在任何实现之前始终完成 Spark 阶段。`docs/changes/<change-id>/context.md` 产物必须存在并经过价值评估。
 
 ---
 
@@ -364,7 +356,7 @@ VibeFlow支持四种工作流程模板。根据项目范围、团队规模和治
 
 **问题**：在没有批准的需求或设计的情况下尝试构建会导致不对齐和昂贵的返工。
 
-**预防**：每个阶段都有明确的进入标准。在Plan完全批准之前不要进入Build。
+**预防**：每个阶段都有明确的进入标准。在Requirements和Design完全批准之前不要进入Build。
 
 ---
 
@@ -394,13 +386,13 @@ VibeFlow支持四种工作流程模板。根据项目范围、团队规模和治
 
 ## 子技能参考
 
-以下17个子技能支持VibeFlow框架：
+以下15个子技能支持VibeFlow框架：
 
 | 技能 | 目的 |
 |------|------|
 | `vibeflow-router` | 在会话开始时路由整个VibeFlow生命周期的工作 |
-| `vibeflow-think` | 定义问题、边界、机会扫描、选择工作流程模板 |
-| `vibeflow-plan-review` | 在规范编写之前的执行范围审查 |
+| `vibeflow-spark` | 灵感迸发：问题框定、DeepResearch、复杂度扫描、CEO 价值评估 |
+| `vibeflow-deepresearch` | 深度调研：竞品分析、技术栈分析、能力矩阵、产品护城河调研 |
 | `vibeflow-requirements` | 编写批准的需求规范（SRS） |
 | `vibeflow-design` | 在初始化之前编写技术设计（含 UCD 内联：视觉风格、Token、组件提示词） |
 | `vibeflow-build-init` | 在设计批准后初始化实现产物 |
@@ -412,8 +404,6 @@ VibeFlow支持四种工作流程模板。根据项目范围、团队规模和治
 | `vibeflow-review` | 构建后跨功能的整体变更审查 |
 | `vibeflow-test-system` | 构建完成后的系统级测试 |
 | `vibeflow-test-qa` | 系统测试后的浏览器导向QA验证 |
-| `vibeflow-ship` | 准备发布产物和发布输出 |
-| `vibeflow-reflect` | 创建回顾和下次迭代输入 |
 
 ---
 

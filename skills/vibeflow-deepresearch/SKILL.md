@@ -198,22 +198,33 @@ gh api repos/<owner>/<repo>/contents/README.md
 
 ---
 
-## 使用示例
+## 使用场景
 
-### 完整流程
+DeepResearch 是**独立工具**，不是 Think 阶段的嵌入步骤。
+
+### 核心定位
+
+1. **开发者竞品输入工具**：在实现某个功能前，先调研同类产品的能力分布、技术选型和护城河
+2. **调研结果归档**：`docs/deepresearch/<领域>-<timestamp>.md`
+3. **按需读取**：只有当用户明确要**实现某个功能**时，才读取对应调研内容进行方案规划
+
+### 典型流程
 
 ```
-用户：我想做一个新的 CLI 工具，用于自动化部署
-
-Assistant：
-1. 理解需求：CLI 部署自动化工具
-2. 调用 vibeflow-deepresearch
-3. 4 个 Agent 并行调研
-4. 聚合输出报告
-5. 将报告作为 Think 阶段的输入
+用户：我要做一个 AI Agent 框架，先调研一下竞品
+  │
+  ├──▶ 调用 vibeflow-deepresearch
+  ├──▶ 4 个 Agent 并行调研
+  ├──▶ 报告归档到 docs/deepresearch/ai-agent-framework-2026-03-29.md
+  │
+  └── 用户决定实现某个具体功能时（如"支持 Tool Calling"）
+        │
+        └──▶ 读取 docs/deepresearch/ai-agent-framework-2026-03-29.md
+        └──▶ 参考竞品能力矩阵和护城河分析
+        └──▶ 制定差异化实现方案
 ```
 
-### 单独使用
+### 使用示例
 
 ```
 用户：/vibeflow-deepresearch
@@ -222,20 +233,32 @@ Assistant：
 请提供您想调研的领域或关键词：
 > AI Agent 框架
 
-正在启动 4 个并行调研 Agent...
+正在启动竞品发现 Agent...
+[发现 8 个高星竞品]
+正在启动 3 个并行分析 Agent...
 [调研完成]
-报告已保存至 docs/deepresearch/2026-03-29-ai-agent-framework.md
+报告已保存至 docs/deepresearch/ai-agent-framework-2026-03-29.md
+
+---
+
+用户：我要实现 Tool Calling 功能，先看看竞品怎么做的
+
+Assistant：
+正在读取调研报告 docs/deepresearch/ai-agent-framework-2026-03-29.md...
+竞品分析：
+- LangChain: 原生支持，生态丰富
+- AutoGPT: 基础支持，文档完善
+- 差异化机会：...
 ```
 
 ---
 
 ## 集成
 
-**调用者：** 用户主动调用（Think 阶段前置）
-**依赖：** 无强制依赖，可独立运行
-**产出：** `docs/deepresearch/<timestamp>-<领域>.md`
-**Gate：** 无强制 gate，用户选择是否基于报告继续
-**链接到：** `vibeflow-think` / `vibeflow-brainstorming`
+**调用方式：** 用户主动调用 `/vibeflow-deepresearch`
+**产出归档：** `docs/deepresearch/<领域>-<timestamp>.md`
+**按需读取：** 在 Plan/Design 阶段实现具体功能时，读取相关调研报告
+**与 Think 的关系：** 独立工具，不嵌入 Think 流程，但可作为 Think 的前置输入
 
 ---
 

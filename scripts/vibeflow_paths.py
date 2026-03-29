@@ -87,14 +87,13 @@ def default_state(project_root: Path, topic: str | None = None) -> dict:
         "version": 2,
         "mode": "full",
         "context": "greenfield",
-        "current_phase": "think",
+        "current_phase": "spark",
         "active_change": {
             "id": change_id,
             "root": change_root,
         },
         "artifacts": {
-            "think": f"{change_root}/context.md",
-            "plan": f"{change_root}/proposal.md",
+            "spark": f"{change_root}/context.md",
             "requirements": f"{change_root}/requirements.md",
             "ucd": f"{change_root}/ucd.md",
             "design": f"{change_root}/design.md",
@@ -106,8 +105,7 @@ def default_state(project_root: Path, topic: str | None = None) -> dict:
         },
         "checkpoints": {
             "quick_ready": False,
-            "think": False,
-            "plan": False,
+            "spark": False,
             "requirements": False,
             "design": False,
             "build_init": False,
@@ -140,9 +138,7 @@ def default_state(project_root: Path, topic: str | None = None) -> dict:
             "parallel_build_workers": 2,
             "manual_only": [
                 "increment",
-                "think",
-                "template-selection",
-                "plan",
+                "spark",
                 "requirements",
                 "design",
                 "quick",
@@ -362,8 +358,7 @@ def path_contract(project_root: Path, state: dict | None = None) -> dict:
         "artifacts": {
             key: resolve_artifact_path(project_root, loaded_state, key)
             for key in [
-                "think",
-                "plan",
+                "spark",
                 "requirements",
                 "ucd",
                 "design",
@@ -428,18 +423,11 @@ def default_policy() -> dict:
     return {
         "version": 1,
         "phases": {
-            "think": {
-                "required_artifacts": ["think"],
+            "spark": {
+                "required_artifacts": ["spark"],
                 "required_checkpoints": [],
-                "required_approvals": ["think"],
-                "completion_evidence": ["artifact:think"],
-                "blocking_conditions": [],
-            },
-            "plan": {
-                "required_artifacts": ["plan"],
-                "required_checkpoints": [],
-                "required_approvals": ["plan"],
-                "completion_evidence": ["artifact:plan"],
+                "required_approvals": ["spark"],
+                "completion_evidence": ["artifact:spark"],
                 "blocking_conditions": [],
             },
             "requirements": {
@@ -798,8 +786,7 @@ def promote_quick_to_full(state: dict, reason: str = "", project_root: Path | No
     state["quick_meta"] = meta
 
     for checkpoint in (
-        "think",
-        "plan",
+        "spark",
         "requirements",
         "design",
         "build_init",
@@ -823,8 +810,7 @@ def update_active_change(state: dict, change_id: str) -> None:
     root = f"docs/changes/{change_id}"
     state["active_change"] = {"id": change_id, "root": root}
     state["artifacts"] = {
-        "think": f"{root}/context.md",
-        "plan": f"{root}/proposal.md",
+        "spark": f"{root}/context.md",
         "requirements": f"{root}/requirements.md",
         "ucd": f"{root}/ucd.md",
         "design": f"{root}/design.md",

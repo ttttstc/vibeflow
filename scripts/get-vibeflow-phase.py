@@ -176,11 +176,10 @@ def sync_runtime_from_detect(project_root: Path, result: dict) -> None:
 
 def legacy_detect_phase(project_root: Path, verbose: bool = False) -> dict:
     state_root = project_root / ".vibeflow"
-    think_path = state_root / "think-output.md"
+    spark_path = state_root / "spark.md"
     workflow_path_obj = resolve_yaml(state_root, "workflow")
     work_config_path = state_root / "work-config.json"
     qa_report_path = state_root / "qa-report.md"
-    plan_path = state_root / "plan.md"
     review_report_path = state_root / "review-report.md"
     increment_path = state_root / "increment-request.json"
     feature_list_path = project_root / "feature-list.json"
@@ -198,9 +197,7 @@ def legacy_detect_phase(project_root: Path, verbose: bool = False) -> dict:
 
     checks.append(("quick", quick_config_path.exists(), "quick-config " + ("exists" if quick_config_path.exists() else "missing")))
     checks.append(("increment", increment_path.exists(), "increment-path " + ("exists" if increment_path.exists() else "missing")))
-    checks.append(("think", not think_path.exists(), "think-output " + ("missing" if not think_path.exists() else "exists")))
-    checks.append(("template-selection", not workflow_path_obj.exists(), "workflow.yaml " + ("missing" if not workflow_path_obj.exists() else "exists")))
-    checks.append(("plan", not plan_path.exists(), "plan " + ("missing" if not plan_path.exists() else "exists")))
+    checks.append(("spark", not spark_path.exists(), "spark " + ("missing" if not spark_path.exists() else "exists")))
     checks.append(("requirements", latest_srs is None, "SRS " + (f"{latest_srs.name}" if latest_srs else "not found")))
     checks.append(("design", latest_design is None, "design " + (f"{latest_design.name}" if latest_design else "not found")))
     checks.append(("design-eng-review", latest_design is not None and not (state_root / "plan-eng-review.md").exists(), "plan-eng-review " + ("missing" if latest_design is not None and not (state_root / "plan-eng-review.md").exists() else "exists")))
@@ -227,12 +224,8 @@ def legacy_detect_phase(project_root: Path, verbose: bool = False) -> dict:
         phase, reason = "build-work", "Quick mode: quick-design complete, proceeding to build."
     elif increment_path.exists():
         phase, reason = "increment", ".vibeflow/increment-request.json exists."
-    elif not think_path.exists():
-        phase, reason = "think", ".vibeflow/think-output.md is missing."
-    elif not workflow_path_obj.exists():
-        phase, reason = "template-selection", ".vibeflow/workflow.yaml (or .yml) is missing."
-    elif not plan_path.exists():
-        phase, reason = "plan", ".vibeflow/plan.md is missing."
+    elif not spark_path.exists():
+        phase, reason = "spark", ".vibeflow/spark.md is missing."
     elif latest_srs is None:
         phase, reason = "requirements", "No SRS document found in docs/plans."
     elif latest_design is None:
@@ -269,9 +262,8 @@ def legacy_detect_phase(project_root: Path, verbose: bool = False) -> dict:
         "reflect_required": _reflect_req,
         "is_quick_mode": quick_config_path.exists(),
         "paths": {
-            "think": str(think_path),
+            "spark": str(spark_path),
             "workflow": str(workflow_path_obj),
-            "plan": str(plan_path),
             "work_config": str(work_config_path),
             "review": str(review_report_path),
             "feature_list": str(feature_list_path),
@@ -323,9 +315,7 @@ def state_based_detect_phase(project_root: Path, verbose: bool = False) -> dict:
         )
     )
     checks.append(("increment", pending_increment, "increment queue " + ("pending" if pending_increment else "empty")))
-    checks.append(("think", not checkpoint_done(state, "think") or not artifacts["think"].exists(), f'checkpoint={checkpoint_done(state, "think")}, artifact={"exists" if artifacts["think"].exists() else "missing"}'))
-    checks.append(("template-selection", not workflow_path_obj.exists(), "workflow " + ("missing" if not workflow_path_obj.exists() else "exists")))
-    checks.append(("plan", not checkpoint_done(state, "plan") or not artifacts["plan"].exists(), f'checkpoint={checkpoint_done(state, "plan")}, artifact={"exists" if artifacts["plan"].exists() else "missing"}'))
+    checks.append(("spark", not checkpoint_done(state, "spark") or not artifacts["spark"].exists(), f'checkpoint={checkpoint_done(state, "spark")}, artifact={"exists" if artifacts["spark"].exists() else "missing"}'))
     checks.append(("requirements", not checkpoint_done(state, "requirements") or not artifacts["requirements"].exists(), f'checkpoint={checkpoint_done(state, "requirements")}, artifact={"exists" if artifacts["requirements"].exists() else "missing"}'))
     checks.append(("design", (not checkpoint_done(state, "design")) or (not artifacts["design"].exists()) or (not artifacts["design_review"].exists()), f'design={checkpoint_done(state, "design")}, design_doc={"exists" if artifacts["design"].exists() else "missing"}, design_review={"exists" if artifacts["design_review"].exists() else "missing"}'))
     checks.append(
@@ -399,61 +389,55 @@ def state_based_detect_phase(project_root: Path, verbose: bool = False) -> dict:
                     reason_code = "missing_completion_evidence"
                     blocking_item = "reflect"
     else:
-        think_validation = evaluate_invariant("think")
-        if not think_validation["ok"]:
-            phase, reason, reason_code, blocking_item, invariant = apply_invariant_block(think_validation, checks if verbose else None)
-        elif not workflow_path_obj.exists():
-            phase, reason = "template-selection", "Workflow file is missing."
+        spark_validation = evaluate_invariant("spark")
+        if not spark_validation["ok"]:
+            phase, reason, reason_code, blocking_item, invariant = apply_invariant_block(spark_validation, checks if verbose else None)
         else:
-            plan_validation = evaluate_invariant("plan")
-            if not plan_validation["ok"]:
-                phase, reason, reason_code, blocking_item, invariant = apply_invariant_block(plan_validation, checks if verbose else None)
+            requirements_validation = evaluate_invariant("requirements")
+            if not requirements_validation["ok"]:
+                phase, reason, reason_code, blocking_item, invariant = apply_invariant_block(requirements_validation, checks if verbose else None)
             else:
-                requirements_validation = evaluate_invariant("requirements")
-                if not requirements_validation["ok"]:
-                    phase, reason, reason_code, blocking_item, invariant = apply_invariant_block(requirements_validation, checks if verbose else None)
+                design_validation = evaluate_invariant("design")
+                if not design_validation["ok"]:
+                    phase, reason, reason_code, blocking_item, invariant = apply_invariant_block(design_validation, checks if verbose else None)
                 else:
-                    design_validation = evaluate_invariant("design")
-                    if not design_validation["ok"]:
-                        phase, reason, reason_code, blocking_item, invariant = apply_invariant_block(design_validation, checks if verbose else None)
+                    build_init_validation = evaluate_invariant("build-init")
+                    if not build_init_validation["ok"]:
+                        phase, reason, reason_code, blocking_item, invariant = apply_invariant_block(build_init_validation, checks if verbose else None)
+                    elif not work_config.exists():
+                        phase, reason = "build-config", ".vibeflow/work-config.json is missing."
+                        reason_code = "missing_artifact"
+                        blocking_item = "work_config"
+                    elif not all_features_passing(feature_list):
+                        phase, reason = "build-work", "Some active features are not passing."
                     else:
-                        build_init_validation = evaluate_invariant("build-init")
-                        if not build_init_validation["ok"]:
-                            phase, reason, reason_code, blocking_item, invariant = apply_invariant_block(build_init_validation, checks if verbose else None)
-                        elif not work_config.exists():
-                            phase, reason = "build-config", ".vibeflow/work-config.json is missing."
-                            reason_code = "missing_artifact"
-                            blocking_item = "work_config"
-                        elif not all_features_passing(feature_list):
-                            phase, reason = "build-work", "Some active features are not passing."
+                        review_validation = evaluate_invariant("review")
+                        if not review_validation["ok"]:
+                            phase, reason, reason_code, blocking_item, invariant = apply_invariant_block(review_validation, checks if verbose else None)
                         else:
-                            review_validation = evaluate_invariant("review")
-                            if not review_validation["ok"]:
-                                phase, reason, reason_code, blocking_item, invariant = apply_invariant_block(review_validation, checks if verbose else None)
-                            else:
-                                test_validation = evaluate_invariant("test-system")
-                                if not test_validation["ok"]:
-                                    phase, reason, reason_code, blocking_item, invariant = apply_invariant_block(test_validation, checks if verbose else None)
-                                elif _ui_req and (not checkpoint_done(state, "test_qa") or not artifacts["qa"].exists()):
-                                    phase, reason = "test-qa", "UI workflow requires QA artifact."
-                                    if not artifacts["qa"].exists():
-                                        reason_code = "missing_artifact"
-                                        blocking_item = "qa"
-                                    elif not checkpoint_done(state, "test_qa"):
-                                        reason_code = "missing_approval"
-                                        blocking_item = "test_qa"
-                                elif _ship_req:
-                                    ship_validation = evaluate_invariant("ship")
-                                    if not ship_validation["ok"]:
-                                        phase, reason, reason_code, blocking_item, invariant = apply_invariant_block(ship_validation, checks if verbose else None)
-                                    elif _reflect_req and (not checkpoint_done(state, "reflect") or latest_retro is None):
-                                        phase, reason = "reflect", "Reflect is required and no retrospective exists."
-                                        reason_code = "missing_completion_evidence"
-                                        blocking_item = "reflect"
+                            test_validation = evaluate_invariant("test-system")
+                            if not test_validation["ok"]:
+                                phase, reason, reason_code, blocking_item, invariant = apply_invariant_block(test_validation, checks if verbose else None)
+                            elif _ui_req and (not checkpoint_done(state, "test_qa") or not artifacts["qa"].exists()):
+                                phase, reason = "test-qa", "UI workflow requires QA artifact."
+                                if not artifacts["qa"].exists():
+                                    reason_code = "missing_artifact"
+                                    blocking_item = "qa"
+                                elif not checkpoint_done(state, "test_qa"):
+                                    reason_code = "missing_approval"
+                                    blocking_item = "test_qa"
+                            elif _ship_req:
+                                ship_validation = evaluate_invariant("ship")
+                                if not ship_validation["ok"]:
+                                    phase, reason, reason_code, blocking_item, invariant = apply_invariant_block(ship_validation, checks if verbose else None)
                                 elif _reflect_req and (not checkpoint_done(state, "reflect") or latest_retro is None):
                                     phase, reason = "reflect", "Reflect is required and no retrospective exists."
                                     reason_code = "missing_completion_evidence"
                                     blocking_item = "reflect"
+                            elif _reflect_req and (not checkpoint_done(state, "reflect") or latest_retro is None):
+                                phase, reason = "reflect", "Reflect is required and no retrospective exists."
+                                reason_code = "missing_completion_evidence"
+                                blocking_item = "reflect"
 
     result = {
         "phase": phase,
@@ -474,8 +458,7 @@ def state_based_detect_phase(project_root: Path, verbose: bool = False) -> dict:
             "change_root": str(contract["change_root"]),
             "phase_history": str(contract["phase_history"]),
             "session_log": str(contract["session_log"]),
-            "think": str(artifacts["think"]),
-            "plan": str(artifacts["plan"]),
+            "spark": str(artifacts["spark"]),
             "requirements": str(artifacts["requirements"]),
             "ucd": str(artifacts["ucd"]),
             "design": str(artifacts["design"]),

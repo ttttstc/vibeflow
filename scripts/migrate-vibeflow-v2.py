@@ -259,8 +259,18 @@ def main():
 
     artifacts = existing_state["artifacts"]
     checkpoints = existing_state["checkpoints"]
-    checkpoints["think"] = Path(project_root / artifacts["think"]).exists()
-    checkpoints["plan"] = Path(project_root / artifacts["plan"]).exists()
+
+    # Handle both v1 (think/plan) and v2 (spark) artifact formats
+    if "think" in artifacts:
+        # v1 format: think + plan are separate
+        checkpoints["spark"] = Path(project_root / artifacts["think"]).exists() or Path(project_root / artifacts.get("plan", "")).exists()
+    elif "spark" in artifacts:
+        # v2 format: spark is the combined artifact
+        checkpoints["spark"] = Path(project_root / artifacts["spark"]).exists()
+    else:
+        # No spark artifact found
+        checkpoints["spark"] = False
+
     checkpoints["requirements"] = Path(project_root / artifacts["requirements"]).exists()
     checkpoints["design"] = Path(project_root / artifacts["design"]).exists() and Path(project_root / artifacts["design_review"]).exists()
     checkpoints["build_init"] = (project_root / "feature-list.json").exists()
@@ -293,10 +303,8 @@ def main():
         existing_state["current_phase"] = "design"
     elif checkpoints["requirements"]:
         existing_state["current_phase"] = "requirements"
-    elif checkpoints["plan"]:
-        existing_state["current_phase"] = "plan"
-    elif checkpoints["think"]:
-        existing_state["current_phase"] = "think"
+    elif checkpoints["spark"]:
+        existing_state["current_phase"] = "spark"
 
     save_state(project_root, existing_state)
     save_runtime(project_root, default_runtime())

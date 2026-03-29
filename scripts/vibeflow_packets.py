@@ -16,8 +16,7 @@ from vibeflow_rules import load_project_rules
 PACKET_VERSION = 1
 SUMMARY_CHAR_LIMIT = 480
 SOURCE_REF_KEYS = (
-    "think",
-    "plan",
+    "spark",
     "requirements",
     "design",
     "build_contract",
@@ -69,8 +68,7 @@ def _default_source_refs(contract: dict, feature: dict, rules_refs: list[str] | 
     design_section = str(feature.get("design_section") or "").strip()
     requirement_refs = normalize_string_list(feature.get("requirements_refs"))
     default_refs = {
-        "think": [str(contract["artifacts"]["think"])],
-        "plan": [str(contract["artifacts"]["plan"])],
+        "spark": [str(contract["artifacts"]["spark"])],
         "requirements": (
             [f"{contract['artifacts']['requirements']}#{ref}" for ref in requirement_refs]
             if requirement_refs
@@ -237,8 +235,7 @@ def build_feature_packet(project_root: Path, state: dict, feature: dict, *, rule
     rules_summary = _rules_summary(normalized.get("custom_rules") or {})
 
     snippets = {
-        "think_summary": summarize_markdown(contract["artifacts"]["think"]),
-        "plan_summary": summarize_markdown(contract["artifacts"]["plan"]),
+        "spark_summary": summarize_markdown(contract["artifacts"]["spark"]),
         "requirements_summary": summarize_markdown(contract["artifacts"]["requirements"]),
         "design_summary": summarize_markdown(contract["artifacts"]["design"]),
         "tasks_summary": summarize_markdown(contract["artifacts"]["tasks"]),

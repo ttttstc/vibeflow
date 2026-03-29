@@ -155,11 +155,9 @@ class TestVibeFlowV2:
         contract = path_contract(tmp_path, state)
 
         write(contract["workflow"], 'template: "prototype"\n')
-        write(contract["artifacts"]["think"], "# Context\n")
-        write(contract["artifacts"]["plan"], "# Proposal\n")
+        write(contract["artifacts"]["spark"], "# Spark Output\n")
 
-        state["checkpoints"]["think"] = True
-        state["checkpoints"]["plan"] = True
+        state["checkpoints"]["spark"] = True
         save_state(tmp_path, state)
 
         result = detect_phase(tmp_path)
@@ -167,14 +165,13 @@ class TestVibeFlowV2:
 
     def test_empty_feature_list_returns_to_build_init(self, tmp_path):
         state = default_state(tmp_path, topic="empty-build")
-        for checkpoint in ("think", "plan", "requirements", "design"):
+        for checkpoint in ("spark", "requirements", "design"):
             state["checkpoints"][checkpoint] = True
         save_state(tmp_path, state)
         contract = path_contract(tmp_path, state)
 
         write(contract["workflow"], 'template: "api-standard"\n')
-        write(contract["artifacts"]["think"], "# Context\n")
-        write(contract["artifacts"]["plan"], "# Proposal\n")
+        write(contract["artifacts"]["spark"], "# Spark Output\n")
         write(contract["artifacts"]["requirements"], "# Requirements\n")
         write(contract["artifacts"]["design"], "# Design\n")
         write(contract["artifacts"]["design_review"], "# Design Review\n")
@@ -185,14 +182,13 @@ class TestVibeFlowV2:
 
     def test_legacy_build_config_keeps_existing_project_past_build_init(self, tmp_path):
         state = default_state(tmp_path, topic="legacy-build-config")
-        for checkpoint in ("think", "plan", "requirements", "design"):
+        for checkpoint in ("spark", "requirements", "design"):
             state["checkpoints"][checkpoint] = True
         save_state(tmp_path, state)
         contract = path_contract(tmp_path, state)
 
         write(contract["workflow"], 'template: "api-standard"\n')
-        write(contract["artifacts"]["think"], "# Context\n")
-        write(contract["artifacts"]["plan"], "# Proposal\n")
+        write(contract["artifacts"]["spark"], "# Spark Output\n")
         write(contract["artifacts"]["requirements"], "# Requirements\n")
         write(contract["artifacts"]["design"], "# Design\n")
         write(contract["artifacts"]["design_review"], "# Design Review\n")
@@ -335,15 +331,13 @@ class TestVibeFlowV2:
         assert not (tmp_path / ".vibeflow" / "work-config.json").exists()
 
         result = detect_phase(tmp_path)
-        assert result["phase"] == "think"
+        assert result["phase"] == "spark"
 
-        promoted_state["checkpoints"]["think"] = True
-        promoted_state["checkpoints"]["plan"] = True
+        promoted_state["checkpoints"]["spark"] = True
         promoted_state["checkpoints"]["requirements"] = True
         promoted_state["checkpoints"]["design"] = True
         save_state(tmp_path, promoted_state)
-        write(contract["artifacts"]["think"], "# Context\n")
-        write(contract["artifacts"]["plan"], "# Proposal\n")
+        write(contract["artifacts"]["spark"], "# Spark Output\n")
         write(contract["artifacts"]["requirements"], "# Requirements\n")
         write(contract["artifacts"]["design"], "# Design\n")
         write(contract["artifacts"]["design_review"], "# Design Review\n")

@@ -316,12 +316,11 @@ reflect:
 """,
     )
     state = read_json(project_root / ".vibeflow" / "state.json")
-    for checkpoint in ("think", "plan", "requirements", "design", "build_init", "build_config"):
+    for checkpoint in ("spark", "requirements", "design", "build_init", "build_config"):
         state["checkpoints"][checkpoint] = True
     state["current_phase"] = "build-work"
     write_json(project_root / ".vibeflow" / "state.json", state)
-    write_text(project_root / state["artifacts"]["think"], "# Context\n\nParallel build context.\n")
-    write_text(project_root / state["artifacts"]["plan"], "# Proposal\n\nParallel build proposal.\n")
+    write_text(project_root / state["artifacts"]["spark"], "# Spark\n\nParallel build context.\n")
     write_text(project_root / state["artifacts"]["requirements"], "# Requirements\n\nParallel build requirements.\n")
     write_text(project_root / state["artifacts"]["design"], "# Design\n\nParallel build design.\n")
     write_text(project_root / state["artifacts"]["design_review"], "# Design Review\n\nApproved.\n")
@@ -434,12 +433,11 @@ build:
 """,
     )
     state = read_json(project_root / ".vibeflow" / "state.json")
-    for checkpoint in ("think", "plan", "requirements", "design", "build_init", "build_config"):
+    for checkpoint in ("spark", "requirements", "design", "build_init", "build_config"):
         state["checkpoints"][checkpoint] = True
     state["current_phase"] = "build-work"
     write_json(project_root / ".vibeflow" / "state.json", state)
-    write_text(project_root / state["artifacts"]["think"], "# Context\n\nConflicting build context.\n")
-    write_text(project_root / state["artifacts"]["plan"], "# Proposal\n\nConflicting build proposal.\n")
+    write_text(project_root / state["artifacts"]["spark"], "# Spark\n\nConflicting build context.\n")
     write_text(project_root / state["artifacts"]["requirements"], "# Requirements\n\nConflicting build requirements.\n")
     write_text(project_root / state["artifacts"]["design"], "# Design\n\nConflicting build design.\n")
     write_text(project_root / state["artifacts"]["design_review"], "# Design Review\n\nApproved.\n")
@@ -516,14 +514,13 @@ class TestVibeFlowAutopilot:
         )
 
         state = read_json(project_root / ".vibeflow" / "state.json")
-        for checkpoint in ("think", "plan", "requirements", "design"):
+        for checkpoint in ("spark", "requirements", "design"):
             state["checkpoints"][checkpoint] = True
         state["current_phase"] = "design"
         write_json(project_root / ".vibeflow" / "state.json", state)
 
         change_root = project_root / state["active_change"]["root"]
-        write_text(change_root / "context.md", "# Context\n\nDeliver a small authenticated API workflow.\n")
-        write_text(change_root / "proposal.md", "# Proposal\n\nImplement two bounded features.\n")
+        write_text(change_root / "context.md", "# Spark\n\nDeliver a small authenticated API workflow.\n")
         write_text(change_root / "requirements.md", "# Requirements\n\n- FR-001 Auth flow\n- FR-002 Audit trail\n")
         write_text(change_root / "design.md", "# Design\n\n## 4.1 Auth\n\nImplement auth.\n\n## 4.2 Audit\n\nImplement audit.\n")
         write_text(change_root / "design-review.md", "# Design Review\n\nApproved.\n")
@@ -592,7 +589,7 @@ class TestVibeFlowAutopilot:
         )
 
         state = read_json(project_root / ".vibeflow" / "state.json")
-        for checkpoint in ("think", "plan", "requirements", "design"):
+        for checkpoint in ("spark", "requirements", "design"):
             state["checkpoints"][checkpoint] = True
         state["current_phase"] = "design"
         write_json(project_root / ".vibeflow" / "state.json", state)
@@ -601,8 +598,7 @@ class TestVibeFlowAutopilot:
             feature_list.unlink()
 
         change_root = project_root / state["active_change"]["root"]
-        write_text(change_root / "context.md", "# Context\n\nDrive implementation from design contracts.\n")
-        write_text(change_root / "proposal.md", "# Proposal\n\nUse design sections as the build handoff.\n")
+        write_text(change_root / "context.md", "# Spark\n\nDrive implementation from design contracts.\n")
         write_text(change_root / "requirements.md", "# Requirements\n\n### FR-001 Login\n\n### FR-002 Audit\n")
         write_text(change_root / "design-review.md", "# Design Review\n\nApproved.\n")
         write_text(
@@ -710,7 +706,7 @@ autopilot_commands = ['python -c "print(456)"']
         )
 
         state = read_json(project_root / ".vibeflow" / "state.json")
-        for checkpoint in ("think", "plan", "requirements", "design"):
+        for checkpoint in ("spark", "requirements", "design"):
             state["checkpoints"][checkpoint] = True
         state["current_phase"] = "design"
         write_json(project_root / ".vibeflow" / "state.json", state)
@@ -719,8 +715,7 @@ autopilot_commands = ['python -c "print(456)"']
             feature_list.unlink()
 
         change_root = project_root / state["active_change"]["root"]
-        write_text(change_root / "context.md", "# Context\n")
-        write_text(change_root / "proposal.md", "# Proposal\n")
+        write_text(change_root / "context.md", "# Spark\n")
         write_text(change_root / "requirements.md", "# Requirements\n\n### FR-001 Broken\n")
         write_text(change_root / "design-review.md", "# Design Review\n\nApproved.\n")
         write_text(
@@ -769,11 +764,11 @@ file_scope = ["src/broken.py"]
         )
         result = run_autopilot(project_root)
         assert result["status"] == "waiting_manual"
-        assert result["final_phase"] == "think"
+        assert result["final_phase"] == "spark"
 
         runtime = read_json(project_root / ".vibeflow" / "runtime.json")
         assert runtime["status"] == "waiting_manual"
-        assert runtime["current_phase"] == "think"
+        assert runtime["current_phase"] == "spark"
 
     def test_full_mode_autopilot_runs_sample_project_to_done(self, tmp_path):
         project_root = copy_sample_project(tmp_path, "sample-full-autopilot")
