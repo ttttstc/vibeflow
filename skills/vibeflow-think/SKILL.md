@@ -53,7 +53,33 @@ Skill: vibeflow-office-hours
 - 明确不在范围内的内容
 - 最小有用的第一个版本
 
-### 2. 复杂度和风险扫描
+### 2. DeepResearch（可选）
+
+在进入机会扫描前，用户可选择运行深度竞品调研：
+
+Skill: vibeflow-deepresearch
+
+**何时使用：**
+- 进入不熟悉领域时
+- 需要系统性了解同领域竞品
+- 需要获取技术选型参考
+- 需要寻找差异化机会点
+
+**流程：**
+```
+调用 vibeflow-deepresearch
+  → Agent 1: 竞品发现
+  → Agent 2/3/4 并行: 技术栈分析、能力矩阵、护城河调研
+  → 聚合输出报告
+  → 归档至 docs/deepresearch/<领域>-<timestamp>.md
+```
+
+**与机会扫描的关系：**
+DeepResearch 报告为机会扫描提供竞品情报输入，帮助识别差异化机会。
+
+**如用户跳过此步骤**，直接进入机会扫描。
+
+### 3. 复杂度和风险扫描
 
 陈述：
 
@@ -61,7 +87,7 @@ Skill: vibeflow-office-hours
 - 预期规模
 - 主要风险
 
-### 3. 机会扫描
+### 4. 机会扫描
 
 产生：
 
@@ -69,7 +95,7 @@ Skill: vibeflow-office-hours
 - 最小可行版本
 - 一个大约30分钟能完成的快速增值
 
-### 4. 模板推荐
+### 5. 模板推荐
 
 从`templates/`中选择一个静态模板：
 
@@ -80,7 +106,7 @@ Skill: vibeflow-office-hours
 | `api-standard` | 后端或集成优先系统，不需要大量UI工作 |
 | `enterprise` | 严格审查、可审计性和更高的质量阈值 |
 
-### 5. 编写 think 输出
+### 6. 编写 think 输出
 
 先运行 `python scripts/get-vibeflow-paths.py --json` 确认当前工作包路径，然后使用完全相同的结构编写 `docs/changes/<change-id>/context.md`：
 
@@ -118,7 +144,7 @@ Skill: vibeflow-office-hours
 Reason: [...]
 ```
 
-### 6. 确认并创建工作流程
+### 7. 确认并创建工作流程
 
 编写 `context.md` 后：
 
