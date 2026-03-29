@@ -88,9 +88,7 @@ gh search repos "topic:<领域>" --sort stars --limit 20
 ```bash
 # 对每个竞品项目
 gh repo view <owner>/<repo> --json name,primaryLanguage
-# 读取依赖文件
-gh repos clone <owner>/<repo> -- --depth 1
-# 或使用 GitHub API 获取文件内容
+# 读取依赖文件（使用 GitHub API）
 gh api repos/<owner>/<repo>/contents/package.json
 gh api repos/<owner>/<repo>/contents/Cargo.toml
 gh api repos/<owner>/<repo>/contents/requirements.txt
@@ -130,7 +128,7 @@ gh api repos/<owner>/<repo>/contents/README.md
 
 ```bash
 # 获取 Stars 增长趋势
-gh api repos/<owner>/<repo> --json stargazers_count,forks_count,pushedAt
+gh api repos/<owner>/<repo> --jq '{stars: .stargazers_count, forks: .forks_count, pushed: .pushed_at}'
 # 获取贡献者数量
 gh api repos/<owner>/<repo>/contributors?per_page=1 --jq '.length'
 # 获取开源协议
