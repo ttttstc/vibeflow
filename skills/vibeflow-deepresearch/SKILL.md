@@ -2,9 +2,9 @@
 name: vibeflow-deepresearch
 description: |
   Think 阶段的深度调研引擎。系统性地分析 GitHub 同领域高星项目的
-  能力分布、技术栈、用户痛点，输出结构化竞品分析报告，为差异化创新提供情报支持。
+  能力分布、技术栈、产品护城河，输出结构化竞品分析报告，为差异化创新提供情报支持。
   使用场景：用户启动新项目前的竞品调研、需要了解同类项目技术选型、
-  寻找差异化机会点。
+  寻找差异化机会点、识别竞品护城河。
 ---
 
 # DeepResearch — Think 阶段的深度调研引擎
@@ -17,7 +17,7 @@ description: |
 - 竞品发现（GitHub 高星项目）
 - 能力矩阵（功能对比）
 - 技术栈分布（语言、框架、依赖）
-- 用户痛点（Issue/Star 反馈）
+- 产品护城河（竞品的核心壁垒）
 - 差异化机会（Gap 识别）
 
 **核心价值：** "了解已有方案"是创新的前提，不是负担。站在巨人肩膀上找差异化。
@@ -40,10 +40,11 @@ description: |
         │   ├── Agent 1: 竞品发现（GitHub Search）
         │   ├── Agent 2: 技术栈分析
         │   ├── Agent 3: 能力矩阵
-        │   └── Agent 4: 痛点挖掘
+        │   └── Agent 4: 护城河调研
         │
         └──▶ 聚合输出
             ├── 竞品分析报告（Markdown）
+            ├── 护城河矩阵
             ├── 差异化机会矩阵
             └── 技术选型建议
 ```
@@ -114,24 +115,29 @@ gh api repos/<owner>/<repo>/contents/README.md
 
 ---
 
-### Agent 4: 痛点挖掘
+### Agent 4: 产品护城河调研
 
-分析 GitHub Issues 和 Star 理由：
+分析竞品的核心壁垒和护城河：
 
 ```bash
-# 获取最近 50 个 closed issues
-gh issue list --repo <owner>/<repo> --state closed --limit 50
-# 获取 repo 的 star 数量趋势
-gh api repos/<owner>/<repo> --json stargazers_count,pushed_at
+# 获取 Stars 增长趋势
+gh api repos/<owner>/<repo> --json stargazers_count,forks_count,pushedAt
+# 获取贡献者数量
+gh api repos/<owner>/<repo>/contributors?per_page=1 --jq '.length'
+# 获取开源协议
+gh repo view <owner>/<repo> --json license
+# 获取 README 中的亮点描述
+gh api repos/<owner>/<repo>/contents/README.md
 ```
 
 **分析维度：**
-1. Issues 中反复出现的问题关键词
-2. 功能请求（feature request）高频词
-3. 已知问题/限制
-4. 负面反馈模式
+1. **生态锁定**：插件数量、集成数量、SDK 支持
+2. **网络效应**：贡献者数量、社区活跃度、star 趋势
+3. **数据积累**：学习资源数量、文档完善度
+4. **品牌先发**：开源时间、版本号、社区规模
+5. **技术壁垒**：专利、独特架构、专有集成
 
-**输出：** Top 5 用户痛点列表
+**输出：** 护城河分析矩阵（每个竞品的核心壁垒）
 
 ---
 
@@ -157,8 +163,8 @@ gh api repos/<owner>/<repo> --json stargazers_count,pushed_at
 ## 3. 技术栈分布
 [语言占比、框架模式、热门依赖]
 
-## 4. 用户痛点 Top 5
-[痛点列表及来源]
+## 4. 产品护城河
+[每个竞品的核心壁垒分析]
 
 ## 5. 差异化机会
 [Gap 矩阵：机会 vs 竞品覆盖度]
