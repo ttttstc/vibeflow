@@ -120,6 +120,8 @@ description: |
 **用户确认状态**: ✅ 确认 / 📝 修改后确认 / 🔄 重新讨论
 **确认时间**: YYYY-MM-DD
 **用户修改意见**: [如有]
+
+> ⚠️ 记录到 phase-history：启用圆桌会议时，需要在 phase-history 中记录 `roundtable_enabled: true` 和 `roundtable_confirmed: <实际状态>`。
 ```
 
 ---

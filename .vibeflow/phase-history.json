@@ -1,0 +1,15 @@
+[
+  {
+    "phase": "quick-assessment",
+    "completed_at": "DATE"
+  },
+  {
+    "phase": "quick-design",
+    "completed_at": "DATE"
+  },
+  {
+    "phase": "build-work",
+    "status": "in_progress",
+    "started_at": "DATE"
+  }
+]

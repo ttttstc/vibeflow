@@ -1,0 +1,5 @@
+template: "prototype"
+ship:
+  required: true
+reflect:
+  required: true

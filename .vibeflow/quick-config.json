@@ -1,0 +1,6 @@
+{
+  "mode": "quick",
+  "created_at": "DATE",
+  "scope": "MINIMAL",
+  "design_doc": "docs/quick-design.md"
+}

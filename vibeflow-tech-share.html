@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VibeFlow 技术分享</title>
+
+<!-- Fonts: Dark Botanical - Cormorant + IBM Plex Sans -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Sans:wght@300;400&display=swap" rel="stylesheet">
+
+<style>
+/* ===========================================
+   CSS CUSTOM PROPERTIES (DARK BOTANICAL THEME)
+   =========================================== */
+:root {
+    /* Colors — elegant dark with warm accents */
+    --bg-primary: #0f0f0f;
+    --bg-gradient: linear-gradient(160deg, #0f0f0f 0%, #1a1512 50%, #0f0f0f 100%);
+    --text-primary: #e8e4df;
+    --text-secondary: #9a9590;
+    --accent-warm: #d4a574;
+    --accent-pink: #e8b4b8;
+    --accent-gold: #c9b896;
+
+    /* Typography — MUST use clamp() */
+    --font-display: 'Cormorant', serif;
+    --font-body: 'IBM Plex Sans', sans-serif;
+    --title-size: clamp(2rem, 6vw, 4.5rem);
+    --h2-size: clamp(1.5rem, 4vw, 3rem);
+    --h3-size: clamp(1.1rem, 2.5vw, 1.75rem);
+    --body-size: clamp(0.8rem, 1.4vw, 1.1rem);
+    --small-size: clamp(0.65rem, 1vw, 0.85rem);
+
+    /* Spacing — MUST use clamp() */
+    --slide-padding: clamp(1.5rem, 5vw, 5rem);
+    --content-gap: clamp(0.8rem, 2vw, 2rem);
+    --element-gap: clamp(0.3rem, 1vw, 0.8rem);
+
+    /* Animation */
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    --duration-normal: 0.7s;
+}
+
+/* ===========================================
+   BASE STYLES
+   =========================================== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+    height: 100%;
+    overflow-x: hidden;
+}
+
+html {
+    scroll-snap-type: y mandatory;
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: var(--font-body);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.6;
+}
+
+/* ===========================================
+   VIEWPORT FITTING: MANDATORY BASE STYLES
+   =========================================== */
+
+/* Each slide = exact viewport height */
+.slide {
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+    scroll-snap-align: start;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    background: var(--bg-gradient);
+}
+
+/* Content container with flex for centering */
+.slide-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    max-height: 100%;
+    overflow: hidden;
+    padding: var(--slide-padding);
+}
+
+/* ===========================================
+   TYPOGRAPHY
+   =========================================== */
+h1 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--title-size);
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+}
+
+h2 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--h2-size);
+    line-height: 1.2;
+    margin-bottom: var(--content-gap);
+}
+
+h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: var(--h3-size);
+    color: var(--accent-warm);
+}
+
+p, li {
+    font-size: var(--body-size);
+    line-height: 1.6;
+}
+
+.small {
+    font-size: var(--small-size);
+    color: var(--text-secondary);
+}
+
+/* ===========================================
+   ANIMATIONS
+   =========================================== */
+.reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity var(--duration-normal) var(--ease-out-expo),
+                transform var(--duration-normal) var(--ease-out-expo);
+}
+
+.slide.visible .reveal {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Stagger children */
+.reveal:nth-child(1) { transition-delay: 0.1s; }
+.reveal:nth-child(2) { transition-delay: 0.2s; }
+.reveal:nth-child(3) { transition-delay: 0.3s; }
+.reveal:nth-child(4) { transition-delay: 0.4s; }
+.reveal:nth-child(5) { transition-delay: 0.5s; }
+.reveal:nth-child(6) { transition-delay: 0.6s; }
+
+/* ===========================================
+   DARK BOTANICAL DECORATIVE ELEMENTS
+   =========================================== */
+
+/* Abstract soft gradient circles */
+.slide::before {
+    content: '';
+    position: absolute;
+    top: -20%;
+    right: -10%;
+    width: 50vw;
+    height: 50vw;
+    background: radial-gradient(ellipse at center,
+        rgba(212, 165, 116, 0.15) 0%,
+        rgba(232, 180, 184, 0.08) 40%,
+        transparent 70%);
+    border-radius: 50%;
+    filter: blur(40px);
+    pointer-events: none;
+}
+
+.slide::after {
+    content: '';
+    position: absolute;
+    bottom: -15%;
+    left: -5%;
+    width: 40vw;
+    height: 40vw;
+    background: radial-gradient(ellipse at center,
+        rgba(201, 184, 150, 0.12) 0%,
+        transparent 60%);
+    border-radius: 50%;
+    filter: blur(30px);
+    pointer-events: none;
+}
+
+/* Thin vertical accent line */
+.accent-line {
+    position: absolute;
+    left: clamp(1.5rem, 5vw, 4rem);
+    top: 15%;
+    width: 2px;
+    height: 70%;
+    background: linear-gradient(to bottom, transparent, var(--accent-warm), var(--accent-pink), transparent);
+    opacity: 0.6;
+}
+
+/* ===========================================
+   SLIDE LAYOUT VARIANTS
+   =========================================== */
+
+/* Title Slide */
+.slide.title-slide {
+    justify-content: center;
+    align-items: flex-start;
+    padding-left: clamp(3rem, 10vw, 8rem);
+}
+
+.slide.title-slide .slide-content {
+    justify-content: center;
+}
+
+.title-slide h1 {
+    margin-bottom: var(--content-gap);
+}
+
+.title-slide h1 em {
+    font-style: italic;
+    color: var(--accent-warm);
+}
+
+.title-slide .subtitle {
+    font-family: var(--font-display);
+    font-size: clamp(1rem, 2vw, 1.4rem);
+    font-style: italic;
+    color: var(--text-secondary);
+    margin-bottom: var(--content-gap);
+}
+
+.title-slide .meta {
+    font-size: var(--small-size);
+    color: var(--text-secondary);
+}
+
+.title-slide .meta span {
+    color: var(--accent-gold);
+}
+
+/* Section Slide */
+.slide.section-slide .slide-content {
+    align-items: center;
+    text-align: center;
+}
+
+.section-slide h2 {
+    font-size: var(--h2-size);
+}
+
+.section-slide .section-num {
+    font-family: var(--font-display);
+    font-size: clamp(0.7rem, 1vw, 0.9rem);
+    color: var(--accent-pink);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: var(--element-gap);
+}
+
+/* Content Slide */
+.content-slide .slide-content {
+    padding-left: clamp(3rem, 8vw, 7rem);
+}
+
+.content-slide h2 {
+    padding-left: var(--content-gap);
+    border-left: 3px solid var(--accent-warm);
+}
+
+/* Two Column Layout */
+.two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(1rem, 3vw, 3rem);
+    margin-top: var(--content-gap);
+}
+
+@media (max-width: 768px) {
+    .two-col {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Feature Cards */
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+    gap: var(--content-gap);
+    margin-top: var(--content-gap);
+}
+
+.feature-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(212, 165, 116, 0.2);
+    border-radius: 8px;
+    padding: clamp(1rem, 2vw, 1.5rem);
+}
+
+.feature-card h3 {
+    font-size: clamp(0.9rem, 1.3vw, 1.1rem);
+    margin-bottom: var(--element-gap);
+}
+
+.feature-card p {
+    font-size: var(--small-size);
+    color: var(--text-secondary);
+}
+
+/* Flow Diagram */
+.flow-diagram {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(0.3rem, 1vw, 0.8rem);
+    margin-top: var(--content-gap);
+    font-family: var(--font-body);
+}
+
+.flow-item {
+    background: rgba(212, 165, 116, 0.15);
+    border: 1px solid var(--accent-warm);
+    border-radius: 4px;
+    padding: clamp(0.4rem, 1vw, 0.7rem) clamp(0.6rem, 1.5vw, 1rem);
+    font-size: clamp(0.65rem, 1vw, 0.85rem);
+    color: var(--accent-warm);
+    font-weight: 500;
+}
+
+.flow-arrow {
+    color: var(--accent-pink);
+    font-size: clamp(0.8rem, 1.2vw, 1rem);
+}
+
+/* Quote Style */
+.quote {
+    font-family: var(--font-display);
+    font-size: clamp(1.2rem, 2.5vw, 2rem);
+    font-style: italic;
+    color: var(--text-primary);
+    border-left: 3px solid var(--accent-warm);
+    padding-left: var(--content-gap);
+    max-width: 800px;
+}
+
+.quote-author {
+    font-family: var(--font-body);
+    font-size: var(--small-size);
+    color: var(--text-secondary);
+    margin-top: var(--content-gap);
+    font-style: normal;
+}
+
+/* Quote slide centering */
+.slide.quote-slide .slide-content {
+    align-items: flex-start;
+    padding-left: clamp(3rem, 10vw, 8rem);
+}
+
+/* List styles */
+.bullet-list {
+    list-style: none;
+    margin-top: var(--content-gap);
+}
+
+.bullet-list li {
+    padding-left: 1.5em;
+    position: relative;
+    margin-bottom: var(--element-gap);
+}
+
+.bullet-list li::before {
+    content: '—';
+    position: absolute;
+    left: 0;
+    color: var(--accent-warm);
+}
+
+/* Code/tech stack style */
+.code-text {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 0.9em;
+    background: rgba(212, 165, 116, 0.15);
+    padding: 0.1em 0.4em;
+    border-radius: 3px;
+    color: var(--accent-gold);
+}
+
+/* Navigation dots */
+.nav-dots {
+    position: fixed;
+    right: var(--slide-padding);
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 100;
+}
+
+.nav-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.nav-dot.active {
+    background: var(--accent-warm);
+    transform: scale(1.3);
+}
+
+/* Progress bar */
+.progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent-warm), var(--accent-pink));
+    z-index: 1000;
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+/* Section number badge */
+.section-badge {
+    position: absolute;
+    top: var(--slide-padding);
+    right: var(--slide-padding);
+    font-family: var(--font-display);
+    font-size: clamp(0.65rem, 0.9vw, 0.8rem);
+    color: var(--accent-pink);
+    letter-spacing: 0.1em;
+}
+
+/* Highlight text */
+.highlight {
+    color: var(--accent-warm);
+}
+
+/* ===========================================
+   RESPONSIVE BREAKPOINTS
+   =========================================== */
+@media (max-height: 700px) {
+    :root {
+        --slide-padding: clamp(1rem, 3vw, 2.5rem);
+        --content-gap: clamp(0.5rem, 1.5vw, 1.2rem);
+        --title-size: clamp(1.5rem, 5vw, 3.5rem);
+        --h2-size: clamp(1.2rem, 3vw, 2.2rem);
+    }
+}
+
+@media (max-height: 600px) {
+    :root {
+        --title-size: clamp(1.3rem, 4vw, 2.5rem);
+        --body-size: clamp(0.7rem, 1.2vw, 0.95rem);
+    }
+    .nav-dots, .progress-bar {
+        display: none;
+    }
+}
+
+@media (max-width: 600px) {
+    .feature-grid {
+        grid-template-columns: 1fr;
+    }
+    .flow-diagram {
+        flex-direction: column;
+    }
+    .flow-arrow {
+        transform: rotate(90deg);
+    }
+}
+
+/* ===========================================
+   REDUCED MOTION
+   =========================================== */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.2s !important;
+    }
+    html {
+        scroll-behavior: auto;
+    }
+}
+
+/* ===========================================
+   INLINE EDITING STYLES (OPT-IN)
+   =========================================== */
+.edit-hotzone {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 60px;
+    height: 60px;
+    z-index: 9999;
+    cursor: pointer;
+}
+
+.edit-toggle {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    width: 36px;
+    height: 36px;
+    background: rgba(212, 165, 116, 0.9);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    z-index: 10000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.2s ease;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.edit-toggle.show,
+.edit-toggle.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.edit-toggle:hover {
+    transform: scale(1.1);
+}
+
+.edit-mode [contenteditable] {
+    outline: 2px dashed var(--accent-warm);
+    outline-offset: 4px;
+    cursor: text;
+}
+
+</style>
+</head>
+<body>
+
+<!-- Progress Bar -->
+<div class="progress-bar" id="progressBar"></div>
+
+<!-- Navigation Dots -->
+<nav class="nav-dots" id="navDots"></nav>
+
+<!-- Edit Mode Toggle (Opt-In) -->
+<div class="edit-hotzone" id="editHotzone"></div>
+<button class="edit-toggle" id="editToggle" title="编辑模式 (E)">✏️</button>
+
+<!-- =========================================
+     SLIDE 01: TITLE
+     ========================================= -->
+<section class="slide title-slide" data-slide="1">
+    <div class="accent-line"></div>
+    <div class="slide-content">
+        <h1 class="reveal">VibeFlow<br><em>技术分享</em></h1>
+        <p class="subtitle reveal">让 AI 写出的，不只是代码，而是一段有章法的交付</p>
+        <p class="meta reveal"><span>内部技术分享</span> · 2026年3月</p>
+    </div>
+</section>
+
+<!-- =========================================
+     SLIDE 02: PROBLEM BACKGROUND
+     ========================================= -->
+<section class="slide content-slide" data-slide="2">
+    <span class="section-badge">02 / 18</span>
+    <div class="accent-line"></div>
+    <div class="slide-content">
+        <h2 class="reveal">问题背景</h2>
+        <div class="two-col">
+            <div class="reveal">
+                <h3>AI 擅长</h3>
+                <ul class="bullet-list">
+                    <li>即时生成代码片段</li>
+                    <li>快速回答技术问题</li>
+                    <li>根据提示改写内容</li>
+                </ul>
+            </div>
+            <div class="reveal">
+                <h3>工程需要</h3>
+                <ul class="bullet-list">
+                    <li>可追溯的需求变更</li>
+                    <li>可交接的上下文</li>
+                    <li>有收尾的交付流程</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- =========================================
+     SLIDE 03: CORE PROBLEM
+     ========================================= -->
+<section class="slide quote-slide" data-slide="3">
+    <span class="section-badge">03 / 18</span>
+    <div class="slide-content">
+        <p class="quote reveal">
+            "真正稀缺的，不是'生成一段代码'，<br>
+            而是把它稳稳穿过需求、设计、实现、审查、测试、发布与复盘，<br>
+            直到它变成一个可以交付、可以追溯、可以继续演化的系统。"
+        </p>
+    </div>
+</section>
+
+<!-- =========================================
+     SLIDE 04: WHAT IS VIBEFLOW
+     ========================================= -->
+<section class="slide section-slide" data-slide="4">
+    <span class="section-badge">04 / 18</span>
+    <div class="slide-content">
+        <p class="section-num reveal">Definition</p>
+        <h2 class="reveal">什么是 VibeFlow</h2>
+        <p class="reveal" style="font-family: var(--font-display); font-size: var(--h3-size); max-width: 800px; text-align: center; color: var(--text-secondary);">
+            VibeFlow 是一个< span class="highlight">标准化 AI 工程交付编排框架</span>。<br>
+            给 AI 铺上轨道，让交付多一点章法、记忆与收尾。
+        </p>
+    </div>
+</section>
+
+<!-- =========================================
+     SLIDE 05: COMPLETE FLOW
+     ========================================= -->
+<section class="slide content-slide" data-slide="5">
+    <span class="section-badge">05 / 18</span>
+    <div class="accent-line"></div>
+    <div class="slide-content">
+        <h2 class="reveal">完整交付链路</h2>
+        <div class="flow-diagram reveal">
+            <span class="flow-item">Think</span>
+            <span class="flow-arrow">→</span>
+            <span class="flow-item">Plan</span>
+            <span class="flow-arrow">→</span>
+            <span class="flow-item">Requirements</span>
+            <span class="flow-arrow">→</span>
+            <span class="flow-item">Design</span>
+            <span class="flow-arrow">→</span>
+            <span class="flow-item">Build</span>
+            <span class="flow-arrow">→</span>
+            <span class="flow-item">Review</span>
+            <span class="flow-arrow">→</span>
+            <span class="flow-item">Test</span>
+            <span class="flow-arrow">→</span>
+            <span class="flow-item">Ship</span>
+            <span class="flow-arrow">→</span>
+            <span class="flow-item">Reflect</span>
+        </div>
+        <p class="small reveal" style="text-align: center; margin-top: var(--content-gap);">
+            每一步都有状态文件、规格文档和验证产物，让 AI 可以继续、恢复、审查和交接
+        </p>
+    </div>
+</section>
+
+<!-- =========================================
+     SLIDE 06: ARCHITECTURE OVERVIEW
+     ========================================= -->
+<section class="slide content-slide" data-slide="6">
+    <span class="section-badge">06 / 18</span>
+    <div class="accent-line"></div>
+    <div class="slide-content">
+        <h2 class="reveal">架构概览</h2>
+        <div class="feature-grid reveal">
+            <div class="feature-card">
+                <h3>Entry Layer</h3>
+                <p>Session Hook · Router Skill · Phase Detection</p>
+            </div>
+            <div class="feature-card">
+                <h3>Config Layer</h3>
+                <p>Workflow Templates · workflow.yaml · work-config.json</p>
+            </div>
+            <div class="feature-card">
+                <h3>Plan Layer</h3>
+                <p>Think · Plan Review · Requirements · UCD · Design</p>
+            </div>
+            <div class="feature-card">
+                <h3>Build Layer</h3>
+                <p>Build Init · TDD · Quality Gates · Spec Review</p>
+            </div>
+            <div class="feature-card">
+                <h3>Verify Layer</h3>
+                <p>Global Review · System Test · QA</p>
+            </div>
+            <div class="feature-card">
+                <h3>Release Layer</h3>
+                <p>Ship · Reflect · Increment Request</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- =========================================
+     SLIDE 07: FILE DRIVEN
+     ========================================= -->
+<section class="slide section-slide" data-slide="7">
+    <span class="section-badge">07 / 18</span>
+    <div class="slide-content">
+        <p class="section-num reveal">Core Concept</p>
+        <h2 class="reveal">文件驱动</h2>
+        <p class="reveal" style="font-size: var(--body-size); max-width: 700px; text-align: center; color: var(--text-secondary);">
+            状态、规格、任务和验证结果留在仓库里<br>
+            而不是消失在对话窗口中
+        </p>
+    </div>
+</section>
+
+<!-- =========================================
+     SLIDE 08: STATE FILES
+     ========================================= -->
+<section class="slide content-slide" data-slide="8">
+    <span class="section-badge">08 / 18</span>
+    <div class="accent-line"></div>
+    <div class="slide-content">
+        <h2 class="reveal">状态文件体系</h2>
+        <div class="feature-grid reveal">
+            <div class="feature-card">
+                <h3>.vibeflow/state.json</h3>
+                <p>当前阶段、执行状态、上下文快照</p>
+            </div>
+            <div class="feature-card">
+                <h3>workflow.yaml</h3>
+                <p>工作流配置、阶段定义、转换规则</p>
+            </div>
+            <div class="feature-card">
+                <h3>feature-list.json</h3>
+                <p>特性清单、优先级、验收标准</p>
+            </div>
+            <div class="feature-card">
+                <h3>phase-history.json</h3>
+                <p>阶段历史、决策记录、变更追溯</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- =========================================
+     SLIDE 09: AGENT HARNESS
+     ========================================= -->
+<section class="slide content-slide" data-slide="9">
+    <span class="section-badge">09 / 18</span>
+    <div class="accent-line"></div>
+    <div class="slide-content">
+        <h2 class="reveal">Agent Harness</h2>
+        <p class="reveal" style="color: var(--text-secondary); margin-bottom: var(--content-gap);">
+            路由器、技能、质量门、安全护栏 — 共同约束 AI 的执行边界
+        </p>
+        <div class="two-col reveal">
+            <div>
+                <h3>路由器 Router</h3>
+                <p>根据当前阶段决定下一步该做什么</p>
+            </div>
+            <div>
+                <h3>质量门 Quality Gates</h3>
+                <p>每个阶段必须有明确的验收条件</p>
+            </div>
+            <div>
+                <h3>技能 Skills</h3>
+                <p>本地化的技能别名，封装最佳实践</p>
+            </div>
+            <div>
+                <h3>安全护栏 Safety Rails</h3>
+                <p>防止危险操作、自动备份、回滚机制</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- =========================================
+     SLIDE 10: THINK PHASE
+     ========================================= -->
+<section class="slide content-slide" data-slide="10">
+    <span class="section-badge">10 / 18</span>
+    <div class="accent-line"></div>
+    <div class="slide-content">
+        <h2 class="reveal">Think 阶段</h2>
+        <p class="reveal" style="color: var(--text-secondary); margin-bottom: var(--content-gap);">
+            在开始编码之前，先理解问题的本质
+        </p>
+        <ul class="bullet-list reveal">
+            <li>澄清需求：用户真正想要解决的是什么？</li>
+            <li>评估影响：这个改动会影响到哪些部分？</li>
+            <li>识别风险：有哪些技术债务或潜在问题？</li>
+            <li>确定范围：这次交付的边界在哪里？</li>
+        </ul>
+    </div>
+</section>
+
+<!-- =========================================
+     SLIDE 11: PLAN PHASE
+     ========================================= -->
+<section class="slide content-slide" data-slide="11">
+    <span class="section-badge">11 / 18</span>
+    <div class="accent-line"></div>
+    <div class="slide-content">
+        <h2 class="reveal">Plan 阶段</h2>
+        <p class="reveal" style="color: var(--text-secondary); margin-bottom: var(--content-gap);">
+            制定清晰的执行计划，而不是边做边想
+        </p>
+        <ul class="bullet-list reveal">
+            <li>Requirements → 需求文档，明确"做什么"</li>
+            <li>Design → 设计文档，明确"怎么做"</li>
+            <li>Plan Review → 评审检查，确保计划可行</li>
+            <li>Spec-Driven → 先写规格，再进入实现</li>
+        </ul>
+    </div>
+</section>
+
+<!-- =========================================
+     SLIDE 12: BUILD PHASE
+     ========================================= -->
+<section class="slide content-slide" data-slide="12">
+    <span class="section-badge">12 / 18</span>
+    <div class="accent-line"></div>
+    <div class="slide-content">
+        <h2 class="reveal">Build 阶段</h2>
+        <p class="reveal" style="color: var(--text-secondary); margin-bottom: var(--content-gap);">
+            自动续跑：进入 build-init 后，系统默认自动推进
+        </p>
+        <div class="flow-diagram reveal">
+            <span class="flow-item">Build Init</span>
+            <span class="flow-arrow">→</span>
+            <span class="flow-item">TDD</span>
+            <span class="flow-arrow">→</span>
+            <span class="flow-item">Quality Gates</span>
+            <span class="flow-arrow">→</span>
+            <span class="flow-item">Feature Acceptance</span>
+            <span class="flow-arrow">→</span>
+            <span class="flow-item">Spec Review</span>
+        </div>
+        <p class="small reveal" style="margin-top: var(--content-gap);">
+            每个检查点都是一次质量门，确保代码符合预期
+        </p>
+    </div>
+</section>
+
+<!-- =========================================
+     SLIDE 13: SHIP & REFLECT
+     ========================================= -->
+<section class="slide content-slide" data-slide="13">
+    <span class="section-badge">13 / 18</span>
+    <div class="accent-line"></div>
+    <div class="slide-content">
+        <h2 class="reveal">Ship & Reflect</h2>
+        <div class="two-col reveal">
+            <div>
+                <h3>Ship</h3>
+                <ul class="bullet-list">
+                    <li>发布验证：确保可部署</li>
+                    <li>Release Notes：变更记录</li>
+                    <li>增量请求：下一个功能的起点</li>
+                </ul>
+            </div>
+            <div>
+                <h3>Reflect</h3>
+                <ul class="bullet-list">
+                    <li>复盘总结：这次有什么收获？</li>
+                    <li>改进建议：下次如何做得更好？</li>
+                    <li>知识沉淀：经验变成文档</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- =========================================
+     SLIDE 14: TECH STACK
+     ========================================= -->
+<section class="slide content-slide" data-slide="14">
+    <span class="section-badge">14 / 18</span>
+    <div class="accent-line"></div>
+    <div class="slide-content">
+        <h2 class="reveal">技术栈</h2>
+        <div class="feature-grid reveal">
+            <div class="feature-card">
+                <h3>Claude Code</h3>
+                <p>Plugin commands + local skills</p>
+            </div>
+            <div class="feature-card">
+                <h3>Python</h3>
+                <p>Router / workflow config / autopilot / dashboard</p>
+            </div>
+            <div class="feature-card">
+                <h3>Markdown + JSON + YAML</h3>
+                <p>状态和交付产物</p>
+            </div>
+            <div class="feature-card">
+                <h3>Bash + PowerShell</h3>
+                <p>安装和主机集成</p>
+            </div>
+        </div>
+        <p class="reveal small" style="margin-top: var(--content-gap); text-align: center;">
+            <span class="highlight">零外部依赖</span> · 单一 HTML 文件可工作 10 年
+        </p>
+    </div>
+</section>
+
+<!-- =========================================
+     SLIDE 15: SUITABLE TEAMS
+     ========================================= -->
+<section class="slide section-slide" data-slide="15">
+    <span class="section-badge">15 / 18</span>
+    <div class="slide-content">
+        <p class="section-num reveal">Who Should Use</p>
+        <h2 class="reveal">适合的团队</h2>
+        <div class="feature-grid reveal" style="max-width: 900px;">
+            <div class="feature-card">
+                <h3>🎯 完整交付</h3>
+                <p>希望 AI 不只写代码，还能推进完整交付</p>
+            </div>
+            <div class="feature-card">
+                <h3>📋 痕迹保留</h3>
+                <p>需要需求、设计、评审、测试、发布的痕迹</p>
+            </div>
+            <div class="feature-card">
+                <h3>🔄 持续迭代</h3>
+                <p>跨会话恢复、跨人交接、跨模型延续</p>
+            </div>
+            <div class="feature-card">
+                <h3>🏗️ 已有仓库</h3>
+                <p>在已有仓库上持续迭代，而非只做新项目</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- =========================================
+     SLIDE 16: QUICK START
+     ========================================= -->
+<section class="slide content-slide" data-slide="16">
+    <span class="section-badge">16 / 18</span>
+    <div class="accent-line"></div>
+    <div class="slide-content">
+        <h2 class="reveal">快速上手</h2>
+        <div class="reveal" style="font-family: monospace; background: rgba(0,0,0,0.3); padding: clamp(1rem, 2vw, 1.5rem); border-radius: 8px; margin-top: var(--content-gap);">
+            <p style="color: var(--accent-warm); margin-bottom: 0.5em;"># macOS / Linux</p>
+            <p style="margin-bottom: 1em;">curl -fsSL https://.../install.sh | bash</p>
+            <p style="color: var(--accent-warm); margin-bottom: 0.5em;"># Windows PowerShell</p>
+            <p>irm https://.../install.ps1 | iex</p>
+        </div>
+        <p class="reveal small" style="margin-top: var(--content-gap);">
+            安装后运行 <span class="code-text">/plugin install vibeflow@vibeflow</span> 激活
+        </p>
+    </div>
+</section>
+
+<!-- =========================================
+     SLIDE 17: SUMMARY
+     ========================================= -->
+<section class="slide content-slide" data-slide="17">
+    <span class="section-badge">17 / 18</span>
+    <div class="accent-line"></div>
+    <div class="slide-content">
+        <h2 class="reveal">总结</h2>
+        <div class="two-col reveal">
+            <div>
+                <h3>VibeFlow 的价值</h3>
+                <ul class="bullet-list">
+                    <li>给 AI 交付铺上轨道</li>
+                    <li>保留完整的交付痕迹</li>
+                    <li>支持跨会话、跨人恢复</li>
+                    <li>标准化带来可预测性</li>
+                </ul>
+            </div>
+            <div>
+                <h3>核心理念</h3>
+                <ul class="bullet-list">
+                    <li>先定章法，再求速度</li>
+                    <li>先有节奏，后有规模</li>
+                    <li>Spec-Driven 开发</li>
+                    <li>文件即文档</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- =========================================
+     SLIDE 18: Q&A
+     ========================================= -->
+<section class="slide section-slide" data-slide="18">
+    <span class="section-badge">18 / 18</span>
+    <div class="slide-content">
+        <h2 class="reveal" style="font-size: var(--title-size);">Q & A</h2>
+        <p class="reveal" style="font-family: var(--font-display); font-style: italic; color: var(--text-secondary); margin-top: var(--content-gap);">
+            欢迎提问与讨论
+        </p>
+        <p class="reveal small" style="margin-top: calc(var(--content-gap) * 2);">
+            <span class="highlight">VibeFlow</span> · github.com/ttttstc/vibeflow
+        </p>
+    </div>
+</section>
+
+<script>
+/* ===========================================
+   SLIDE PRESENTATION CONTROLLER
+   ========================================= */
+class SlidePresentation {
+    constructor() {
+        this.slides = document.querySelectorAll('.slide');
+        this.currentSlide = 0;
+        this.totalSlides = this.slides.length;
+        this.setupIntersectionObserver();
+        this.setupKeyboardNav();
+        this.setupTouchNav();
+        this.setupProgressBar();
+        this.setupNavDots();
+        this.initInlineEditing();
+    }
+
+    setupIntersectionObserver() {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    const slideIndex = Array.from(this.slides).indexOf(entry.target);
+                    this.currentSlide = slideIndex;
+                    this.updateProgressBar();
+                    this.updateNavDots();
+                }
+            });
+        }, { threshold: 0.5 });
+
+        this.slides.forEach(slide => observer.observe(slide));
+    }
+
+    setupKeyboardNav() {
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+                e.preventDefault();
+                this.nextSlide();
+            } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft' || e.key === 'PageUp') {
+                e.preventDefault();
+                this.prevSlide();
+            } else if (e.key === 'Home') {
+                e.preventDefault();
+                this.goToSlide(0);
+            } else if (e.key === 'End') {
+                e.preventDefault();
+                this.goToSlide(this.totalSlides - 1);
+            }
+        });
+    }
+
+    setupTouchNav() {
+        let startY = 0;
+        document.addEventListener('touchstart', (e) => {
+            startY = e.touches[0].clientY;
+        });
+        document.addEventListener('touchend', (e) => {
+            const endY = e.changedTouches[0].clientY;
+            const diff = startY - endY;
+            if (Math.abs(diff) > 50) {
+                if (diff > 0) this.nextSlide();
+                else this.prevSlide();
+            }
+        });
+    }
+
+    setupProgressBar() {
+        const bar = document.getElementById('progressBar');
+        if (bar) {
+            this.progressBar = bar;
+        }
+    }
+
+    updateProgressBar() {
+        if (this.progressBar) {
+            const progress = ((this.currentSlide + 1) / this.totalSlides) * 100;
+            this.progressBar.style.width = `${progress}%`;
+        }
+    }
+
+    setupNavDots() {
+        const container = document.getElementById('navDots');
+        if (!container) return;
+
+        this.navDots = [];
+        this.slides.forEach((_, index) => {
+            const dot = document.createElement('div');
+            dot.className = 'nav-dot' + (index === 0 ? ' active' : '');
+            dot.addEventListener('click', () => this.goToSlide(index));
+            container.appendChild(dot);
+            this.navDots.push(dot);
+        });
+    }
+
+    updateNavDots() {
+        if (!this.navDots) return;
+        this.navDots.forEach((dot, index) => {
+            dot.classList.toggle('active', index === this.currentSlide);
+        });
+    }
+
+    nextSlide() {
+        if (this.currentSlide < this.totalSlides - 1) {
+            this.goToSlide(this.currentSlide + 1);
+        }
+    }
+
+    prevSlide() {
+        if (this.currentSlide > 0) {
+            this.goToSlide(this.currentSlide - 1);
+        }
+    }
+
+    goToSlide(index) {
+        this.slides[index].scrollIntoView({ behavior: 'smooth' });
+    }
+
+    /* =========================================
+       INLINE EDITING (OPT-IN)
+       ========================================= */
+    initInlineEditing() {
+        const hotzone = document.getElementById('editHotzone');
+        const toggle = document.getElementById('editToggle');
+        if (!hotzone || !toggle) return;
+
+        this.isEditMode = false;
+        this.editToggle = toggle;
+        this.hotzone = hotzone;
+        let hideTimeout = null;
+
+        // Toggle button click
+        toggle.addEventListener('click', () => this.toggleEditMode());
+
+        // Hotzone hover with grace period
+        hotzone.addEventListener('mouseenter', () => {
+            clearTimeout(hideTimeout);
+            toggle.classList.add('show');
+        });
+
+        hotzone.addEventListener('mouseleave', () => {
+            hideTimeout = setTimeout(() => {
+                if (!this.isEditMode) toggle.classList.remove('show');
+            }, 400);
+        });
+
+        toggle.addEventListener('mouseenter', () => {
+            clearTimeout(hideTimeout);
+        });
+
+        toggle.addEventListener('mouseleave', () => {
+            hideTimeout = setTimeout(() => {
+                if (!this.isEditMode) toggle.classList.remove('show');
+            }, 400);
+        });
+
+        // Hotzone direct click
+        hotzone.addEventListener('click', () => this.toggleEditMode());
+
+        // Keyboard shortcut
+        document.addEventListener('keydown', (e) => {
+            if ((e.key === 'e' || e.key === 'E') && !e.target.getAttribute('contenteditable')) {
+                this.toggleEditMode();
+            }
+            if (e.key === 'Escape' && this.isEditMode) {
+                this.toggleEditMode();
+            }
+            if ((e.key === 's' || e.key === 'S') && e.ctrlKey && this.isEditMode) {
+                e.preventDefault();
+                this.saveToLocalStorage();
+            }
+        });
+
+        // Enable contenteditable on text elements
+        this.makeEditable();
+    }
+
+    toggleEditMode() {
+        this.isEditMode = !this.isEditMode;
+        document.body.classList.toggle('edit-mode', this.isEditMode);
+        this.editToggle.classList.toggle('active', this.isEditMode);
+
+        if (this.isEditMode) {
+            this.editToggle.classList.add('show');
+            this.enableEditing();
+        } else {
+            this.disableEditing();
+            this.saveToLocalStorage();
+        }
+    }
+
+    makeEditable() {
+        const editableElements = document.querySelectorAll('h1, h2, h3, p, li, .flow-item');
+        editableElements.forEach(el => {
+            el.setAttribute('contenteditable', 'false');
+            el.setAttribute('data-original', el.innerHTML);
+        });
+    }
+
+    enableEditing() {
+        const editableElements = document.querySelectorAll('h1, h2, h3, p, li, .flow-item');
+        editableElements.forEach(el => {
+            el.setAttribute('contenteditable', 'true');
+        });
+    }
+
+    disableEditing() {
+        const editableElements = document.querySelectorAll('h1, h2, h3, p, li, .flow-item');
+        editableElements.forEach(el => {
+            el.setAttribute('contenteditable', 'false');
+        });
+    }
+
+    saveToLocalStorage() {
+        const content = {};
+        document.querySelectorAll('[contenteditable]').forEach((el, i) => {
+            content[i] = el.innerHTML;
+        });
+        localStorage.setItem('vibeflow-slides-edit', JSON.stringify(content));
+    }
+
+    loadFromLocalStorage() {
+        const saved = localStorage.getItem('vibeflow-slides-edit');
+        if (saved) {
+            const content = JSON.parse(saved);
+            const editableElements = document.querySelectorAll('[contenteditable]');
+            editableElements.forEach((el, i) => {
+                if (content[i]) el.innerHTML = content[i];
+            });
+        }
+    }
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    const presentation = new SlidePresentation();
+    presentation.loadFromLocalStorage();
+});
+</script>
+
+</body>
+</html>

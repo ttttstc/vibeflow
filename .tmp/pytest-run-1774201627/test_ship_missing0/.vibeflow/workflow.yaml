@@ -1,0 +1,3 @@
+template: "prototype"
+ship:
+  required: true

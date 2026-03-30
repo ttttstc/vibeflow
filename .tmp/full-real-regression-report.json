@@ -1,0 +1,14 @@
+{
+  "workspace": "C:\\Users\\2E25~1\\AppData\\Local\\Temp\\vibeflow-real-regression-7n_2nxxu",
+  "steps": [
+    {
+      "name": "fresh_project_commands",
+      "payload": {
+        "paths_has_state": true,
+        "initial_phase": "think",
+        "workflow_path": "C:\\Users\\泥巴猪\\AppData\\Local\\Temp\\vibeflow-real-regression-7n_2nxxu\\fresh-project\\.vibeflow\\workflow.yaml",
+        "work_config_path": "C:\\Users\\泥巴猪\\AppData\\Local\\Temp\\vibeflow-real-regression-7n_2nxxu\\fresh-project\\.vibeflow\\work-config.json"
+      }
+    }
+  ]
+}

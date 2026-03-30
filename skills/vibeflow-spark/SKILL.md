@@ -126,6 +126,9 @@ Skill: vibeflow-plan-value-review
 ## Direction
 [来自步骤 3 的方向声明]
 
+## Roundtable 结论
+[来自步骤 3.1 的圆桌结论，如有；如跳过则标注"未启用"]
+
 ## 复杂度评估
 [来自步骤 4 的评估]
 
@@ -162,7 +165,10 @@ Skill: vibeflow-plan-value-review
   "phase": "spark",
   "decision": "passed / rejected",
   "decision_mode": "...",
-  "reason": "..."
+  "reason": "...",
+  "roundtable_enabled": true,
+  "roundtable_confirmed": true,
+  "roundtable_confirmed_at": "..."
 }
 ```
 
