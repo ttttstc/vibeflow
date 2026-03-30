@@ -60,6 +60,28 @@ Skill: vibeflow-deepresearch（如评估通过）
 **灵感来源**: [竞品启发/市场洞察]
 ```
 
+### 3.1 圆桌会议（可选）
+
+**提示用户：**
+```
+📋 在进入复杂度评估前，是否需要通过圆桌会议从多角色视角审视当前方向？
+
+圆桌参与角色：产品经理、架构师、用户代表、体验代表、竞争力代表
+预计耗时：3-5 分钟
+
+选项：
+- 启用圆桌会议
+- 跳过，直接进入复杂度评估
+```
+
+**用户选择启用时：**
+Skill: `vibeflow-roundtable`
+
+圆桌结论将追加至 `context.md`，用户确认后继续。
+
+**用户选择跳过时：**
+直接继续步骤 4。
+
 ### 4. 复杂度/风险扫描
 
 ```
@@ -104,6 +126,9 @@ Skill: vibeflow-plan-value-review
 ## Direction
 [来自步骤 3 的方向声明]
 
+## Roundtable 结论
+[来自步骤 3.1 的圆桌结论，如有；如跳过则标注"未启用"]
+
 ## 复杂度评估
 [来自步骤 4 的评估]
 
@@ -140,7 +165,10 @@ Skill: vibeflow-plan-value-review
   "phase": "spark",
   "decision": "passed / rejected",
   "decision_mode": "...",
-  "reason": "..."
+  "reason": "...",
+  "roundtable_enabled": true,
+  "roundtable_confirmed": true,
+  "roundtable_confirmed_at": "..."
 }
 ```
 
