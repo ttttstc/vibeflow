@@ -6,6 +6,7 @@ The refactor keeps VibeFlow file-driven, but separates:
 - internal state under .vibeflow/
 - change artifacts under docs/changes/<change-id>/
 - build execution state in feature-list.json
+- architecture specs under docs/architecture/
 
 This module is intentionally lightweight so both scripts and tests can import it.
 """
@@ -353,6 +354,9 @@ def path_contract(project_root: Path, state: dict | None = None) -> dict:
         "packet_results_dir": build_packet_results_dir(project_root, loaded_state),
         "codebase_map_json": codebase_map_json_path(project_root),
         "codebase_map_md": codebase_map_md_path(project_root),
+        "spec_facts": project_root / "docs" / "architecture" / ".spec-facts.json",
+        "spec_inferences": project_root / "docs" / "architecture" / ".spec-inferences.json",
+        "spec_architecture": project_root / "docs" / "architecture" / "full-spec.md",
         "codebase_impact_json": codebase_impact_json_path(project_root, loaded_state),
         "codebase_impact_md": codebase_impact_md_path(project_root, loaded_state),
         "artifacts": {

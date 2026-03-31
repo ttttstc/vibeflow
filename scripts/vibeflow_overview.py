@@ -95,16 +95,28 @@ def feature_status_summary(project_root: Path) -> dict:
 
 
 def codebase_snapshot(project_root: Path, contract: dict) -> dict:
+    # First try the new spec-facts.json
+    spec_facts_path = project_root / "docs" / "architecture" / ".spec-facts.json"
+    if spec_facts_path.exists():
+        data = read_json(spec_facts_path, {})
+        return {
+            "languages": data.get("languages", []),
+            "modules": [m.get("name") for m in data.get("modules", [])],
+            "frameworks": [],  # spec-facts does not have frameworks field
+            "roots": {},
+            "entrypoints": [],
+        }
+    # Fallback to old codebase-map.json (only for legacy projects)
     path = contract["codebase_map_json"]
     if not path.exists():
         return {}
     data = read_json(path, {})
     return {
         "languages": [item.get("name") for item in data.get("languages", []) if item.get("name")][:3],
-        "frameworks": [item.get("name") for item in data.get("frameworks", []) if item.get("name")][:5],
         "modules": [item.get("name") for item in data.get("modules", []) if item.get("name")][:6],
-        "entrypoints": [item.get("path") for item in data.get("entrypoints", []) if item.get("path")][:4],
+        "frameworks": [item.get("name") for item in data.get("frameworks", []) if item.get("name")][:5],
         "roots": data.get("roots") or {},
+        "entrypoints": [item.get("path") for item in data.get("entrypoints", []) if item.get("path")][:4],
     }
 
 
