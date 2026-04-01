@@ -264,3 +264,15 @@ python scripts/run-vibeflow-autopilot.py --project-root .
 ### 规则7：增量队列 FIFO
 
 按先进先出顺序处理，不跳步，不并行。
+
+---
+
+## Reverse-Spec Pre-Flight Check
+
+在进入 Spark 或 Requirements 阶段之前：
+
+1. 检查 `docs/architecture/full-spec.md` 是否存在
+   - 如果存在 → 继续正常的阶段流程
+2. 检查项目根目录是否包含源文件（.py, .ts, .tsx, .js, .jsx）
+   - 如果包含 → 在首次进入时提示用户可以运行 `/vibeflow-reverse-spec` 生成架构文档
+3. 如果 `docs/architecture/full-spec.md` 不存在且用户已选择生成 → 调用 `vibeflow-reverse-spec` skill
