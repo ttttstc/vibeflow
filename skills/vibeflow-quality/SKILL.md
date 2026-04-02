@@ -87,6 +87,23 @@ TDD Refactor 后，对变更文件运行变异测试。
 如任何步骤失败 -> 停止。不标记为 passing。先修复问题。
 ```
 
+## 项目规则检查
+
+如果 implementation packet 的 `custom_rules.files` 非空，质量门禁阶段必须补跑项目规则的可执行检查，而不是只看代码“感觉上像是符合规范”。
+
+对当前功能的变更文件运行：
+
+```bash
+python scripts/vibeflow_rules.py --project-root . --stage build --language <language> --file-scope <changed-file> --file-scope <changed-file> --design-path docs/changes/<change-id>/design.md --evaluate-checks --format markdown
+```
+
+要求：
+
+- 命令退出码必须为 0，才能继续标记功能为 `passing`
+- 如果输出里有 `Issues:`，先修复，再重新执行
+- `Warnings:` 需要在功能报告中说明为什么可以接受，或转成后续改进项
+- 这些检查是覆盖率/变异测试之外的**项目规范门禁**
+
 ## 红线词
 
 如果你发现自己使用以下任何词语，**停止**并重新验证：

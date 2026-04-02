@@ -78,7 +78,7 @@ description: "设计文档存在但 feature-list.json 尚未创建时使用 — 
 - 每个 FR-xxx -> 一个或多个功能条目，含 `id`、`category`、`title`、`description`、`priority`、`status`（始终为 `"failing"`）、`verification_steps`、`dependencies`
 - `verification_steps` 应追溯到 SRS 验收标准（Given/When/Then）
 - UI 功能：设置 `"ui": true`，可选 `"ui_entry": "/路径"`
-- 设计契约中的 `file_scope`、`requirements_refs`、`integration_points`、`required_configs`、`autopilot_commands` 必须原样保留到 feature 条目或 packet 中
+- 设计契约中的 `file_scope`、`requirements_refs`、`integration_points`、`required_configs`、`autopilot_commands` 必须原样保留到 feature 条目中；如生成 packet，只作为缓存视图同步
 
 每个功能条目：
 ```json
@@ -113,6 +113,8 @@ description: "设计文档存在但 feature-list.json 尚未创建时使用 — 
 
 - `.vibeflow/packets/<change-id>/feature-<id>.json`
 
+这些任务包是**可选缓存层**，用于调试、兼容和缩短恢复成本，不再是 Build 阶段唯一正式输入。
+
 每个任务包至少包含：
 - 功能目标
 - 依赖关系
@@ -127,7 +129,7 @@ description: "设计文档存在但 feature-list.json 尚未创建时使用 — 
 - `design_contract.requirements_refs`
 - `design_contract.integration_points`
 
-这些任务包是 Build 阶段后续独立实施单元的正式输入，不应依赖长会话上下文记忆。
+Build 阶段后续独立实施单元的正式输入应以 `feature-list.json + design.md + tasks.md + rules/` 为准，不应依赖长会话上下文记忆。任务包如存在，可作为同构缓存视图使用。
 
 ### 6. 填充 required_configs
 从 SRS（IFR-xxx 接口需求）和设计文档：
@@ -196,7 +198,7 @@ python scripts/new-vibeflow-work-config.py --project-root .
 | 文件 | 用途 |
 |------|------|
 | `feature-list.json` | 带状态的结构化任务清单 |
-| `.vibeflow/packets/<change-id>/feature-*.json` | 每个 feature 的实施任务包 |
+| `.vibeflow/packets/<change-id>/feature-*.json` | 每个 feature 的可选缓存任务包 |
 | `.vibeflow/logs/session-log.md` | 逐会话进度日志 |
 | `RELEASE_NOTES.md` | 活跃的发布说明 |
 | `.vibeflow/guides/build.md` | 项目专属构建指南 |

@@ -32,6 +32,11 @@ A target project is expected to accumulate these artifacts over time:
 - `feature-list.json`
 - `RELEASE_NOTES.md`
 
+Optional compatibility/cache artifacts:
+
+- `.vibeflow/packets/<change-id>/feature-*.json`
+- `.vibeflow/subagent-results/<change-id>/feature-*.json`
+
 ## 2. Workflow Templates
 
 Available templates:
@@ -108,6 +113,15 @@ In Claude Code plugin mode, reaching `build-init` is the handoff point where the
 ```bash
 python scripts/run-vibeflow-autopilot.py --project-root <target-project>
 ```
+
+Build execution is artifact-first:
+
+- `design.md`
+- `tasks.md`
+- `feature-list.json`
+- `rules/`
+
+Packet files may still be generated as cached handoff artifacts, but they are not required for the primary build/review flow.
 
 ## 5. Example Validation
 

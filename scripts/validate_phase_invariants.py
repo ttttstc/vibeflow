@@ -89,6 +89,12 @@ def build_packets_ready(feature_list_path: Path, packets_dir: Path) -> bool:
     return True
 
 
+def build_artifacts_ready(feature_list_path: Path, *, build_init_done: bool = False, work_config_exists: bool = False) -> bool:
+    if not has_active_features(feature_list_path):
+        return False
+    return build_init_done or work_config_exists or has_active_features(feature_list_path)
+
+
 def artifact_lookup(contract: dict) -> dict[str, Path]:
     lookup = dict(contract["artifacts"])
     lookup["feature_list"] = contract["feature_list"]
@@ -136,15 +142,15 @@ def evaluate_evidence(evidence: str, *, state: dict, contract: dict) -> tuple[bo
         return ok, "feature-list.json has active features." if ok else "feature-list.json has no active features."
 
     if evidence == "build_init_ready_signal":
-        ok = (
-            checkpoint_done(state, "build_init")
-            or contract["work_config"].exists()
-            or build_packets_ready(contract["feature_list"], contract["packets_dir"])
+        ok = build_artifacts_ready(
+            contract["feature_list"],
+            build_init_done=checkpoint_done(state, "build_init"),
+            work_config_exists=contract["work_config"].exists(),
         )
         return ok, (
             "build-init readiness signal is present."
             if ok
-            else "build-init readiness signal is missing (need build_init checkpoint, work-config, or packets)."
+            else "build-init readiness signal is missing (need active features in feature-list.json)."
         )
 
     if evidence == "release_notes_exists":

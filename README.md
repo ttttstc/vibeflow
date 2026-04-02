@@ -197,6 +197,8 @@ Build 不是“把整份长上下文硬塞给 AI 再赌它别漂”。
 
 当前已经支持：
 - feature 级实施输入
+- 以 `design.md + tasks.md + feature-list.json + rules/` 为主输入
+- 可选的 packet 缓存，便于调试与兼容，但不再是唯一真相
 - 依赖感知构建
 - 安全回退到串行执行
 - Review 中区分“做得对不对”和“代码写得稳不稳”

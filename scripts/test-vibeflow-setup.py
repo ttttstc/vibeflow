@@ -14,7 +14,7 @@ def load_module(path: Path):
 
 
 SKILL_NAMES = [
-    'vibeflow', 'vibeflow-router', 'vibeflow-think', 'vibeflow-plan',
+    'vibeflow', 'vibeflow-router', 'vibeflow-spark',
     'vibeflow-plan-value-review', 'vibeflow-plan-eng-review', 'vibeflow-plan-design-review',
     'vibeflow-requirements', 'vibeflow-ucd', 'vibeflow-design', 'vibeflow-build-init',
     'vibeflow-build-work', 'vibeflow-tdd', 'vibeflow-quality', 'vibeflow-feature-st',

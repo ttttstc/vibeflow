@@ -34,6 +34,8 @@ check_st_readiness = st_module.check_st_readiness
 mode_selection_required = paths_module.mode_selection_required
 selected_mode = paths_module.selected_mode
 load_project_rules = rules_module.load_project_rules
+render_design_rules_section = rules_module.render_design_rules_section
+select_applicable_rules = rules_module.select_applicable_rules
 
 
 def write(path: Path, content: str) -> None:
@@ -124,6 +126,61 @@ class TestVibeFlowV2:
         ]
         assert [item["id"] for item in rules["files"]] == ["rules-api-contract", "ui-tone"]
 
+    def test_markdown_rule_front_matter_supports_scope_filtering(self, tmp_path):
+        write(
+            tmp_path / "rules" / "python.md",
+            """---
+id: python-style
+title: Python Style
+languages: [python]
+globs: ["**/*.py"]
+layers: [runtime]
+stages: [design, build, review]
+checks: [python-no-bare-except]
+---
+
+# Python Style
+
+Use explicit exceptions.
+""",
+        )
+        write(
+            tmp_path / "rules" / "ts.md",
+            """---
+id: ts-style
+title: TS Style
+languages: [typescript]
+globs: ["**/*.ts"]
+layers: [ui]
+stages: [design, build, review]
+checks: [ts-no-explicit-any]
+---
+
+# TS Style
+
+Avoid any in shipped code.
+""",
+        )
+
+        rules = load_project_rules(tmp_path)
+        assert rules["enabled"] is True
+        assert rules["files"][0]["applies_to"]["languages"] == ["python"]
+        assert rules["files"][0]["checks"] == ["python-no-bare-except"]
+
+        python_rules = select_applicable_rules(
+            tmp_path,
+            rules_context=rules,
+            project_language="python",
+            file_scope=["src/service.py"],
+            layers=["runtime"],
+            stage="build",
+        )
+        assert [item["id"] for item in python_rules["files"]] == ["python-style"]
+
+        design_section = render_design_rules_section(python_rules)
+        assert "## Project Rules And Constraints" in design_section
+        assert "`rules/python.md`" in design_section
+
     def test_init_project_creates_overview_docs(self, tmp_path):
         project_root = tmp_path / "overview-project"
         result = subprocess.run(
@@ -179,6 +236,31 @@ class TestVibeFlowV2:
 
         result = detect_phase(tmp_path)
         assert result["phase"] == "build-init"
+
+    def test_active_feature_list_advances_to_build_config_without_packet_cache(self, tmp_path):
+        state = default_state(tmp_path, topic="artifact-first-build-init")
+        for checkpoint in ("spark", "requirements", "design"):
+            state["checkpoints"][checkpoint] = True
+        save_state(tmp_path, state)
+        contract = path_contract(tmp_path, state)
+
+        write(contract["workflow"], 'template: "api-standard"\n')
+        write(contract["artifacts"]["spark"], "# Spark Output\n")
+        write(contract["artifacts"]["requirements"], "# Requirements\n")
+        write(contract["artifacts"]["design"], "# Design\n")
+        write(contract["artifacts"]["design_review"], "# Design Review\n")
+        write_json(
+            contract["feature_list"],
+            {
+                "project": "artifact-first-build-init",
+                "features": [
+                    {"id": 1, "title": "Artifact-first feature", "status": "failing", "dependencies": []}
+                ],
+            },
+        )
+
+        result = detect_phase(tmp_path)
+        assert result["phase"] == "build-config"
 
     def test_legacy_build_config_keeps_existing_project_past_build_init(self, tmp_path):
         state = default_state(tmp_path, topic="legacy-build-config")

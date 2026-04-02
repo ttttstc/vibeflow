@@ -29,6 +29,8 @@ from vibeflow_paths import (  # noqa: E402
     set_checkpoint,
 )
 from vibeflow_packets import (  # noqa: E402
+    build_feature_packet,
+    ensure_feature_contract,
     feature_execution_config as packet_feature_execution_config,
     load_feature_packet,
     packet_validation_issues,
@@ -37,7 +39,7 @@ from vibeflow_packets import (  # noqa: E402
 )
 from vibeflow_design_contracts import load_design_execution_contracts  # noqa: E402
 from vibeflow_overview import refresh_current_state  # noqa: E402
-from vibeflow_rules import load_project_rules  # noqa: E402
+from vibeflow_rules import evaluate_executable_rule_checks, load_project_rules, select_applicable_rules  # noqa: E402
 
 
 MANUAL_ONLY_PHASES = {
@@ -439,6 +441,9 @@ def scopes_overlap(left: list[str], right: list[str]) -> bool:
 
 
 def feature_packet_scope(project_root: Path, state: dict, feature: dict) -> list[str]:
+    feature_scope = normalize_scope_entries(feature.get("file_scope"))
+    if feature_scope:
+        return feature_scope
     packet = load_feature_packet(project_root, state, feature.get("id"))
     if not packet:
         return []
@@ -485,6 +490,18 @@ def select_feature_batch(
 
 def feature_command_config(feature: dict) -> tuple[list[str], str, int]:
     return packet_feature_execution_config(feature)
+
+
+def normalize_feature_contract(project_root: Path, state: dict, payload: dict, feature: dict) -> dict:
+    rules_context = load_project_rules(project_root)
+    project_language = infer_language(project_root, payload)
+    return ensure_feature_contract(
+        feature,
+        project_root,
+        state,
+        rules_context=rules_context,
+        project_language=project_language,
+    )
 
 
 def run_command(command: str, *, cwd: Path, timeout: int = 300) -> dict:
@@ -542,29 +559,32 @@ def write_feature_report(project_root: Path, feature: dict, command_results: lis
 
 def execute_feature(project_root: Path, feature: dict) -> dict:
     state = ensure_state(project_root)
-    packet = load_feature_packet(project_root, state, feature.get("id"))
-    if not packet:
-        return {
-            "feature_id": feature.get("id"),
-            "title": feature.get("title", "Untitled"),
-            "ok": False,
-            "detail": "Implementation packet is missing for this feature.",
-            "command_results": [],
-            "packet": None,
-        }
+    payload = load_feature_payload(project_root)
+    project_language = infer_language(project_root, payload)
+    rules_context = load_project_rules(project_root)
 
-    packet_issues = packet_validation_issues(packet)
-    if packet_issues:
-        return {
-            "feature_id": feature.get("id"),
-            "title": feature.get("title", "Untitled"),
-            "ok": False,
-            "detail": "Implementation packet is incomplete: " + "; ".join(packet_issues),
-            "command_results": [],
-            "packet": packet,
-        }
+    normalized_feature = ensure_feature_contract(
+        feature,
+        project_root,
+        state,
+        rules_context=rules_context,
+        project_language=project_language,
+    )
+    packet = build_feature_packet(
+        project_root,
+        state,
+        normalized_feature,
+        rules_context=rules_context,
+        project_language=project_language,
+    )
 
-    execution = packet.get("execution") if isinstance(packet.get("execution"), dict) else {}
+    cached_packet = load_feature_packet(project_root, state, feature.get("id"))
+    if cached_packet and not packet_validation_issues(cached_packet):
+        execution_input = cached_packet
+    else:
+        execution_input = packet
+
+    execution = execution_input.get("execution") if isinstance(execution_input.get("execution"), dict) else {}
     commands = normalize_command_list(execution.get("commands"))
     relative_workdir = str(execution.get("workdir") or ".").strip() or "."
     timeout = int(execution.get("timeout_sec") or 300)
@@ -574,7 +594,7 @@ def execute_feature(project_root: Path, feature: dict) -> dict:
             "feature_id": feature.get("id"),
             "title": feature.get("title", "Untitled"),
             "ok": False,
-            "detail": "No execution commands are configured for this feature packet.",
+            "detail": "No execution commands are configured for this feature contract.",
             "command_results": [],
             "packet": packet,
         }
@@ -646,27 +666,19 @@ def run_review_command(command: list[str], *, cwd: Path = REPO_ROOT, label: str 
 
 def review_spec_compliance(project_root: Path, state: dict, payload: dict) -> dict:
     issues: list[str] = []
+    warnings: list[str] = []
     notes: list[str] = []
     contract = path_contract(project_root, state)
     features = active_features(payload)
     rules_context = load_project_rules(project_root)
-    expected_rule_ids = [
-        str(rule.get("id") or "").strip()
-        for rule in rules_context.get("files") or []
-        if str(rule.get("id") or "").strip()
-    ]
-    expected_rule_paths = [
-        str(rule.get("path") or "").strip()
-        for rule in rules_context.get("files") or []
-        if str(rule.get("path") or "").strip()
-    ]
+    project_language = infer_language(project_root, payload)
 
     if not features:
         issues.append("No active features found in feature-list.json.")
 
     if rules_context.get("enabled"):
         notes.append(
-            f"- Project custom rules: {len(expected_rule_ids)} file(s) loaded from {rules_context.get('rules_dir', 'rules/')}"
+            f"- Project custom rules: {len(rules_context.get('files') or [])} file(s) loaded from {rules_context.get('rules_dir', 'rules/')}"
         )
         guidance_files = normalize_command_list(rules_context.get("agent_guidance_files"))
         if guidance_files:
@@ -675,46 +687,86 @@ def review_spec_compliance(project_root: Path, state: dict, payload: dict) -> di
             )
 
     for feature in features:
+        normalized_feature = ensure_feature_contract(
+            feature,
+            project_root,
+            state,
+            rules_context=rules_context,
+            project_language=project_language,
+        )
         feature_id = feature.get("id")
         title = feature.get("title", "Untitled")
-        packet = load_feature_packet(project_root, state, feature_id)
-        if not packet:
-            issues.append(f"Feature #{feature_id} ({title}): implementation packet is missing.")
-            continue
+        feature_rules = normalized_feature.get("custom_rules") if isinstance(normalized_feature.get("custom_rules"), dict) else {}
+        feature_source_refs = normalized_feature.get("source_refs") if isinstance(normalized_feature.get("source_refs"), dict) else {}
 
-        packet_issues = packet_validation_issues(packet)
-        if packet_issues:
-            issues.append(
-                f"Feature #{feature_id} ({title}): implementation packet is incomplete: "
-                + "; ".join(packet_issues)
-            )
+        expected_rules = select_applicable_rules(
+            project_root,
+            rules_context=rules_context,
+            project_language=project_language,
+            file_scope=normalize_command_list(normalized_feature.get("file_scope")),
+            layers=normalize_command_list(normalized_feature.get("layers") or normalized_feature.get("layer")),
+            stage="build",
+        )
+        expected_rule_ids = [
+            str(rule.get("id") or "").strip()
+            for rule in expected_rules.get("files") or []
+            if str(rule.get("id") or "").strip()
+        ]
+        expected_rule_paths = [
+            str(rule.get("path") or "").strip()
+            for rule in expected_rules.get("files") or []
+            if str(rule.get("path") or "").strip()
+        ]
 
-        if rules_context.get("enabled"):
-            custom_rules = packet.get("custom_rules") if isinstance(packet.get("custom_rules"), dict) else {}
-            source_refs = packet.get("source_refs") if isinstance(packet.get("source_refs"), dict) else {}
-            packet_rule_ids = [
+        if expected_rules.get("enabled"):
+            feature_rule_ids = [
                 str(rule.get("id") or "").strip()
-                for rule in custom_rules.get("files") or []
+                for rule in feature_rules.get("files") or []
                 if isinstance(rule, dict) and str(rule.get("id") or "").strip()
             ]
-            packet_rule_paths = normalize_command_list(source_refs.get("rules"))
+            feature_rule_paths = normalize_command_list(feature_source_refs.get("rules"))
 
-            if not custom_rules.get("enabled"):
+            if not feature_rules.get("enabled"):
                 issues.append(
-                    f"Feature #{feature_id} ({title}): custom rules exist in rules/ but were not injected into the implementation packet."
+                    f"Feature #{feature_id} ({title}): applicable custom rules exist in rules/ but were not materialized into the feature contract."
                 )
-            elif packet_rule_ids != expected_rule_ids:
+            elif feature_rule_ids != expected_rule_ids:
                 issues.append(
-                    f"Feature #{feature_id} ({title}): implementation packet custom rules differ from the current project rules."
+                    f"Feature #{feature_id} ({title}): feature contract custom rules differ from the applicable project rules."
                 )
-            elif packet_rule_paths != expected_rule_paths:
+            elif feature_rule_paths != expected_rule_paths:
                 issues.append(
-                    f"Feature #{feature_id} ({title}): source_refs.rules does not match the current project rules."
+                    f"Feature #{feature_id} ({title}): feature contract source_refs.rules does not match the applicable project rules."
                 )
-            elif not str(custom_rules.get("precedence_note") or "").strip():
+            elif not str(feature_rules.get("precedence_note") or "").strip():
                 issues.append(
-                    f"Feature #{feature_id} ({title}): custom rules precedence note is missing."
+                    f"Feature #{feature_id} ({title}): feature contract custom rules precedence note is missing."
                 )
+            notes.append(
+                f"- Feature #{feature_id}: applicable rules={len(expected_rule_ids)} ({', '.join(expected_rule_ids) if expected_rule_ids else 'none'})"
+            )
+        else:
+            notes.append(f"- Feature #{feature_id}: no project rules matched its current build scope.")
+
+        packet = load_feature_packet(project_root, state, feature_id)
+        if packet:
+            packet_issues = packet_validation_issues(packet)
+            if packet_issues:
+                warnings.append(
+                    f"Feature #{feature_id} ({title}): legacy implementation packet is incomplete and was ignored: "
+                    + "; ".join(packet_issues)
+                )
+            else:
+                packet_rules = packet.get("custom_rules") if isinstance(packet.get("custom_rules"), dict) else {}
+                packet_rule_ids = [
+                    str(rule.get("id") or "").strip()
+                    for rule in packet_rules.get("files") or []
+                    if isinstance(rule, dict) and str(rule.get("id") or "").strip()
+                ]
+                if feature_rules.get("enabled") and packet_rule_ids and packet_rule_ids != expected_rule_ids:
+                    warnings.append(
+                        f"Feature #{feature_id} ({title}): legacy implementation packet rules differ from the current feature contract."
+                    )
 
         result_path = contract["packet_results_dir"] / f"feature-{feature_id}.json"
         if not result_path.exists():
@@ -736,14 +788,16 @@ def review_spec_compliance(project_root: Path, state: dict, payload: dict) -> di
             issues.append(f"Feature #{feature_id} ({title}): result still requires clarification.")
 
         notes.append(
-            f"- Feature #{feature_id}: packet + result present, status={result_payload.get('status', 'unknown')}"
+            f"- Feature #{feature_id}: feature contract + result present, status={result_payload.get('status', 'unknown')}"
         )
 
     lines = [
-        f"Checked {len(features)} active feature(s) against implementation packets and results.",
+        f"Checked {len(features)} active feature(s) against feature contracts and implementation results.",
     ]
     if notes:
         lines.extend(["", "Evidence:", *notes])
+    if warnings:
+        lines.extend(["", "Warnings:", *[f"- {warning}" for warning in warnings]])
     if issues:
         lines.extend(["", "Issues:", *[f"- {issue}" for issue in issues]])
     else:
@@ -751,6 +805,104 @@ def review_spec_compliance(project_root: Path, state: dict, payload: dict) -> di
 
     return {
         "label": "Implementation Delivery & Rule Consistency" if rules_context.get("enabled") else "Implementation Delivery Consistency",
+        "ok": not issues,
+        "exit_code": 0 if not issues else 1,
+        "body": "\n".join(lines).strip(),
+    }
+
+
+def review_rule_enforcement(project_root: Path, state: dict, payload: dict) -> dict:
+    issues: list[str] = []
+    warnings: list[str] = []
+    notes: list[str] = []
+    contract = path_contract(project_root, state)
+    rules_context = load_project_rules(project_root)
+    design_path = contract["artifacts"]["design"]
+    project_language = infer_language(project_root, payload)
+
+    if not (rules_context.get("files") or []):
+        return {
+            "label": "Executable Rule Checks",
+            "ok": True,
+            "exit_code": 0,
+            "body": "No project rules define executable checks.",
+        }
+
+    project_rules = select_applicable_rules(
+        project_root,
+        rules_context=rules_context,
+        project_language=project_language,
+        stage="review",
+    )
+    project_level = evaluate_executable_rule_checks(
+        project_root,
+        rules=project_rules.get("files") or [],
+        implemented_files=[],
+        design_path=design_path,
+    )
+    issues.extend(project_level["issues"])
+    warnings.extend(project_level["warnings"])
+    if project_level["active_checks"]:
+        notes.append(
+            "- Project-level checks: " + ", ".join(project_level["active_checks"])
+        )
+
+    for feature in active_features(payload):
+        feature_id = feature.get("id")
+        title = feature.get("title", "Untitled")
+        result_path = contract["packet_results_dir"] / f"feature-{feature_id}.json"
+        if not result_path.exists():
+            issues.append(f"Feature #{feature_id} ({title}): implementation result file is missing.")
+            continue
+
+        result_payload = read_json(result_path, {})
+        normalized_feature = ensure_feature_contract(
+            feature,
+            project_root,
+            state,
+            rules_context=rules_context,
+            project_language=project_language,
+        )
+        implemented_files = normalize_command_list(result_payload.get("implemented_files")) or normalize_command_list(
+            normalized_feature.get("file_scope")
+        )
+        custom_rules = normalized_feature.get("custom_rules") if isinstance(normalized_feature.get("custom_rules"), dict) else {}
+        applicable_rules: list[dict] = []
+        for rule in (custom_rules.get("files") if isinstance(custom_rules.get("files"), list) else []):
+            if not isinstance(rule, dict):
+                continue
+            cloned = dict(rule)
+            cloned["checks"] = [
+                check for check in normalize_command_list(rule.get("checks")) if check != "design-rules-documented"
+            ]
+            applicable_rules.append(cloned)
+        rule_check_result = evaluate_executable_rule_checks(
+            project_root,
+            rules=applicable_rules,
+            implemented_files=implemented_files,
+            design_path=design_path,
+        )
+        if rule_check_result["issues"]:
+            issues.extend([f"Feature #{feature_id} ({title}): {item}" for item in rule_check_result["issues"]])
+        if rule_check_result["warnings"]:
+            warnings.extend([f"Feature #{feature_id} ({title}): {item}" for item in rule_check_result["warnings"]])
+        if rule_check_result["active_checks"]:
+            notes.append(
+                f"- Feature #{feature_id}: executable checks={', '.join(rule_check_result['active_checks'])}"
+            )
+
+    lines = ["Checked executable project rules against design artifacts and implemented files."]
+    if notes:
+        lines.extend(["", "Evidence:", *notes])
+    if warnings:
+        lines.extend(["", "Warnings:", *[f"- {warning}" for warning in warnings]])
+    if issues:
+        lines.extend(["", "Issues:", *[f"- {issue}" for issue in issues]])
+    else:
+        lines.extend(["", "Issues:", "- None."])
+
+    return {
+        "label": "Executable Rule Checks",
         "ok": not issues,
         "exit_code": 0 if not issues else 1,
         "body": "\n".join(lines).strip(),
@@ -900,7 +1052,7 @@ def execute_build_init(project_root: Path, state: dict, runtime: dict) -> dict:
     payload = sync_feature_packets(project_root, state, payload)
     save_feature_payload(project_root, payload)
     packet_count = len(payload.get("features", []))
-    detail = f"{detail.rstrip('.')} Generated {packet_count} implementation packet(s)."
+    detail = f"{detail.rstrip('.')} Materialized {packet_count} feature contract(s) and refreshed optional packet caches."
 
     set_checkpoint(state, "build_init", True, phase="build-init")
     save_state(project_root, state)
@@ -1068,6 +1220,7 @@ def execute_review(project_root: Path, state: dict, runtime: dict) -> dict:
             label="Required Config Checks",
         ),
         review_code_quality(project_root, state, payload),
+        review_rule_enforcement(project_root, state, payload),
     ]
 
     all_checks = spec_checks + quality_checks

@@ -133,21 +133,26 @@ class TestVibeFlowModeE2E:
 
         state = update_state(
             project_root,
-            lambda data: data["checkpoints"].__setitem__("think", True),
+            lambda data: (
+                data["checkpoints"].__setitem__("spark", True),
+                data["checkpoints"].__setitem__("requirements", True),
+            ),
         )
-        write_text(project_root / state["artifacts"]["think"], "# Context\n\nInvariant runtime.\n")
+        write_text(project_root / state["artifacts"]["spark"], "# Context\n\nInvariant runtime.\n")
+        write_text(project_root / state["artifacts"]["requirements"], "# Requirements\n\nInvariant runtime.\n")
         create_workflow(project_root)
-        write_text(project_root / state["artifacts"]["plan"], "# Proposal\n\nWaiting approval.\n")
+        write_text(project_root / state["artifacts"]["design"], "# Design\n\nWaiting approval.\n")
+        write_text(project_root / state["artifacts"]["design_review"], "# Design Review\n\nApproved.\n")
 
         result = detect_phase(project_root)
-        assert result["phase"] == "plan"
+        assert result["phase"] == "design"
         assert result["reason_code"] == "missing_approval"
-        assert result["blocking_item"] == "plan"
+        assert result["blocking_item"] == "design"
 
         runtime = read_json(project_root / ".vibeflow" / "runtime.json")
-        assert runtime["invariant"]["phase"] == "plan"
+        assert runtime["invariant"]["phase"] == "design"
         assert runtime["invariant"]["reason_code"] == "missing_approval"
-        assert "plan checkpoint" in runtime["invariant"]["reason"]
+        assert "design checkpoint" in runtime["invariant"]["reason"]
 
     def test_full_mode_end_to_end_flow(self, tmp_path):
         project_root = tmp_path / "full-mode-project"
@@ -161,28 +166,17 @@ class TestVibeFlowModeE2E:
         )
 
         phases = [detect_phase(project_root)["phase"]]
-        assert phases[-1] == "think"
+        assert phases[-1] == "spark"
 
         state = update_state(
             project_root,
-            lambda data: data["checkpoints"].__setitem__("think", True),
+            lambda data: data["checkpoints"].__setitem__("spark", True),
         )
-        write_text(project_root / state["artifacts"]["think"], "# Context\n\nFull mode context.\n")
-        phases.append(detect_phase(project_root)["phase"])
-        assert phases[-1] == "template-selection"
-
-        create_workflow(project_root)
-        phases.append(detect_phase(project_root)["phase"])
-        assert phases[-1] == "plan"
-
-        state = update_state(
-            project_root,
-            lambda data: data["checkpoints"].__setitem__("plan", True),
-        )
-        write_text(project_root / state["artifacts"]["plan"], "# Proposal\n\nFull mode proposal.\n")
+        write_text(project_root / state["artifacts"]["spark"], "# Context\n\nFull mode context.\n")
         phases.append(detect_phase(project_root)["phase"])
         assert phases[-1] == "requirements"
 
+        create_workflow(project_root)
         state = update_state(
             project_root,
             lambda data: data["checkpoints"].__setitem__("requirements", True),
@@ -263,9 +257,7 @@ class TestVibeFlowModeE2E:
         report = setup_report(project_root)
         assert report["setup_ok"] is True
         assert phases == [
-            "think",
-            "template-selection",
-            "plan",
+            "spark",
             "requirements",
             "design",
             "build-init",

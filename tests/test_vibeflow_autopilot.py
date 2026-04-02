@@ -865,6 +865,19 @@ file_scope = ["src/broken.py"]
         assert feature_result["status"] == "passing"
         assert feature_result["verification"]["passed"] is True
 
+    def test_build_work_recovers_when_packet_cache_is_missing(self, tmp_path):
+        project_root = create_parallel_project(tmp_path)
+        state = read_json(project_root / ".vibeflow" / "state.json")
+        packet_dir = project_root / ".vibeflow" / "packets" / state["active_change"]["id"]
+        if packet_dir.exists():
+            shutil.rmtree(packet_dir)
+
+        result = run_build_work(project_root, "--max-workers", 2)
+        assert result["ok"] is True
+
+        feature_payload = read_json(project_root / "feature-list.json")
+        assert all(feature["status"] == "passing" for feature in feature_payload["features"])
+
     def test_autopilot_blocks_on_failed_feature_command(self, tmp_path):
         project_root = create_parallel_project(tmp_path)
         feature_payload = read_json(project_root / "feature-list.json")
@@ -910,7 +923,7 @@ file_scope = ["src/broken.py"]
         assert "Feature #2 (Feature B): implementation result file is missing." in review_text
         assert "FAIL — Fix review issues before system testing." in review_text
 
-    def test_review_blocks_when_project_rules_are_missing_from_packet(self, tmp_path):
+    def test_review_ignores_legacy_packet_rule_drift_when_feature_contract_is_correct(self, tmp_path):
         project_root = create_parallel_project(tmp_path)
         write_text(project_root / "rules" / "api.md", "# API Rules\n\nKeep the summary payload stable.\n")
 
@@ -930,14 +943,142 @@ file_scope = ["src/broken.py"]
         state["checkpoints"]["review"] = False
         write_json(project_root / ".vibeflow" / "state.json", state)
 
+        result = run_autopilot(project_root, "--stop-at", "test-system")
+        assert result["status"] == "stopped"
+        assert result["final_phase"] == "test-system"
+
+        review_artifact = project_root / state["artifacts"]["review"]
+        assert review_artifact.exists()
+        review_text = review_artifact.read_text(encoding="utf-8")
+        assert "FAIL — Fix review issues before system testing." not in review_text
+        assert "applicable custom rules exist in rules/" not in review_text
+
+    def test_review_uses_feature_contracts_when_packets_are_removed(self, tmp_path):
+        project_root = create_parallel_project(tmp_path)
+        write_text(project_root / "rules" / "api.md", "# API Rules\n\nKeep the summary payload stable.\n")
+
+        build_result = run_build_work(project_root, "--max-workers", 2)
+        assert build_result["ok"] is True
+
+        state = read_json(project_root / ".vibeflow" / "state.json")
+        packet_dir = project_root / ".vibeflow" / "packets" / state["active_change"]["id"]
+        assert packet_dir.exists()
+        shutil.rmtree(packet_dir)
+
+        state["current_phase"] = "review"
+        state["checkpoints"]["build_work"] = True
+        state["checkpoints"]["review"] = False
+        write_json(project_root / ".vibeflow" / "state.json", state)
+
+        result = run_autopilot(project_root, "--stop-at", "test-system")
+        assert result["status"] == "stopped"
+        assert result["final_phase"] == "test-system"
+
+        review_artifact = project_root / state["artifacts"]["review"]
+        review_text = review_artifact.read_text(encoding="utf-8")
+        assert "implementation packet is missing" not in review_text
+        assert "FAIL — Fix review issues before system testing." not in review_text
+
+    def test_build_work_filters_rules_by_scope_before_packet_injection(self, tmp_path):
+        project_root = create_parallel_project(tmp_path)
+        write_text(
+            project_root / "rules" / "python.md",
+            """---
+id: python-style
+title: Python Style
+languages: [python]
+globs: ["**/*.py"]
+layers: [runtime]
+stages: [design, build, review]
+checks: [python-no-bare-except]
+---
+
+# Python Style
+
+Use explicit exceptions.
+""",
+        )
+        write_text(
+            project_root / "rules" / "typescript.md",
+            """---
+id: ts-style
+title: TS Style
+languages: [typescript]
+globs: ["**/*.ts"]
+layers: [ui]
+stages: [design, build, review]
+checks: [ts-no-explicit-any]
+---
+
+# TS Style
+
+Avoid explicit any.
+""",
+        )
+
+        feature_payload = read_json(project_root / "feature-list.json")
+        feature_payload["features"][0]["file_scope"] = ["src/feature_a.py"]
+        feature_payload["features"][1]["file_scope"] = ["web/feature_b.ts"]
+        write_json(project_root / "feature-list.json", feature_payload)
+
+        build_result = run_build_work(project_root, "--max-workers", 2)
+        assert build_result["ok"] is True
+
+        state = read_json(project_root / ".vibeflow" / "state.json")
+        packet_dir = project_root / ".vibeflow" / "packets" / state["active_change"]["id"]
+        packet_a = read_json(packet_dir / "feature-1.json")
+        packet_b = read_json(packet_dir / "feature-2.json")
+
+        assert [item["id"] for item in packet_a["custom_rules"]["files"]] == ["python-style"]
+        assert packet_a["source_refs"]["rules"] == ["rules/python.md"]
+        assert [item["id"] for item in packet_b["custom_rules"]["files"]] == ["ts-style"]
+        assert packet_b["source_refs"]["rules"] == ["rules/typescript.md"]
+
+    def test_review_blocks_when_executable_rule_check_fails(self, tmp_path):
+        project_root = create_parallel_project(tmp_path)
+        write_text(
+            project_root / "rules" / "python.md",
+            """---
+id: python-style
+title: Python Style
+languages: [python]
+globs: ["**/*.py"]
+layers: [runtime]
+stages: [design, build, review]
+checks: [python-no-bare-except]
+---
+
+# Python Style
+
+Use explicit exceptions.
+""",
+        )
+        write_text(
+            project_root / "src" / "feature_a.py",
+            "def run():\n    try:\n        return 1\n    except:\n        return 0\n",
+        )
+
+        feature_payload = read_json(project_root / "feature-list.json")
+        feature_payload["features"][0]["file_scope"] = ["src/feature_a.py"]
+        write_json(project_root / "feature-list.json", feature_payload)
+
+        build_result = run_build_work(project_root, "--max-workers", 2)
+        assert build_result["ok"] is True
+
+        state = read_json(project_root / ".vibeflow" / "state.json")
+        state["current_phase"] = "review"
+        state["checkpoints"]["build_work"] = True
+        state["checkpoints"]["review"] = False
+        write_json(project_root / ".vibeflow" / "state.json", state)
+
         result = run_autopilot(project_root, expect_ok=False)
         assert result["status"] == "blocked"
         assert result["final_phase"] == "review"
 
         review_artifact = project_root / state["artifacts"]["review"]
-        assert review_artifact.exists()
         review_text = review_artifact.read_text(encoding="utf-8")
-        assert "custom rules exist in rules/ but were not injected into the implementation packet." in review_text
+        assert "Executable Rule Checks" in review_text
+        assert "Bare except found in runtime Python files: src/feature_a.py" in review_text
 
     def test_parallel_build_falls_back_to_serial_when_file_scope_overlaps(self, tmp_path):
         project_root = create_conflicting_parallel_project(tmp_path)

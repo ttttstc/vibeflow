@@ -95,6 +95,14 @@ def build_packets_ready(feature_list_path: Path, packets_dir: Path) -> bool:
     return all((packets_dir / f"feature-{feature.get('id')}.json").exists() for feature in features if feature.get("id") is not None)
 
 
+def build_artifacts_ready(feature_list_path: Path, *, build_init_done: bool = False, work_config_exists: bool = False) -> bool:
+    if not feature_list_path.exists():
+        return False
+    if not has_active_features(feature_list_path):
+        return False
+    return build_init_done or work_config_exists or has_active_features(feature_list_path)
+
+
 def increment_pending(project_root: Path) -> bool:
     queue_json = increment_queue_path(project_root)
     if queue_json.exists():
@@ -300,10 +308,10 @@ def state_based_detect_phase(project_root: Path, verbose: bool = False) -> dict:
     pending_increment = increment_pending(project_root)
     quick_issues = quick_readiness_issues(project_root, state) if is_quick_mode else []
     quick_state_meta = quick_meta(state) if is_quick_mode else {}
-    build_init_ready = feature_list.exists() and has_active_features(feature_list) and (
-        checkpoint_done(state, "build_init")
-        or build_packets_ready(feature_list, packets_dir)
-        or work_config.exists()
+    build_init_ready = build_artifacts_ready(
+        feature_list,
+        build_init_done=checkpoint_done(state, "build_init"),
+        work_config_exists=work_config.exists(),
     )
 
     checks = []
@@ -326,7 +334,7 @@ def state_based_detect_phase(project_root: Path, verbose: bool = False) -> dict:
             + (
                 "ready"
                 if build_init_ready
-                else "feature-list, work-config, or implementation packets are missing/incomplete"
+                else "feature-list is missing or has no active features"
             ),
         )
     )

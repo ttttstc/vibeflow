@@ -10,7 +10,7 @@ from vibeflow_paths import (
     build_packet_result_path,
     path_contract,
 )
-from vibeflow_rules import load_project_rules
+from vibeflow_rules import load_project_rules, select_applicable_rules
 
 
 PACKET_VERSION = 1
@@ -137,6 +137,8 @@ def _normalize_custom_rules(rules_context: dict) -> dict:
                 "format": str(rule.get("format") or "").strip(),
                 "summary": str(rule.get("summary") or "").strip(),
                 "content": str(rule.get("content") or "").strip(),
+                "applies_to": rule.get("applies_to") if isinstance(rule.get("applies_to"), dict) else {},
+                "checks": normalize_string_list(rule.get("checks")),
             }
         )
     return {
@@ -168,7 +170,14 @@ def _rules_summary(custom_rules: dict) -> str:
     return summary[: SUMMARY_CHAR_LIMIT - 3].rstrip() + "..."
 
 
-def ensure_feature_contract(feature: dict, project_root: Path, state: dict, *, rules_context: dict | None = None) -> dict:
+def ensure_feature_contract(
+    feature: dict,
+    project_root: Path,
+    state: dict,
+    *,
+    rules_context: dict | None = None,
+    project_language: str = "",
+) -> dict:
     contract = path_contract(project_root, state)
     loaded_rules = rules_context or load_project_rules(project_root)
     normalized = deepcopy(feature)
@@ -177,7 +186,6 @@ def ensure_feature_contract(feature: dict, project_root: Path, state: dict, *, r
     title = str(normalized.get("title") or f"Feature {feature_id}").strip()
     description = str(normalized.get("description") or title).strip()
     commands, workdir, timeout = feature_execution_config(normalized)
-    rules_refs = [str(rule.get("path") or "").strip() for rule in loaded_rules.get("files") or [] if str(rule.get("path") or "").strip()]
 
     normalized["title"] = title
     normalized["description"] = description
@@ -202,16 +210,30 @@ def ensure_feature_contract(feature: dict, project_root: Path, state: dict, *, r
     normalized["requirements_refs"] = normalize_string_list(normalized.get("requirements_refs") or normalized.get("requirements"))
     normalized["design_section"] = str(normalized.get("design_section") or "").strip()
     normalized["integration_points"] = normalize_string_list(normalized.get("integration_points"))
+    normalized["layers"] = normalize_string_list(normalized.get("layers") or normalized.get("layer"))
     normalized["build_contract_ref"] = (
         str(normalized.get("build_contract_ref") or "").strip() or f"{contract['artifacts']['design']}#build-contract"
     )
+    selected_rules = select_applicable_rules(
+        project_root,
+        rules_context=loaded_rules,
+        project_language=project_language,
+        file_scope=normalized.get("file_scope") or [],
+        layers=normalized.get("layers") or [],
+        stage="build",
+    )
+    rules_refs = [
+        str(rule.get("path") or "").strip()
+        for rule in selected_rules.get("files") or []
+        if str(rule.get("path") or "").strip()
+    ]
     normalized["source_refs"] = _normalize_source_refs(
         normalized.get("source_refs"),
         contract,
         normalized,
         rules_refs=rules_refs,
     )
-    normalized["custom_rules"] = _normalize_custom_rules(loaded_rules)
+    normalized["custom_rules"] = _normalize_custom_rules(selected_rules)
 
     if commands and not normalize_string_list(normalized.get("autopilot_commands")):
         normalized["autopilot_commands"] = commands
@@ -227,9 +249,22 @@ def ensure_feature_contract(feature: dict, project_root: Path, state: dict, *, r
     return normalized
 
 
-def build_feature_packet(project_root: Path, state: dict, feature: dict, *, rules_context: dict | None = None) -> dict:
+def build_feature_packet(
+    project_root: Path,
+    state: dict,
+    feature: dict,
+    *,
+    rules_context: dict | None = None,
+    project_language: str = "",
+) -> dict:
     loaded_rules = rules_context or load_project_rules(project_root)
-    normalized = ensure_feature_contract(feature, project_root, state, rules_context=loaded_rules)
+    normalized = ensure_feature_contract(
+        feature,
+        project_root,
+        state,
+        rules_context=loaded_rules,
+        project_language=project_language,
+    )
     contract = path_contract(project_root, state)
     commands, workdir, timeout = feature_execution_config(normalized)
     rules_summary = _rules_summary(normalized.get("custom_rules") or {})
@@ -313,8 +348,15 @@ def packet_validation_issues(packet: dict) -> list[str]:
     return issues
 
 
-def write_feature_packet(project_root: Path, state: dict, feature: dict, *, rules_context: dict | None = None) -> Path:
-    packet = build_feature_packet(project_root, state, feature, rules_context=rules_context)
+def write_feature_packet(
+    project_root: Path,
+    state: dict,
+    feature: dict,
+    *,
+    rules_context: dict | None = None,
+    project_language: str = "",
+) -> Path:
+    packet = build_feature_packet(project_root, state, feature, rules_context=rules_context, project_language=project_language)
     path = build_packet_path(project_root, state, feature.get("id"))
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(packet, indent=2, ensure_ascii=False), encoding="utf-8")
@@ -330,8 +372,15 @@ def load_feature_packet(project_root: Path, state: dict, feature_id: int | str) 
 
 def sync_feature_packets(project_root: Path, state: dict, payload: dict) -> dict:
     rules_context = load_project_rules(project_root)
+    project_language = str(((payload.get("tech_stack") or {}).get("language") or "")).strip()
     normalized_features = [
-        ensure_feature_contract(feature, project_root, state, rules_context=rules_context)
+        ensure_feature_contract(
+            feature,
+            project_root,
+            state,
+            rules_context=rules_context,
+            project_language=project_language,
+        )
         for feature in payload.get("features", [])
     ]
     payload["features"] = normalized_features
@@ -340,7 +389,13 @@ def sync_feature_packets(project_root: Path, state: dict, payload: dict) -> dict
     packet_dir.mkdir(parents=True, exist_ok=True)
     active_paths: set[Path] = set()
     for feature in normalized_features:
-        packet_path = write_feature_packet(project_root, state, feature, rules_context=rules_context)
+        packet_path = write_feature_packet(
+            project_root,
+            state,
+            feature,
+            rules_context=rules_context,
+            project_language=project_language,
+        )
         active_paths.add(packet_path.resolve())
 
     for stale in packet_dir.glob("feature-*.json"):
