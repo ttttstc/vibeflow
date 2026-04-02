@@ -89,7 +89,7 @@ TDD Refactor 后，对变更文件运行变异测试。
 
 ## 项目规则检查
 
-如果 implementation packet 的 `custom_rules.files` 非空，质量门禁阶段必须补跑项目规则的可执行检查，而不是只看代码“感觉上像是符合规范”。
+如果当前 feature 合同的 `custom_rules.files` 非空，质量门禁阶段必须补跑项目规则的可执行检查，而不是只看代码“感觉上像是符合规范”。
 
 对当前功能的变更文件运行：
 

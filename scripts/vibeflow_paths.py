@@ -261,12 +261,8 @@ def project_rules_dir(project_root: Path) -> Path:
     return project_root / "rules"
 
 
-def build_packets_root(project_root: Path) -> Path:
-    return project_root / ".vibeflow" / "packets"
-
-
-def build_packet_results_root(project_root: Path) -> Path:
-    return project_root / ".vibeflow" / "subagent-results"
+def build_reports_dir(project_root: Path) -> Path:
+    return project_root / ".vibeflow" / "build-reports"
 
 
 def codebase_map_json_path(project_root: Path) -> Path:
@@ -292,27 +288,6 @@ def resolve_artifact_path(project_root: Path, state: dict, key: str) -> Path:
     if rel:
         return project_root / Path(rel)
     return change_root(project_root, state) / f"{key}.md"
-
-
-def packet_namespace(project_root: Path, state: dict) -> str:
-    active = state.get("active_change") or {}
-    return str(active.get("id") or default_change_id())
-
-
-def build_packets_dir(project_root: Path, state: dict) -> Path:
-    return build_packets_root(project_root) / packet_namespace(project_root, state)
-
-
-def build_packet_path(project_root: Path, state: dict, feature_id: int | str) -> Path:
-    return build_packets_dir(project_root, state) / f"feature-{feature_id}.json"
-
-
-def build_packet_results_dir(project_root: Path, state: dict) -> Path:
-    return build_packet_results_root(project_root) / packet_namespace(project_root, state)
-
-
-def build_packet_result_path(project_root: Path, state: dict, feature_id: int | str) -> Path:
-    return build_packet_results_dir(project_root, state) / f"feature-{feature_id}.json"
 
 
 def codebase_impact_json_path(project_root: Path, state: dict) -> Path:
@@ -348,10 +323,9 @@ def path_contract(project_root: Path, state: dict | None = None) -> dict:
         "session_log": session_log_path(project_root),
         "build_guide": build_guide_path(project_root),
         "services_guide": services_guide_path(project_root),
+        "build_reports_dir": build_reports_dir(project_root),
         "rules_dir": project_rules_dir(project_root),
         "change_root": change_root(project_root, loaded_state),
-        "packets_dir": build_packets_dir(project_root, loaded_state),
-        "packet_results_dir": build_packet_results_dir(project_root, loaded_state),
         "codebase_map_json": codebase_map_json_path(project_root),
         "codebase_map_md": codebase_map_md_path(project_root),
         "spec_facts": project_root / "docs" / "architecture" / ".spec-facts.json",

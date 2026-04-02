@@ -18,7 +18,7 @@ The architecture is intentionally split into thin local orchestration and plugga
 - local orchestration owns naming, routing, state files, and template-derived config
 - phase execution is expressed through local `vibeflow-*` aliases
 - project state is persisted in repo files rather than process memory
-- build/review execution is artifact-first, with packet files kept only as optional cached handoff artifacts
+- build/review execution is artifact-first, with normalized feature contracts stored in `feature-list.json`
 
 ## 2. Complete Architecture Flow
 
@@ -404,7 +404,7 @@ Produces SRS, UCD, and design documents.
 
 ### 10.3 Build
 Produces feature inventory, implementation, progress logs, and per-feature evidence.
-When `design.md` contains a `Build Contract` plus per-feature `Implementation Contract` blocks, Build Init derives `feature-list.json` from those contracts instead of inferring from `tasks.md`. Packet files may still be refreshed as compatibility caches, but build execution now treats `design.md`, `tasks.md`, `feature-list.json`, and `rules/` as the authoritative inputs.
+When `design.md` contains a `Build Contract` plus per-feature `Implementation Contract` blocks, Build Init derives `feature-list.json` from those contracts instead of inferring from `tasks.md`. Build execution treats `design.md`, `tasks.md`, `feature-list.json`, and `rules/` as the authoritative inputs, and records per-feature execution evidence back into `feature-list.json` plus `.vibeflow/build-reports/`.
 
 ### 10.4 Review and Test
 Produces global review notes, system test reports, and optional QA evidence.

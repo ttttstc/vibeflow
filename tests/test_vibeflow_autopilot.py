@@ -224,18 +224,16 @@ def prepare_sample_for_full_autopilot(project_root: Path, *, start_from_build_in
         feature_payload = read_json(project_root / "feature-list.json")
         for feature in feature_payload["features"]:
             feature["status"] = "failing"
+            feature.pop("execution_result", None)
         write_json(project_root / "feature-list.json", feature_payload)
 
     work_config = project_root / ".vibeflow" / "work-config.json"
     if work_config.exists():
         work_config.unlink()
 
-    packet_dir = project_root / ".vibeflow" / "packets" / state["active_change"]["id"]
-    if packet_dir.exists():
-        shutil.rmtree(packet_dir)
-    result_dir = project_root / ".vibeflow" / "subagent-results" / state["active_change"]["id"]
-    if result_dir.exists():
-        shutil.rmtree(result_dir)
+    build_report_dir = project_root / ".vibeflow" / "build-reports"
+    if build_report_dir.exists():
+        shutil.rmtree(build_report_dir)
 
     review_artifact = project_root / state["artifacts"]["review"]
     system_test_artifact = project_root / state["artifacts"]["system_test"]
@@ -502,7 +500,7 @@ lock_file.unlink()
 
 
 class TestVibeFlowAutopilot:
-    def test_build_init_generates_feature_packets_and_normalized_feature_contracts(self, tmp_path):
+    def test_build_init_generates_normalized_feature_contracts(self, tmp_path):
         project_root = tmp_path / "packet-build-init"
         run_python(
             ROOT / "scripts" / "init_project.py",
@@ -560,22 +558,13 @@ class TestVibeFlowAutopilot:
         assert "design" in first["source_refs"]
         assert "tasks" in first["source_refs"]
 
-        packet_dir = project_root / ".vibeflow" / "packets" / state["active_change"]["id"]
-        packet_path = packet_dir / "feature-1.json"
-        assert packet_path.exists()
-        packet = read_json(packet_path)
-        assert packet["feature"]["id"] == 1
-        assert packet["objective"] == "Implement auth flow"
-        assert packet["custom_rules"]["enabled"] is True
-        assert packet["custom_rules"]["agent_guidance_files"] == ["CLAUDE.md"]
-        assert [item["id"] for item in packet["custom_rules"]["files"]] == [
+        assert first["custom_rules"]["enabled"] is True
+        assert first["custom_rules"]["agent_guidance_files"] == ["CLAUDE.md"]
+        assert [item["id"] for item in first["custom_rules"]["files"]] == [
             "api-contract",
             "rules-implementation",
         ]
-        assert packet["source_refs"]["rules"] == ["rules/api.json", "rules/implementation.md"]
-        assert packet["source_snippets"]["requirements_summary"]
-        assert packet["source_snippets"]["design_summary"]
-        assert packet["source_snippets"]["rules_summary"]
+        assert first["source_refs"]["rules"] == ["rules/api.json", "rules/implementation.md"]
 
     def test_build_init_prefers_design_execution_contracts_and_writes_design_refs(self, tmp_path):
         project_root = tmp_path / "contract-build-init"
@@ -687,12 +676,11 @@ autopilot_commands = ['python -c "print(456)"']
             f"{project_root / state['artifacts']['requirements']}#FR-001"
         ]
 
-        packet_dir = project_root / ".vibeflow" / "packets" / state["active_change"]["id"]
-        packet = read_json(packet_dir / "feature-1.json")
-        assert packet["design_contract"]["build_contract_ref"] == f"{project_root / state['artifacts']['design']}#build-contract"
-        assert packet["design_contract"]["design_section"] == "4.1"
-        assert packet["design_contract"]["requirements_refs"] == ["FR-001"]
-        assert packet["design_contract"]["integration_points"] == ["src/login.py:submit_login"]
+        first_feature = feature_payload["features"][0]
+        assert first_feature["build_contract_ref"] == f"{project_root / state['artifacts']['design']}#build-contract"
+        assert first_feature["design_section"] == "4.1"
+        assert first_feature["requirements_refs"] == ["FR-001"]
+        assert first_feature["integration_points"] == ["src/login.py:submit_login"]
 
     def test_build_init_blocks_on_invalid_design_execution_contracts(self, tmp_path):
         project_root = tmp_path / "invalid-contract-build-init"
@@ -852,31 +840,25 @@ file_scope = ["src/broken.py"]
         assert (marker_root / "feature-b-done").exists()
         assert (marker_root / "feature-c-done").exists()
 
-        state = read_json(project_root / ".vibeflow" / "state.json")
-        packet_dir = project_root / ".vibeflow" / "packets" / state["active_change"]["id"]
-        result_dir = project_root / ".vibeflow" / "subagent-results" / state["active_change"]["id"]
-        assert (packet_dir / "feature-1.json").exists()
-        assert (packet_dir / "feature-2.json").exists()
-        assert (packet_dir / "feature-3.json").exists()
-        assert (result_dir / "feature-1.json").exists()
-        assert (result_dir / "feature-2.json").exists()
-        assert (result_dir / "feature-3.json").exists()
-        feature_result = read_json(result_dir / "feature-1.json")
+        build_report_dir = project_root / ".vibeflow" / "build-reports"
+        assert (build_report_dir / "feature-1.md").exists()
+        assert (build_report_dir / "feature-2.md").exists()
+        assert (build_report_dir / "feature-3.md").exists()
+        feature_result = feature_payload["features"][0]["execution_result"]
         assert feature_result["status"] == "passing"
         assert feature_result["verification"]["passed"] is True
 
-    def test_build_work_recovers_when_packet_cache_is_missing(self, tmp_path):
+    def test_build_work_runs_without_legacy_packet_cache(self, tmp_path):
         project_root = create_parallel_project(tmp_path)
-        state = read_json(project_root / ".vibeflow" / "state.json")
-        packet_dir = project_root / ".vibeflow" / "packets" / state["active_change"]["id"]
-        if packet_dir.exists():
-            shutil.rmtree(packet_dir)
+        packet_dir = project_root / ".vibeflow" / "packets"
+        assert not packet_dir.exists()
 
         result = run_build_work(project_root, "--max-workers", 2)
         assert result["ok"] is True
 
         feature_payload = read_json(project_root / "feature-list.json")
         assert all(feature["status"] == "passing" for feature in feature_payload["features"])
+        assert not packet_dir.exists()
 
     def test_autopilot_blocks_on_failed_feature_command(self, tmp_path):
         project_root = create_parallel_project(tmp_path)
@@ -898,12 +880,11 @@ file_scope = ["src/broken.py"]
         build_result = run_build_work(project_root, "--max-workers", 2)
         assert build_result["ok"] is True
 
-        state = read_json(project_root / ".vibeflow" / "state.json")
-        result_dir = project_root / ".vibeflow" / "subagent-results" / state["active_change"]["id"]
-        missing_result = result_dir / "feature-2.json"
-        assert missing_result.exists()
-        missing_result.unlink()
+        feature_payload = read_json(project_root / "feature-list.json")
+        feature_payload["features"][1].pop("execution_result", None)
+        write_json(project_root / "feature-list.json", feature_payload)
 
+        state = read_json(project_root / ".vibeflow" / "state.json")
         state["current_phase"] = "review"
         state["checkpoints"]["build_work"] = True
         state["checkpoints"]["review"] = False
@@ -920,10 +901,10 @@ file_scope = ["src/broken.py"]
         review_artifact = project_root / state["artifacts"]["review"]
         assert review_artifact.exists()
         review_text = review_artifact.read_text(encoding="utf-8")
-        assert "Feature #2 (Feature B): implementation result file is missing." in review_text
+        assert "Feature #2 (Feature B): execution_result is missing from feature-list.json." in review_text
         assert "FAIL — Fix review issues before system testing." in review_text
 
-    def test_review_ignores_legacy_packet_rule_drift_when_feature_contract_is_correct(self, tmp_path):
+    def test_review_uses_feature_contracts_without_legacy_packets(self, tmp_path):
         project_root = create_parallel_project(tmp_path)
         write_text(project_root / "rules" / "api.md", "# API Rules\n\nKeep the summary payload stable.\n")
 
@@ -931,12 +912,8 @@ file_scope = ["src/broken.py"]
         assert build_result["ok"] is True
 
         state = read_json(project_root / ".vibeflow" / "state.json")
-        packet_dir = project_root / ".vibeflow" / "packets" / state["active_change"]["id"]
-        packet_path = packet_dir / "feature-1.json"
-        packet = read_json(packet_path)
-        packet.pop("custom_rules", None)
-        packet["source_refs"].pop("rules", None)
-        write_json(packet_path, packet)
+        packet_dir = project_root / ".vibeflow" / "packets"
+        assert not packet_dir.exists()
 
         state["current_phase"] = "review"
         state["checkpoints"]["build_work"] = True
@@ -953,33 +930,7 @@ file_scope = ["src/broken.py"]
         assert "FAIL — Fix review issues before system testing." not in review_text
         assert "applicable custom rules exist in rules/" not in review_text
 
-    def test_review_uses_feature_contracts_when_packets_are_removed(self, tmp_path):
-        project_root = create_parallel_project(tmp_path)
-        write_text(project_root / "rules" / "api.md", "# API Rules\n\nKeep the summary payload stable.\n")
-
-        build_result = run_build_work(project_root, "--max-workers", 2)
-        assert build_result["ok"] is True
-
-        state = read_json(project_root / ".vibeflow" / "state.json")
-        packet_dir = project_root / ".vibeflow" / "packets" / state["active_change"]["id"]
-        assert packet_dir.exists()
-        shutil.rmtree(packet_dir)
-
-        state["current_phase"] = "review"
-        state["checkpoints"]["build_work"] = True
-        state["checkpoints"]["review"] = False
-        write_json(project_root / ".vibeflow" / "state.json", state)
-
-        result = run_autopilot(project_root, "--stop-at", "test-system")
-        assert result["status"] == "stopped"
-        assert result["final_phase"] == "test-system"
-
-        review_artifact = project_root / state["artifacts"]["review"]
-        review_text = review_artifact.read_text(encoding="utf-8")
-        assert "implementation packet is missing" not in review_text
-        assert "FAIL — Fix review issues before system testing." not in review_text
-
-    def test_build_work_filters_rules_by_scope_before_packet_injection(self, tmp_path):
+    def test_build_work_filters_rules_by_scope_before_feature_contract_sync(self, tmp_path):
         project_root = create_parallel_project(tmp_path)
         write_text(
             project_root / "rules" / "python.md",
@@ -1024,15 +975,14 @@ Avoid explicit any.
         build_result = run_build_work(project_root, "--max-workers", 2)
         assert build_result["ok"] is True
 
-        state = read_json(project_root / ".vibeflow" / "state.json")
-        packet_dir = project_root / ".vibeflow" / "packets" / state["active_change"]["id"]
-        packet_a = read_json(packet_dir / "feature-1.json")
-        packet_b = read_json(packet_dir / "feature-2.json")
+        feature_payload = read_json(project_root / "feature-list.json")
+        feature_a = feature_payload["features"][0]
+        feature_b = feature_payload["features"][1]
 
-        assert [item["id"] for item in packet_a["custom_rules"]["files"]] == ["python-style"]
-        assert packet_a["source_refs"]["rules"] == ["rules/python.md"]
-        assert [item["id"] for item in packet_b["custom_rules"]["files"]] == ["ts-style"]
-        assert packet_b["source_refs"]["rules"] == ["rules/typescript.md"]
+        assert [item["id"] for item in feature_a["custom_rules"]["files"]] == ["python-style"]
+        assert feature_a["source_refs"]["rules"] == ["rules/python.md"]
+        assert [item["id"] for item in feature_b["custom_rules"]["files"]] == ["ts-style"]
+        assert feature_b["source_refs"]["rules"] == ["rules/typescript.md"]
 
     def test_review_blocks_when_executable_rule_check_fails(self, tmp_path):
         project_root = create_parallel_project(tmp_path)

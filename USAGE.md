@@ -32,10 +32,9 @@ A target project is expected to accumulate these artifacts over time:
 - `feature-list.json`
 - `RELEASE_NOTES.md`
 
-Optional compatibility/cache artifacts:
+Build evidence artifacts:
 
-- `.vibeflow/packets/<change-id>/feature-*.json`
-- `.vibeflow/subagent-results/<change-id>/feature-*.json`
+- `.vibeflow/build-reports/feature-*.md`
 
 ## 2. Workflow Templates
 
@@ -121,7 +120,7 @@ Build execution is artifact-first:
 - `feature-list.json`
 - `rules/`
 
-Packet files may still be generated as cached handoff artifacts, but they are not required for the primary build/review flow.
+Build now reads normalized feature contracts from `feature-list.json` directly; per-feature execution evidence is written back into the same file and mirrored as markdown reports under `.vibeflow/build-reports/`.
 
 ## 5. Example Validation
 

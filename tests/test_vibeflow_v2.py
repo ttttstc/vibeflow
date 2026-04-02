@@ -77,16 +77,13 @@ class TestVibeFlowV2:
         assert "build-init" in state["autopilot"]["auto_runnable"]
         assert "design" in state["autopilot"]["manual_only"]
 
-    def test_path_contract_exposes_packet_directories(self, tmp_path):
-        state = default_state(tmp_path, topic="packet-paths")
+    def test_path_contract_exposes_build_report_directory(self, tmp_path):
+        state = default_state(tmp_path, topic="build-report-paths")
         save_state(tmp_path, state)
 
         contract = path_contract(tmp_path, state)
         assert contract["rules_dir"].name == "rules"
-        assert contract["packets_dir"].name == state["active_change"]["id"]
-        assert contract["packet_results_dir"].name == state["active_change"]["id"]
-        assert contract["packets_dir"].parent.name == "packets"
-        assert contract["packet_results_dir"].parent.name == "subagent-results"
+        assert contract["build_reports_dir"].name == "build-reports"
         assert contract["codebase_map_json"].name == "codebase-map.json"
         assert contract["codebase_map_md"].name == "codebase-map.md"
         assert contract["codebase_impact_json"].name == "codebase-impact.json"

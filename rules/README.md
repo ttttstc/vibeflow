@@ -1,6 +1,6 @@
 ﻿# VibeFlow Project Rules Preset
 
-This directory contains project-level rules that VibeFlow can inject into implementation packets.
+This directory contains project-level rules that VibeFlow injects into normalized feature contracts during design/build/review.
 
 ## Usage
 

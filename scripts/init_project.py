@@ -386,7 +386,7 @@ def main():
         "get-vibeflow-paths.py",
         "vibeflow_paths.py",
         "vibeflow_codebase.py",
-        "vibeflow_packets.py",
+        "vibeflow_feature_contracts.py",
         "map-codebase.py",
         "map-change-impact.py",
         "promote-vibeflow-quick.py",

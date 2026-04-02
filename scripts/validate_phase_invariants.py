@@ -75,20 +75,6 @@ def has_active_features(feature_list_path: Path) -> bool:
     return bool(features)
 
 
-def build_packets_ready(feature_list_path: Path, packets_dir: Path) -> bool:
-    data = _load_feature_payload(feature_list_path)
-    features = [feature for feature in data.get("features", []) if not feature.get("deprecated")]
-    if not features:
-        return False
-    for feature in features:
-        feature_id = feature.get("id")
-        if feature_id is None:
-            continue
-        if not (packets_dir / f"feature-{feature_id}.json").exists():
-            return False
-    return True
-
-
 def build_artifacts_ready(feature_list_path: Path, *, build_init_done: bool = False, work_config_exists: bool = False) -> bool:
     if not has_active_features(feature_list_path):
         return False

@@ -19,6 +19,7 @@ if str(SCRIPT_DIR) not in sys.path:
 
 from vibeflow_paths import (  # noqa: E402
     append_phase_history,
+    build_reports_dir,
     ensure_runtime,
     ensure_state,
     feature_list_path,
@@ -28,14 +29,10 @@ from vibeflow_paths import (  # noqa: E402
     save_state,
     set_checkpoint,
 )
-from vibeflow_packets import (  # noqa: E402
-    build_feature_packet,
+from vibeflow_feature_contracts import (  # noqa: E402
     ensure_feature_contract,
-    feature_execution_config as packet_feature_execution_config,
-    load_feature_packet,
-    packet_validation_issues,
-    sync_feature_packets,
-    write_feature_result,
+    feature_execution_config as feature_contract_execution_config,
+    sync_feature_contracts,
 )
 from vibeflow_design_contracts import load_design_execution_contracts  # noqa: E402
 from vibeflow_overview import refresh_current_state  # noqa: E402
@@ -69,8 +66,6 @@ RETRYABLE_PHASES = {
     "test-system",
     "test-qa",
 }
-
-FEATURE_REPORT_DIR = ".vibeflow/build-reports"
 
 _PHASE_MODULE = None
 
@@ -440,19 +435,14 @@ def scopes_overlap(left: list[str], right: list[str]) -> bool:
     return False
 
 
-def feature_packet_scope(project_root: Path, state: dict, feature: dict) -> list[str]:
+def feature_contract_scope(feature: dict) -> list[str]:
     feature_scope = normalize_scope_entries(feature.get("file_scope"))
     if feature_scope:
         return feature_scope
-    packet = load_feature_packet(project_root, state, feature.get("id"))
-    if not packet:
-        return []
-    return normalize_scope_entries(packet.get("file_scope"))
+    return []
 
 
 def select_feature_batch(
-    project_root: Path,
-    state: dict,
     ready: list[dict],
     *,
     parallel: bool,
@@ -465,7 +455,7 @@ def select_feature_batch(
     if not parallel or max_workers <= 1:
         return [primary], "Parallel build disabled; running the next ready feature in sequence."
 
-    primary_scope = feature_packet_scope(project_root, state, primary)
+    primary_scope = feature_contract_scope(primary)
     if not primary_scope:
         return [primary], "Primary ready feature has no file scope; running sequentially for safety."
 
@@ -475,7 +465,7 @@ def select_feature_batch(
     for feature in ready[1:]:
         if len(batch) >= max_workers:
             break
-        scope = feature_packet_scope(project_root, state, feature)
+        scope = feature_contract_scope(feature)
         if not scope:
             continue
         if any(scopes_overlap(scope, existing) for existing in selected_scopes):
@@ -489,7 +479,7 @@ def select_feature_batch(
 
 
 def feature_command_config(feature: dict) -> tuple[list[str], str, int]:
-    return packet_feature_execution_config(feature)
+    return feature_contract_execution_config(feature)
 
 
 def normalize_feature_contract(project_root: Path, state: dict, payload: dict, feature: dict) -> dict:
@@ -527,7 +517,7 @@ def run_command(command: str, *, cwd: Path, timeout: int = 300) -> dict:
 
 
 def write_feature_report(project_root: Path, feature: dict, command_results: list[dict], ok: bool) -> Path:
-    report_dir = project_root / FEATURE_REPORT_DIR
+    report_dir = build_reports_dir(project_root)
     report_path = report_dir / f"feature-{feature.get('id')}.md"
     lines = [
         f"# Feature {feature.get('id')} — {feature.get('title', 'Untitled')}",
@@ -557,6 +547,34 @@ def write_feature_report(project_root: Path, feature: dict, command_results: lis
     return write_text(report_path, "\n".join(lines).rstrip() + "\n")
 
 
+def execution_result_payload(project_root: Path, feature_contract: dict, result: dict, report_path: Path) -> dict:
+    commands, _, _ = feature_command_config(feature_contract)
+    try:
+        relative_report = report_path.relative_to(project_root).as_posix()
+    except ValueError:
+        relative_report = str(report_path)
+
+    custom_rules = feature_contract.get("custom_rules") if isinstance(feature_contract.get("custom_rules"), dict) else {}
+    return {
+        "status": "passing" if result.get("ok") else "failing",
+        "summary": str(result.get("detail") or "").strip(),
+        "implemented_files": normalize_command_list(feature_contract.get("file_scope")),
+        "verification": {
+            "commands": commands,
+            "passed": bool(result.get("ok")),
+        },
+        "applied_rule_ids": [
+            str(rule.get("id") or "").strip()
+            for rule in (custom_rules.get("files") or [])
+            if isinstance(rule, dict) and str(rule.get("id") or "").strip()
+        ],
+        "needs_clarification": False,
+        "error": "" if result.get("ok") else str(result.get("detail") or "").strip(),
+        "build_report": relative_report,
+        "updated_at": now_iso(),
+    }
+
+
 def execute_feature(project_root: Path, feature: dict) -> dict:
     state = ensure_state(project_root)
     payload = load_feature_payload(project_root)
@@ -570,21 +588,7 @@ def execute_feature(project_root: Path, feature: dict) -> dict:
         rules_context=rules_context,
         project_language=project_language,
     )
-    packet = build_feature_packet(
-        project_root,
-        state,
-        normalized_feature,
-        rules_context=rules_context,
-        project_language=project_language,
-    )
-
-    cached_packet = load_feature_packet(project_root, state, feature.get("id"))
-    if cached_packet and not packet_validation_issues(cached_packet):
-        execution_input = cached_packet
-    else:
-        execution_input = packet
-
-    execution = execution_input.get("execution") if isinstance(execution_input.get("execution"), dict) else {}
+    execution = normalized_feature.get("autopilot") if isinstance(normalized_feature.get("autopilot"), dict) else {}
     commands = normalize_command_list(execution.get("commands"))
     relative_workdir = str(execution.get("workdir") or ".").strip() or "."
     timeout = int(execution.get("timeout_sec") or 300)
@@ -596,7 +600,7 @@ def execute_feature(project_root: Path, feature: dict) -> dict:
             "ok": False,
             "detail": "No execution commands are configured for this feature contract.",
             "command_results": [],
-            "packet": packet,
+            "feature_contract": normalized_feature,
         }
 
     command_results = []
@@ -610,7 +614,7 @@ def execute_feature(project_root: Path, feature: dict) -> dict:
                 "ok": False,
                 "detail": f"Command failed: {command}",
                 "command_results": command_results,
-                "packet": packet,
+                "feature_contract": normalized_feature,
             }
 
     return {
@@ -619,7 +623,7 @@ def execute_feature(project_root: Path, feature: dict) -> dict:
         "ok": True,
         "detail": "All feature commands passed.",
         "command_results": command_results,
-        "packet": packet,
+        "feature_contract": normalized_feature,
     }
 
 
@@ -696,8 +700,8 @@ def review_spec_compliance(project_root: Path, state: dict, payload: dict) -> di
         )
         feature_id = feature.get("id")
         title = feature.get("title", "Untitled")
-        feature_rules = normalized_feature.get("custom_rules") if isinstance(normalized_feature.get("custom_rules"), dict) else {}
-        feature_source_refs = normalized_feature.get("source_refs") if isinstance(normalized_feature.get("source_refs"), dict) else {}
+        feature_rules = feature.get("custom_rules") if isinstance(feature.get("custom_rules"), dict) else {}
+        feature_source_refs = feature.get("source_refs") if isinstance(feature.get("source_refs"), dict) else {}
 
         expected_rules = select_applicable_rules(
             project_root,
@@ -748,32 +752,19 @@ def review_spec_compliance(project_root: Path, state: dict, payload: dict) -> di
         else:
             notes.append(f"- Feature #{feature_id}: no project rules matched its current build scope.")
 
-        packet = load_feature_packet(project_root, state, feature_id)
-        if packet:
-            packet_issues = packet_validation_issues(packet)
-            if packet_issues:
-                warnings.append(
-                    f"Feature #{feature_id} ({title}): legacy implementation packet is incomplete and was ignored: "
-                    + "; ".join(packet_issues)
+        expected_source_refs = normalized_feature.get("source_refs") if isinstance(normalized_feature.get("source_refs"), dict) else {}
+        for ref_key in ("requirements", "design", "build_contract", "tasks"):
+            expected_refs = normalize_command_list(expected_source_refs.get(ref_key))
+            feature_refs = normalize_command_list(feature_source_refs.get(ref_key))
+            if feature_refs != expected_refs:
+                issues.append(
+                    f"Feature #{feature_id} ({title}): feature contract source_refs.{ref_key} does not match the normalized contract."
                 )
-            else:
-                packet_rules = packet.get("custom_rules") if isinstance(packet.get("custom_rules"), dict) else {}
-                packet_rule_ids = [
-                    str(rule.get("id") or "").strip()
-                    for rule in packet_rules.get("files") or []
-                    if isinstance(rule, dict) and str(rule.get("id") or "").strip()
-                ]
-                if feature_rules.get("enabled") and packet_rule_ids and packet_rule_ids != expected_rule_ids:
-                    warnings.append(
-                        f"Feature #{feature_id} ({title}): legacy implementation packet rules differ from the current feature contract."
-                    )
 
-        result_path = contract["packet_results_dir"] / f"feature-{feature_id}.json"
-        if not result_path.exists():
-            issues.append(f"Feature #{feature_id} ({title}): implementation result file is missing.")
+        result_payload = feature.get("execution_result") if isinstance(feature.get("execution_result"), dict) else {}
+        if not result_payload:
+            issues.append(f"Feature #{feature_id} ({title}): execution_result is missing from feature-list.json.")
             continue
-
-        result_payload = read_json(result_path, {})
         if result_payload.get("status") != "passing":
             issues.append(
                 f"Feature #{feature_id} ({title}): implementation result status is "
@@ -787,9 +778,7 @@ def review_spec_compliance(project_root: Path, state: dict, payload: dict) -> di
         if result_payload.get("needs_clarification"):
             issues.append(f"Feature #{feature_id} ({title}): result still requires clarification.")
 
-        notes.append(
-            f"- Feature #{feature_id}: feature contract + result present, status={result_payload.get('status', 'unknown')}"
-        )
+        notes.append(f"- Feature #{feature_id}: feature contract + result present, status={result_payload.get('status', 'unknown')}")
 
     lines = [
         f"Checked {len(features)} active feature(s) against feature contracts and implementation results.",
@@ -850,12 +839,11 @@ def review_rule_enforcement(project_root: Path, state: dict, payload: dict) -> d
     for feature in active_features(payload):
         feature_id = feature.get("id")
         title = feature.get("title", "Untitled")
-        result_path = contract["packet_results_dir"] / f"feature-{feature_id}.json"
-        if not result_path.exists():
-            issues.append(f"Feature #{feature_id} ({title}): implementation result file is missing.")
+        result_payload = feature.get("execution_result") if isinstance(feature.get("execution_result"), dict) else {}
+        if not result_payload:
+            issues.append(f"Feature #{feature_id} ({title}): execution_result is missing from feature-list.json.")
             continue
 
-        result_payload = read_json(result_path, {})
         normalized_feature = ensure_feature_contract(
             feature,
             project_root,
@@ -922,16 +910,15 @@ def review_code_quality(project_root: Path, state: dict, payload: dict) -> dict:
     for feature in features:
         feature_id = feature.get("id")
         title = feature.get("title", "Untitled")
-        report_path = project_root / FEATURE_REPORT_DIR / f"feature-{feature_id}.md"
+        report_path = build_reports_dir(project_root) / f"feature-{feature_id}.md"
         if not report_path.exists():
             issues.append(f"Feature #{feature_id} ({title}): build report is missing.")
 
-        result_path = contract["packet_results_dir"] / f"feature-{feature_id}.json"
-        if not result_path.exists():
-            issues.append(f"Feature #{feature_id} ({title}): implementation result file is missing.")
+        result_payload = feature.get("execution_result") if isinstance(feature.get("execution_result"), dict) else {}
+        if not result_payload:
+            issues.append(f"Feature #{feature_id} ({title}): execution_result is missing from feature-list.json.")
             continue
 
-        result_payload = read_json(result_path, {})
         verification = result_payload.get("verification") if isinstance(result_payload.get("verification"), dict) else {}
         commands = normalize_command_list(verification.get("commands"))
         if not commands:
@@ -1049,10 +1036,10 @@ def execute_build_init(project_root: Path, state: dict, runtime: dict) -> dict:
         else:
             detail = f"{feature_path.name} already exists."
 
-    payload = sync_feature_packets(project_root, state, payload)
+    payload = sync_feature_contracts(project_root, state, payload)
     save_feature_payload(project_root, payload)
-    packet_count = len(payload.get("features", []))
-    detail = f"{detail.rstrip('.')} Materialized {packet_count} feature contract(s) and refreshed optional packet caches."
+    contract_count = len(payload.get("features", []))
+    detail = f"{detail.rstrip('.')} Materialized {contract_count} normalized feature contract(s)."
 
     set_checkpoint(state, "build_init", True, phase="build-init")
     save_state(project_root, state)
@@ -1100,7 +1087,7 @@ def execute_build_work(project_root: Path, state: dict, runtime: dict, *, parall
         return {"ok": False, "detail": "feature-list.json is missing."}
 
     while True:
-        payload = sync_feature_packets(project_root, state, payload)
+        payload = sync_feature_contracts(project_root, state, payload)
         save_feature_payload(project_root, payload)
         pending = pending_active_features(payload)
         if not pending:
@@ -1122,7 +1109,7 @@ def execute_build_work(project_root: Path, state: dict, runtime: dict, *, parall
             append_session_log(project_root, detail)
             return {"ok": False, "detail": detail}
 
-        batch, batch_reason = select_feature_batch(project_root, state, ready, parallel=parallel, max_workers=max_workers)
+        batch, batch_reason = select_feature_batch(ready, parallel=parallel, max_workers=max_workers)
 
         for feature in batch:
             feature["status"] = "running"
@@ -1156,7 +1143,12 @@ def execute_build_work(project_root: Path, state: dict, runtime: dict, *, parall
             feature = next(item for item in payload.get("features", []) if item.get("id") == feature_id)
             feature["status"] = "passing" if result["ok"] else "failing"
             report_path = write_feature_report(project_root, feature, result["command_results"], result["ok"])
-            result_path = write_feature_result(project_root, state, result, result.get("packet"))
+            feature["execution_result"] = execution_result_payload(
+                project_root,
+                result["feature_contract"],
+                result,
+                report_path,
+            )
             record_feature_run(
                 runtime,
                 feature_id=feature_id,
@@ -1173,7 +1165,7 @@ def execute_build_work(project_root: Path, state: dict, runtime: dict, *, parall
                     "feature_id": feature_id,
                     "title": result["title"],
                     "status": "passing" if result["ok"] else "failing",
-                    "detail": f"{result['detail']} Report: {report_path} Result: {result_path}",
+                    "detail": f"{result['detail']} Report: {report_path}",
                 },
             )
             append_session_log(project_root, f"Feature #{feature_id} {'passed' if result['ok'] else 'failed'}: {result['title']}")

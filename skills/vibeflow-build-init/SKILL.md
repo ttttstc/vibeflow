@@ -78,7 +78,7 @@ description: "设计文档存在但 feature-list.json 尚未创建时使用 — 
 - 每个 FR-xxx -> 一个或多个功能条目，含 `id`、`category`、`title`、`description`、`priority`、`status`（始终为 `"failing"`）、`verification_steps`、`dependencies`
 - `verification_steps` 应追溯到 SRS 验收标准（Given/When/Then）
 - UI 功能：设置 `"ui": true`，可选 `"ui_entry": "/路径"`
-- 设计契约中的 `file_scope`、`requirements_refs`、`integration_points`、`required_configs`、`autopilot_commands` 必须原样保留到 feature 条目中；如生成 packet，只作为缓存视图同步
+- 设计契约中的 `file_scope`、`requirements_refs`、`integration_points`、`required_configs`、`autopilot_commands` 必须原样保留到 feature 条目中
 
 每个功能条目：
 ```json
@@ -108,14 +108,9 @@ description: "设计文档存在但 feature-list.json 尚未创建时使用 — 
 
 目标：10-200+ 个功能；每个独立可验证，可在一个会话中完成。
 
-### 5.1 生成实施任务包
-在 `feature-list.json` 准备完成后，为每个 feature 生成独立的实施任务包，放到：
+### 5.1 归一化 feature 合同
+在 `feature-list.json` 准备完成后，为每个 feature 补齐归一化合同字段，至少包括：
 
-- `.vibeflow/packets/<change-id>/feature-<id>.json`
-
-这些任务包是**可选缓存层**，用于调试、兼容和缩短恢复成本，不再是 Build 阶段唯一正式输入。
-
-每个任务包至少包含：
 - 功能目标
 - 依赖关系
 - 文件范围
@@ -123,13 +118,13 @@ description: "设计文档存在但 feature-list.json 尚未创建时使用 — 
 - 完成定义
 - 相关文档引用（requirements / design section / build contract / tasks）
 
-如果 feature 来自设计契约，任务包必须包含：
-- `design_contract.design_section`
-- `design_contract.build_contract_ref`
-- `design_contract.requirements_refs`
-- `design_contract.integration_points`
+如果 feature 来自设计契约，条目必须包含：
+- `design_section`
+- `build_contract_ref`
+- `requirements_refs`
+- `integration_points`
 
-Build 阶段后续独立实施单元的正式输入应以 `feature-list.json + design.md + tasks.md + rules/` 为准，不应依赖长会话上下文记忆。任务包如存在，可作为同构缓存视图使用。
+Build 阶段后续独立实施单元的正式输入应以 `feature-list.json + design.md + tasks.md + rules/` 为准，不应依赖长会话上下文记忆。
 
 ### 6. 填充 required_configs
 从 SRS（IFR-xxx 接口需求）和设计文档：
@@ -198,7 +193,7 @@ python scripts/new-vibeflow-work-config.py --project-root .
 | 文件 | 用途 |
 |------|------|
 | `feature-list.json` | 带状态的结构化任务清单 |
-| `.vibeflow/packets/<change-id>/feature-*.json` | 每个 feature 的可选缓存任务包 |
+| `.vibeflow/build-reports/feature-*.md` | 每个 feature 的执行证据报告 |
 | `.vibeflow/logs/session-log.md` | 逐会话进度日志 |
 | `RELEASE_NOTES.md` | 活跃的发布说明 |
 | `.vibeflow/guides/build.md` | 项目专属构建指南 |

@@ -85,16 +85,6 @@ def has_active_features(feature_list_path: Path) -> bool:
     return bool(features)
 
 
-def build_packets_ready(feature_list_path: Path, packets_dir: Path) -> bool:
-    if not feature_list_path.exists():
-        return False
-    data = json.loads(feature_list_path.read_text(encoding="utf-8"))
-    features = [f for f in data.get("features", []) if not f.get("deprecated")]
-    if not features:
-        return False
-    return all((packets_dir / f"feature-{feature.get('id')}.json").exists() for feature in features if feature.get("id") is not None)
-
-
 def build_artifacts_ready(feature_list_path: Path, *, build_init_done: bool = False, work_config_exists: bool = False) -> bool:
     if not feature_list_path.exists():
         return False
@@ -295,7 +285,6 @@ def state_based_detect_phase(project_root: Path, verbose: bool = False) -> dict:
     workflow_path_obj = contract["workflow"]
     feature_list = contract["feature_list"]
     work_config = contract["work_config"]
-    packets_dir = contract["packets_dir"]
     release_notes = contract["release_notes"]
     artifacts = contract["artifacts"]
     state_root = project_root / ".vibeflow"
