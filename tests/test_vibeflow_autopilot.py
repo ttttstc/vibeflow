@@ -147,9 +147,15 @@ class TestVibeFlowAutopilot:
         assert result["status"] == "completed"
         assert result["final_phase"] == "done"
         state = read_json(project_root / ".vibeflow" / "state.json")
+        runtime = state["runtime"]
         assert state["checkpoints"]["build"] is True
         assert state["checkpoints"]["review"] is True
         assert state["checkpoints"]["test"] is True
+        assert "归档文档" in runtime["friendly_message"]
+        assert "requirements:" in runtime["friendly_message"]
+        assert "design:" in runtime["friendly_message"]
+        assert "tasks:" in runtime["friendly_message"]
+        assert "review:" in runtime["friendly_message"]
 
     def test_quick_mode_autopilot_runs_to_done(self, tmp_path):
         project_root = tmp_path / "quick-mode-project"

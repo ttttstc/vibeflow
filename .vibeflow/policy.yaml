@@ -24,6 +24,12 @@ phases:
     required_approvals: []
     completion_evidence: []
     blocking_conditions: []
+  tasks:
+    required_artifacts: ["tasks"]
+    required_checkpoints: []
+    required_approvals: ["tasks"]
+    completion_evidence: ["artifact:tasks"]
+    blocking_conditions: []
   review:
     required_artifacts: ["review"]
     required_checkpoints: []

@@ -1,13 +1,13 @@
 ---
 name: vibeflow-build-init
-description: "设计文档存在但 feature-list.json 尚未创建时使用 — 搭建项目工件并将需求分解为功能清单"
+description: "在 tasks 审批通过后使用，基于设计契约生成 feature-list.json 并准备进入 Build"
 ---
 
 # 初始化 VibeFlow 项目
 
-在 SRS 和设计均审批通过后运行一次。搭建所有持久化工件，将需求分解为可验证的功能，准备项目进入迭代构建。
+在 `tasks` 审批通过后运行一次。搭建所有持久化工件，将需求分解为可验证的功能，准备项目进入迭代构建。
 
-在 Claude Code 插件的默认路径中，本 skill 是 **Build 自动继续链路的第一个内部子步骤**，不是用户需要手动停留的长期阶段。
+在 Claude Code 插件的默认路径中，本 skill 是 **Build 自动继续链路的第一个内部子步骤**。只有 `tasks` 已经展示全量交付计划并经过人工确认后，才能进入这里。
 
 **启动宣告：** "正在使用 vibeflow-build-init 初始化项目。"
 
@@ -58,9 +58,9 @@ description: "设计文档存在但 feature-list.json 尚未创建时使用 — 
 创建 `feature-list.json`，根结构：
 
 **权威来源规则：**
-- 如 `design.md` 中存在 `Build Contract` + `Implementation Contract` TOML 代码块，必须以这些设计契约为权威来源生成 `feature-list.json`
-- 只有旧项目或设计文档尚未升级时，才回退到 `tasks.md` / 默认值推断
-- 如检测到设计契约但解析失败、缺少 `Build Contract`、或 feature 契约不完整，必须阻塞 build-init
+- `design.md` 中的 `Build Contract` + `Implementation Contract` TOML 代码块是生成 `feature-list.json` 的唯一权威来源
+- 不再允许从 `tasks.md` 或默认值回退推断 feature 合同
+- 如缺少设计契约、解析失败、缺少 `Build Contract`、或 feature 契约不完整，必须阻塞 build-init
 
 ```json
 {
@@ -86,7 +86,7 @@ description: "设计文档存在但 feature-list.json 尚未创建时使用 — 
 
 **quality_gates 阈值**应从 `.vibeflow/workflow.yaml` 中读取，而非硬编码默认值。
 
-### 4. 填充 SRS 字段
+### 4. 填充 brief 字段
 从 `brief.md` 中：
 - `constraints[]` — 复制 CON-xxx 项
 - `assumptions[]` — 复制 ASM-xxx 项
@@ -98,7 +98,7 @@ description: "设计文档存在但 feature-list.json 尚未创建时使用 — 
 优先从设计文档中每个 feature 的 `Implementation Contract` 填充 `features[]`；必要时再从 `brief.md` 与设计文档的**开发计划**（任务分解章节）补全。
 
 - 每个 FR-xxx -> 一个或多个功能条目，含 `id`、`category`、`title`、`description`、`priority`、`status`（始终为 `"failing"`）、`verification_steps`、`dependencies`
-- `verification_steps` 应追溯到 SRS 验收标准（Given/When/Then）
+- `verification_steps` 应追溯到 brief 中的验收标准（Given/When/Then）
 - UI 功能：设置 `"ui": true`，可选 `"ui_entry": "/路径"`
 - 设计契约中的 `file_scope`、`requirements_refs`、`integration_points`、`required_configs`、`autopilot_commands` 必须原样保留到 feature 条目中
 
@@ -149,7 +149,7 @@ description: "设计文档存在但 feature-list.json 尚未创建时使用 — 
 Build 阶段后续独立实施单元的正式输入应以 `feature-list.json + design.md + tasks.md + rules/` 为准，不应依赖长会话上下文记忆。
 
 ### 6. 填充 required_configs
-从 SRS（IFR-xxx 接口需求）和设计文档：
+从 brief（IFR-xxx 接口需求）和设计文档：
 - API 密钥、服务 URL -> type `env`
 - 配置文件、证书 -> type `file`
 - 通过 `required_by` 链接到功能；提供 `check_hint` 含设置说明

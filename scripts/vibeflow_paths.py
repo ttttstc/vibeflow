@@ -112,6 +112,7 @@ def default_state(project_root: Path, topic: str | None = None) -> dict:
             "tasks": False,
             "build": False,
             "build_init": False,
+            "tasks": False,
             "build_config": False,
             "build_work": False,
             "review": False,
@@ -408,6 +409,13 @@ def default_policy() -> dict:
                 "required_checkpoints": ["tasks"],
                 "required_approvals": [],
                 "completion_evidence": [],
+                "blocking_conditions": [],
+            },
+            "tasks": {
+                "required_artifacts": ["tasks"],
+                "required_checkpoints": [],
+                "required_approvals": ["tasks"],
+                "completion_evidence": ["artifact:tasks"],
                 "blocking_conditions": [],
             },
             "review": {

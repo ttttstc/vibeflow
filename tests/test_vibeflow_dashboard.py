@@ -42,6 +42,11 @@ class TestVibeFlowDashboard:
         snapshot = dashboard_module.build_dashboard_snapshot(tmp_path)
         assert snapshot["current_phase"] == "done"
         assert any(card["key"] == "build" for card in snapshot["workflow"])
+        assert "归档文档" in snapshot["friendly_message"]
+        assert "requirements:" in snapshot["friendly_message"]
+        assert "design:" in snapshot["friendly_message"]
+        assert "tasks:" in snapshot["friendly_message"]
+        assert "review:" in snapshot["friendly_message"]
 
     def test_dashboard_token_changes_when_state_changes(self, tmp_path):
         state = paths_module.default_state(tmp_path, topic="demo")

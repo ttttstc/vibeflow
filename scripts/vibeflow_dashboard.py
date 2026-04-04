@@ -16,7 +16,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
-from vibeflow_automation import detect_phase, friendly_message_for_phase  # noqa: E402
+from vibeflow_automation import archive_review_message, detect_phase, friendly_message_for_phase  # noqa: E402
 from vibeflow_paths import load_runtime, load_state, path_contract  # noqa: E402
 
 
@@ -282,11 +282,14 @@ def build_dashboard_snapshot(project_root: Path) -> dict:
     friendly_seed = runtime.get("friendly_message")
     if invariant_matches and runtime_status in {"blocked", "pending"}:
         friendly_seed = ""
-    friendly = friendly_seed or friendly_message_for_phase(
-        current_phase,
-        status="waiting_manual" if current_phase in {"spark", "design", "tasks", "quick"} else runtime_status,
-        detail=stop_reason,
-    )
+    if current_phase == "done":
+        friendly = friendly_seed if friendly_seed and "归档文档" in friendly_seed else archive_review_message(project_root)
+    else:
+        friendly = friendly_seed or friendly_message_for_phase(
+            current_phase,
+            status="waiting_manual" if current_phase in {"spark", "design", "tasks", "quick"} else runtime_status,
+            detail=stop_reason,
+        )
 
     return {
         "project": project_root.name,

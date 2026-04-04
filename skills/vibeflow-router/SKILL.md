@@ -168,10 +168,10 @@ python scripts/run-vibeflow-autopilot.py --project-root .
 
 ### 阶段：`tasks`
 **条件**：design 已批准，开始生成执行级任务计划。
-**操作**：使用 `skills/vibeflow-tasks/SKILL.md`，输出 `docs/changes/<change-id>/tasks.md`，供 Build 直接消费。
+**操作**：使用 `skills/vibeflow-tasks/SKILL.md`，输出 `docs/changes/<change-id>/tasks.md`。这里必须展示全量交付计划并等待人工确认；确认前不得进入 Build。
 
 ### 阶段：`build`
-**条件**：tasks 已完成，进入实现。
+**条件**：tasks 已完成且人工已确认交付计划，进入实现。
 **操作**：开始自动继续后续链路。Build 内部会先执行准备步骤，再使用 `skills/vibeflow-build-work/SKILL.md` 遍历 `feature-list.json` 按优先级实现功能。若审查/测试失败返回此阶段，自动执行会从这里恢复。
 
 ### 阶段：`review`

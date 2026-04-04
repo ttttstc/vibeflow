@@ -25,6 +25,7 @@
     "design": true,
     "tasks": true,
     "build_init": true,
+    "tasks": true,
     "build_config": true,
     "build_work": true,
     "review": true,

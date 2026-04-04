@@ -49,6 +49,8 @@ VibeFlow是一个结构化的六阶段工作流程，用于有目的性地、有
 
 **完整流程**：Spark → Design → Tasks → Build → Review → Test
 
+其中 `Tasks` 不是走过场。必须先展示本次变更的全量交付计划并获得人工确认，才允许进入 `Build`。
+
 **入口**：`/vibeflow`（选择 Full Mode）
 
 ## 框架概述
@@ -61,7 +63,7 @@ VibeFlow是一个严谨的软件开发框架，强调在构建之前思考、在
 |------|------|-----------|
 | 1. Spark（灵感迸发） | 灵感探索、问题框定、DeepResearch、复杂度扫描、CEO 价值评估 | `docs/changes/<change-id>/brief.md` |
 | 2. Design（设计） | 技术设计 + 三视角评审 | `docs/changes/<change-id>/design.md` |
-| 3. Tasks（任务化） | 执行级 handoff，生成稳定可消费的 `tasks.md` | `docs/changes/<change-id>/tasks.md` |
+| 3. Tasks（任务化） | 执行级 handoff，生成稳定可消费的 `tasks.md`，并等待人工确认 | `docs/changes/<change-id>/tasks.md` |
 | 4. Build（构建） | 通过TDD、质量关卡、规范审查实现功能 | `feature-list.json` |
 | 5. Review（审查） | 跨功能的整体变更分析 | 审查报告 |
 | 6. Test（测试） | 系统测试和QA验证 | 测试报告 |
@@ -101,7 +103,8 @@ VibeFlow是一个严谨的软件开发框架，强调在构建之前思考、在
 ### 步骤4：初始化Build阶段
 
 ```
-Design 确认后进入 Build。
+Design 确认后先进入 Tasks。
+Tasks 展示完整交付计划并获批后才进入 Build。
 在 Claude Code 插件里，Build 的默认路径不是逐段手动推进，而是进入 Build 后自动继续后续链路。
 只有在调试单个内部子步骤时，才单独调用 vibeflow-build-init 或 vibeflow-build-work。
 ```
@@ -220,7 +223,7 @@ cat feature-list.json
 **使用的技能**：
 - `vibeflow-tasks`
 
-**退出标准**：`tasks.md` 完成且可被 Build 直接消费。
+**退出标准**：`tasks.md` 完成、展示为全量交付计划并获人工确认，且可被 Build 直接消费。
 
 ---
 
@@ -395,7 +398,7 @@ VibeFlow支持四种工作流程模板。根据项目范围、团队规模和治
 | `vibeflow-spark` | 灵感迸发：问题框定、DeepResearch、复杂度扫描、CEO 价值评估 |
 | `vibeflow-deepresearch` | 深度调研：竞品分析、技术栈分析、能力矩阵、产品护城河调研 |
 | `vibeflow-design` | 在初始化之前编写技术设计（含 UCD 内联：视觉风格、Token、组件提示词） |
-| `vibeflow-tasks` | 生成 execution-grade 任务计划，供 Build 直接消费 |
+| `vibeflow-tasks` | 生成 execution-grade 全量交付计划，并在人工确认后交给 Build |
 | `vibeflow-build-init` | Build 内部准备步骤：初始化实现产物 |
 | `vibeflow-build-work` | 驱动功能通过TDD到质量关卡再到规范审查 |
 | `vibeflow-tdd` | 构建阶段内的红-绿-重构步骤 |
