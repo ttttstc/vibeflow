@@ -291,7 +291,26 @@ Present via AskUserQuestion. Do NOT proceed without user approval of the approac
 
 ---
 
-## Phase 5: Design Doc
+## Phase 5: Scope And Acceptance Confirmation
+
+在结束 Office Hours 之前，必须让用户确认当前范围和验收标准。
+
+通过 AskUserQuestion 展示：
+- 当前问题定义
+- 建议范围边界
+- 建议验收标准
+- 仍未解决的开放问题
+
+并要求用户明确确认：
+- 接受当前验收标准
+- 需要调整范围
+- 需要补充条件后再确认
+
+如果用户未确认验收标准，不得把 Office Hours 结论标记为收口完成。
+
+---
+
+## Phase 6: Design Doc
 
 Write the design document to `docs/plans/`.
 
@@ -411,5 +430,5 @@ After the design doc is complete, suggest the next step:
 **调用者：** 用户在 think 阶段之前主动调用，或 vibeflow-think 可选推荐
 **依赖：** `CLAUDE.md`、`TODOS.md`（如存在）
 **产出：** `docs/plans/YYYY-MM-DD-<title>-office-hours.md`
-**Gate：** 无强制 gate，用于想法验证
+**Gate：** 当被 Spark 默认调用时，必须完成范围与验收标准确认
 **链接到：** vibeflow-plan-value-review（验证后）/ vibeflow-plan-eng-review（规划前）

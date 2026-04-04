@@ -15,8 +15,8 @@ VibeFlow 对外暴露两种开发模式：
 
 | 阶段 | 性质 | 说明 |
 |------|------|------|
-| Spark | 人工 | 灵感迸发：问题框定、DeepResearch、复杂度扫描、CEO 价值评估 |
-| Design | 人工 | 技术设计 + 三视角评审 |
+| Spark | 人工 | 默认先进入 Office Hours 做问题框定，完成复杂度扫描、可选 DeepResearch、可选 Roundtable、CEO 价值评估，并在收口总结后等待用户确认 |
+| Design | 人工 | 技术设计 + 三视角评审，并在阶段收口时等待用户确认是否进入 Tasks |
 | Tasks | 人工 | 执行级任务化 handoff，生成 `tasks.md` |
 | Build | 自动接管 | 进入 `build` 后默认由系统自动继续后续链路，不再逐段等待用户 |
 | Review | 自动 | 跨功能审查（架构、安全、性能）|
@@ -158,12 +158,12 @@ python scripts/run-vibeflow-autopilot.py --project-root .
 
 ### 阶段：`spark`
 **条件**：用户输入功能需求，需探索灵感、确定方向和价值评估。
-**操作**：使用 `skills/vibeflow-spark/SKILL.md`，按需触发 DeepResearch，执行问题框定、复杂度扫描、CEO 价值评估，输出到 `docs/changes/<change-id>/brief.md`。
-价值评估通过后自动进入 design，无需额外插入 requirements phase。
+**操作**：使用 `skills/vibeflow-spark/SKILL.md`。默认先进入 `skills/vibeflow-office-hours/SKILL.md` 做问题框定，并让用户确认本次验收标准；然后完成复杂度扫描，由用户选择是否执行 DeepResearch；调研后可选进入 `skills/vibeflow-roundtable/SKILL.md`；最后完成 CEO 价值评估，输出到 `docs/changes/<change-id>/brief.md`。
+Spark 收口后必须向用户总结方向与范围，并确认是否进入 design。
 
 ### 阶段：`design`
 **条件**：spark 已完成，开始技术设计。
-**操作**：使用 `skills/vibeflow-design/SKILL.md`，输出 `docs/changes/<change-id>/design.md`。含内置步骤：UCD（如需）→ 用户审批 → AI eng review → AI design review → scope decision，并把评审结论汇总到 `design.md` 内的 review summary 章节。
+**操作**：使用 `skills/vibeflow-design/SKILL.md`，输出 `docs/changes/<change-id>/design.md`。含内置步骤：UCD（如需）→ 用户审批 → AI eng review → AI design review → scope decision → 阶段产物展示与确认，并把评审结论汇总到 `design.md` 内的 review summary 章节。
 **说明**：UCD（视觉风格指南）已并入 design 阶段。无 UI 需求时跳过。
 
 ### 阶段：`tasks`

@@ -49,7 +49,9 @@ VibeFlow是一个结构化的六阶段工作流程，用于有目的性地、有
 
 **完整流程**：Spark → Design → Tasks → Build → Review → Test
 
-其中 `Tasks` 不是走过场。必须先展示本次变更的全量交付计划并获得人工确认，才允许进入 `Build`。
+其中有两个关键人工确认闸门：
+- `Spark` 收口后，必须展示方向和范围总结，由用户确认是否进入 `Design`
+- `Tasks` 不是走过场，必须先展示本次变更的全量交付计划并获得人工确认，才允许进入 `Build`
 
 **入口**：`/vibeflow`（选择 Full Mode）
 
@@ -150,6 +152,8 @@ ls skills/vibeflow-*/
 预期技能：
 - vibeflow-router
 - vibeflow-spark
+- vibeflow-office-hours
+- vibeflow-roundtable
 - vibeflow-plan-value-review
 - vibeflow-plan-eng-review
 - vibeflow-plan-design-review
@@ -181,7 +185,7 @@ cat feature-list.json
 
 ### 阶段1：Spark（灵感迸发）
 
-**目的**：灵感探索、问题框定、方向确定、DeepResearch（按需）、复杂度扫描、CEO 价值评估。
+**目的**：默认先通过 Office Hours 做问题框定，确认验收标准；再做复杂度扫描、按需 DeepResearch、可选 Roundtable 和 CEO 价值评估。
 
 **何时进入**：项目开始或面对不清晰的问题时。
 
@@ -189,9 +193,11 @@ cat feature-list.json
 
 **使用的技能**：
 - `vibeflow-spark`
+- `vibeflow-office-hours`（默认进入）
 - `vibeflow-deepresearch`（按需）
+- `vibeflow-roundtable`（可选）
 
-**退出标准**：问题框定完成、方向明确、价值评估通过（EXPANSION/SELECTIVE/HOLD），自动进入 Design。
+**退出标准**：问题框定完成、验收标准已确认、方向明确、价值评估完成，并由用户确认是否进入 Design。
 
 ---
 
@@ -207,7 +213,7 @@ cat feature-list.json
 **使用的技能**：
 - `vibeflow-design`
 
-**退出标准**：技术设计完成，且 `design.md` 已包含工程审查、设计审查和范围决策结论。
+**退出标准**：技术设计完成，`design.md` 已包含工程审查、设计审查和范围决策结论，并由用户确认是否进入 Tasks。
 
 ---
 
@@ -215,7 +221,7 @@ cat feature-list.json
 
 **目的**：把设计翻译成 execution-grade `tasks.md`，为 Build 提供正式交接输入。
 
-**何时进入**：Design 阶段批准后。
+**何时进入**：Design 阶段完成并经用户确认后。
 
 **关键产出物**：
 - `docs/changes/<change-id>/tasks.md`
@@ -231,7 +237,7 @@ cat feature-list.json
 
 **目的**：从 Build 开始默认自动接管后半程执行链路。
 
-**何时进入**：Design 阶段批准后。
+**何时进入**：Tasks 阶段完成并经用户确认后。
 
 **关键产出物**：`feature-list.json`
 
@@ -395,8 +401,10 @@ VibeFlow支持四种工作流程模板。根据项目范围、团队规模和治
 | 技能 | 目的 |
 |------|------|
 | `vibeflow-router` | 在会话开始时路由整个VibeFlow生命周期的工作 |
-| `vibeflow-spark` | 灵感迸发：问题框定、DeepResearch、复杂度扫描、CEO 价值评估 |
+| `vibeflow-spark` | 灵感迸发：编排 Office Hours、复杂度扫描、DeepResearch、Roundtable、CEO 价值评估和 Spark 收口确认 |
+| `vibeflow-office-hours` | Spark 默认起点：做问题框定、范围梳理和验收标准确认 |
 | `vibeflow-deepresearch` | 深度调研：竞品分析、技术栈分析、能力矩阵、产品护城河调研 |
+| `vibeflow-roundtable` | 多角色圆桌讨论，用于在 Spark 中可选审视方向和范围 |
 | `vibeflow-design` | 在初始化之前编写技术设计（含 UCD 内联：视觉风格、Token、组件提示词） |
 | `vibeflow-tasks` | 生成 execution-grade 全量交付计划，并在人工确认后交给 Build |
 | `vibeflow-build-init` | Build 内部准备步骤：初始化实现产物 |

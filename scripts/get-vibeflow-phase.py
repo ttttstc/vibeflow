@@ -118,9 +118,9 @@ def next_action_for_phase(phase: str, reason: str, *, ui_required_flag: bool, sh
     if phase == "increment":
         return "先处理增量队列，再继续主链。"
     if phase == "spark":
-        return "补全 brief.md，明确目标、边界、验收标准和约束。"
+        return "默认先进入 vibeflow-office-hours 完成问题框定，并让用户确认本次验收标准；随后完成复杂度扫描，由用户决定是否做深度调研，必要时再进入圆桌讨论，最后总结方向与范围并确认是否进入 design。"
     if phase == "design":
-        return "完善 design.md，并把评审结论合并进设计文档。"
+        return "完善 design.md，完成 eng/design review，并向用户展示本阶段产物与方案；只有在用户确认后才能进入 tasks。"
     if phase == "tasks":
         return "生成 execution-grade tasks.md，确保包含精确文件路径、验证步骤和回滚说明。"
     if phase == "build":
