@@ -137,6 +137,24 @@ class TestDetectPhase:
         assert result["next_action"]
         assert result["open_files"]
 
+    def test_spark_guidance_mentions_office_hours_and_design_confirmation(self, tmp_path):
+        make_stateful_project(tmp_path)
+        result = detect_phase(tmp_path, verbose=True)
+        assert "vibeflow-office-hours" in result["next_action"]
+        assert "验收标准" in result["next_action"]
+        assert "是否进入 design" in result["next_action"]
+
+    def test_design_guidance_mentions_confirmation_before_tasks(self, tmp_path):
+        state = make_stateful_project(tmp_path)
+        state["checkpoints"]["spark"] = True
+        write(tmp_path / state["artifacts"]["spark"], "# Brief\n")
+        paths_module.save_state(tmp_path, state)
+        result = detect_phase(tmp_path, verbose=True)
+        assert result["phase"] == "design"
+        assert "eng/design review" in result["next_action"]
+        assert "用户确认后" in result["next_action"]
+        assert "进入 tasks" in result["next_action"]
+
 
 class TestHelpers:
     def test_ui_required(self, tmp_path):
