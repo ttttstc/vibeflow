@@ -53,7 +53,20 @@ BLOCKING_LABELS = {
 EVIDENCE_LABELS = {
     "active_features": "active features declared in feature-list.json",
     "release_notes_exists": "release notes file",
+    "all_phases_complete": "all required phases complete",
 }
+
+
+def _workflow_text(path: Path) -> str:
+    return path.read_text(encoding="utf-8") if path.exists() else ""
+
+
+def _workflow_requires(workflow_path: Path, phase_name: str) -> bool:
+    content = _workflow_text(workflow_path)
+    return (
+        (f"{phase_name}:\n  required: true" in content)
+        or (f"{phase_name}:\n    required: true" in content)
+    )
 
 
 def _load_feature_payload(feature_list_path: Path) -> dict:
@@ -116,6 +129,19 @@ def evaluate_evidence(evidence: str, *, state: dict, contract: dict) -> tuple[bo
     if evidence == "release_notes_exists":
         ok = contract["release_notes"].exists()
         return ok, "RELEASE_NOTES.md exists." if ok else "RELEASE_NOTES.md is missing."
+
+    if evidence == "all_phases_complete":
+        checkpoints = state.get("checkpoints") or {}
+        required = ["spark", "design", "tasks", "build", "review", "test"]
+        if _workflow_requires(contract["workflow"], "ship"):
+            required.append("ship")
+        if _workflow_requires(contract["workflow"], "reflect"):
+            required.append("reflect")
+        missing = [name for name in required if not checkpoint_done(state, name)]
+        ok = not missing
+        if ok:
+            return True, "all required checkpoints are complete."
+        return False, f"missing checkpoints: {', '.join(missing)}."
 
     return False, f"unknown evidence '{evidence}' is not satisfied."
 

@@ -7,10 +7,10 @@ phases:
     completion_evidence: ["artifact:spark"]
     blocking_conditions: []
   design:
-    required_artifacts: ["design", "design_review"]
+    required_artifacts: ["design"]
     required_checkpoints: []
     required_approvals: ["design"]
-    completion_evidence: ["artifact:design", "artifact:design_review"]
+    completion_evidence: ["artifact:design"]
     blocking_conditions: []
   tasks:
     required_artifacts: ["tasks"]
@@ -18,11 +18,11 @@ phases:
     required_approvals: ["tasks"]
     completion_evidence: ["artifact:tasks"]
     blocking_conditions: []
-  build-init:
+  build:
     required_artifacts: ["tasks"]
     required_checkpoints: ["tasks"]
     required_approvals: []
-    completion_evidence: ["active_features", "build_init_ready_signal"]
+    completion_evidence: []
     blocking_conditions: []
   review:
     required_artifacts: ["review"]
@@ -30,10 +30,10 @@ phases:
     required_approvals: ["review"]
     completion_evidence: ["artifact:review"]
     blocking_conditions: []
-  test-system:
+  test:
     required_artifacts: ["system_test"]
     required_checkpoints: []
-    required_approvals: ["test_system"]
+    required_approvals: ["test"]
     completion_evidence: ["artifact:system_test"]
     blocking_conditions: []
   ship:
@@ -41,4 +41,16 @@ phases:
     required_checkpoints: []
     required_approvals: ["ship"]
     completion_evidence: ["release_notes_exists"]
+    blocking_conditions: []
+  reflect:
+    required_artifacts: []
+    required_checkpoints: []
+    required_approvals: ["reflect"]
+    completion_evidence: []
+    blocking_conditions: []
+  done:
+    required_artifacts: []
+    required_checkpoints: []
+    required_approvals: []
+    completion_evidence: ["all_phases_complete"]
     blocking_conditions: []

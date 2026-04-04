@@ -431,6 +431,20 @@ def default_policy() -> dict:
                 "completion_evidence": ["release_notes_exists"],
                 "blocking_conditions": [],
             },
+            "reflect": {
+                "required_artifacts": [],
+                "required_checkpoints": [],
+                "required_approvals": ["reflect"],
+                "completion_evidence": [],
+                "blocking_conditions": [],
+            },
+            "done": {
+                "required_artifacts": [],
+                "required_checkpoints": [],
+                "required_approvals": [],
+                "completion_evidence": ["all_phases_complete"],
+                "blocking_conditions": [],
+            },
         },
     }
 

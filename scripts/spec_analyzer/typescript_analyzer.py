@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+import sys
 from pathlib import Path
 
 try:
@@ -23,8 +24,17 @@ def analyze_typescript(project_root: Path) -> dict:
     if TS_MORPH_AVAILABLE:
         try:
             return analyze_typescript_with_ts_morph(project_root, ts_files, tech_stack)
-        except Exception:
+        except Exception as exc:
+            print(
+                f"WARNING: ts-morph fast path failed, falling back to text analysis: {exc}",
+                file=sys.stderr,
+            )
             pass
+    else:
+        print(
+            "WARNING: ts_morph not installed, falling back to text-based TypeScript analysis.",
+            file=sys.stderr,
+        )
 
     return analyze_typescript_with_fallback(project_root, ts_files, tech_stack)
 

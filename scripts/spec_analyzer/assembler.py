@@ -410,20 +410,20 @@ def assemble(project_root: Path, facts_path: Path, inferences_path: Path, output
     inferences = read_json(inferences_path, default={})
     project_name = project_root.name
 
-    existing_spec_content = output_path.read_text(encoding="utf-8") if output_path.exists() else None
-    spec_content = assemble_full_spec(facts, inferences, project_name, project_root)
+    old_spec_content = output_path.read_text(encoding="utf-8") if output_path.exists() else None
+    new_spec_content = assemble_full_spec(facts, inferences, project_name, project_root)
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(spec_content, encoding="utf-8")
+    output_path.write_text(new_spec_content, encoding="utf-8")
     print(f"Full spec written to: {output_path}")
 
-    if existing_spec_content is not None:
+    if old_spec_content is not None:
         change_id = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
         delta_dir = project_root / "docs" / "changes" / change_id
         delta_dir.mkdir(parents=True, exist_ok=True)
         delta_content = generate_spec_delta_from_content(
-            existing_spec_content,
-            spec_content,
+            old_spec_content,
+            new_spec_content,
             change_id=change_id,
             old_label=f"{output_path} (previous)",
             new_label=str(output_path),
