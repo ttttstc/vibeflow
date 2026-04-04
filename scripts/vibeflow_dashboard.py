@@ -16,7 +16,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
-from vibeflow_automation import detect_phase, friendly_message_for_phase  # noqa: E402
+from vibeflow_automation import archive_review_message, detect_phase, friendly_message_for_phase  # noqa: E402
 from vibeflow_paths import load_runtime, load_state, path_contract  # noqa: E402
 
 
@@ -27,7 +27,7 @@ ARTIFACT_DESCRIPTIONS = {
     "ucd": "用户体验说明，用于 UI 或交互细节校准。",
     "design": "实现方案，解释怎么接到当前系统里。",
     "design_review": "设计评审结论，记录工程和设计视角的反馈。",
-    "tasks": "执行清单，把实现工作拆成可落地任务。",
+    "tasks": "全量交付计划，展示任务拆分、依赖与人工确认闸门。",
     "review": "全局审查结果，检查结构、风险和一致性。",
     "system_test": "系统测试结果，确认核心链路可跑通。",
     "qa": "界面或体验验证结果，用于 UI 场景。",
@@ -39,6 +39,7 @@ PHASE_GROUPS = [
     ("plan", "Plan", ["plan"]),
     ("requirements", "Requirements", ["requirements"]),
     ("design", "Design", ["design"]),
+    ("tasks", "Tasks", ["tasks"]),
     ("build", "Build", ["build-init", "build-config", "build-work"]),
     ("review", "Review", ["review"]),
     ("test", "Test", ["test-system", "test-qa"]),
@@ -61,6 +62,7 @@ def phase_index(phase: str) -> int:
         "requirements",
         "design",
         "build-init",
+        "tasks",
         "build-config",
         "build-work",
         "review",
@@ -304,11 +306,17 @@ def build_dashboard_snapshot(project_root: Path) -> dict:
     friendly_seed = runtime.get("friendly_message")
     if invariant_matches and runtime_status in {"blocked", "pending"}:
         friendly_seed = ""
-    friendly = friendly_seed or friendly_message_for_phase(
-        current_phase,
-        status="waiting_manual" if current_phase in {"think", "plan", "requirements", "design", "quick"} else runtime_status,
-        detail=stop_reason,
-    )
+    if current_phase == "done":
+        if runtime_status == "completed":
+            friendly = friendly_seed if friendly_seed and "归档文档" in friendly_seed else archive_review_message(project_root)
+        else:
+            friendly = friendly_seed or archive_review_message(project_root)
+    else:
+        friendly = friendly_seed or friendly_message_for_phase(
+            current_phase,
+            status="waiting_manual" if current_phase in {"think", "plan", "requirements", "design", "quick", "tasks"} else runtime_status,
+            detail=stop_reason,
+        )
 
     return {
         "project": project_root.name,

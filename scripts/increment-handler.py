@@ -51,6 +51,7 @@ CHECKPOINT_ORDER = [
     "requirements",
     "design",
     "build_init",
+    "tasks",
     "build_config",
     "build_work",
     "review",
@@ -325,6 +326,9 @@ def update_state_after_increment(project_root: Path, inc: dict, result: str) -> 
         elif doc_type in {"design", "ucd", "design_review"}:
             reset_downstream_checkpoints(state, "design")
             next_phase = "design"
+        elif doc_type in {"tasks", "delivery_plan"}:
+            reset_downstream_checkpoints(state, "tasks")
+            next_phase = "tasks"
         elif doc_type in {"review"}:
             reset_downstream_checkpoints(state, "review")
             next_phase = "review"

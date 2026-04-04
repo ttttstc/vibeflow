@@ -178,10 +178,14 @@ python scripts/run-vibeflow-autopilot.py --project-root .
 
 ### 阶段：`build-init`
 **条件**：设计完成，初始化构建。
-**操作**：开始自动继续后续链路。先执行 `skills/vibeflow-build-init/SKILL.md` 完成初始化，再立即重检 phase 并继续后续阶段。仅在用户明确要求调试单阶段时，才把 `vibeflow-build-init` 当成独立停顿点。
+**操作**：执行 `skills/vibeflow-build-init/SKILL.md`，生成 `feature-list.json`、实施任务包和 `tasks.md` 全量交付计划。
+
+### 阶段：`tasks`
+**条件**：build-init 已完成，等待人工审核交付计划。
+**操作**：展示 `docs/changes/<change-id>/tasks.md` 与 `feature-list.json`，等待用户明确确认。确认前不得进入 `build-config` 或 `build-work`。
 
 ### 阶段：`build-config`
-**条件**：build-init 完成，需功能配置。
+**条件**：tasks 已获人工确认，需功能配置。
 **操作**：作为自动继续链路的内部子步骤运行 `python scripts/new-vibeflow-work-config.py`，完成后立即继续下一阶段，不等待用户额外确认。
 
 ### 阶段：`build-work`
@@ -243,9 +247,9 @@ python scripts/run-vibeflow-autopilot.py --project-root .
 
 构建顺序、状态、依赖、阻塞均来自 feature-list.json。绝不假设功能已完成。
 
-### 规则3.5：进入 Build 后默认自动继续后续链路
+### 规则3.5：进入 Build 后先停在 tasks 审核闸门，再自动继续后续链路
 
-当 phase 首次进入 `build-init` 时，默认开始自动继续后续链路，并持续推进 `build-init -> build-config -> build-work -> review -> test -> ship -> reflect`。除非用户明确要求单阶段调试，否则不要在这些子阶段之间停下来等待下一条指令。
+当 phase 首次进入 `build-init` 时，先生成 `tasks.md` 全量交付计划并停在 `tasks` 阶段等待人工确认。只有 `tasks` 获批后，才持续推进 `build-config -> build-work -> review -> test -> ship -> reflect`。除非用户明确要求单阶段调试，否则不要在这些自动子阶段之间停下来等待下一条指令。
 
 ### 规则4：phase-history.json 仅追加
 

@@ -74,6 +74,7 @@ class TestVibeFlowV2:
         assert state["autopilot"]["enabled"] is True
         assert "build-init" in state["autopilot"]["auto_runnable"]
         assert "design" in state["autopilot"]["manual_only"]
+        assert "tasks" in state["autopilot"]["manual_only"]
 
     def test_path_contract_exposes_packet_directories(self, tmp_path):
         state = default_state(tmp_path, topic="packet-paths")
@@ -180,7 +181,7 @@ class TestVibeFlowV2:
         result = detect_phase(tmp_path)
         assert result["phase"] == "build-init"
 
-    def test_legacy_build_config_keeps_existing_project_past_build_init(self, tmp_path):
+    def test_build_config_without_tasks_approval_stays_in_build_init(self, tmp_path):
         state = default_state(tmp_path, topic="legacy-build-config")
         for checkpoint in ("spark", "requirements", "design"):
             state["checkpoints"][checkpoint] = True
@@ -204,7 +205,36 @@ class TestVibeFlowV2:
         write(contract["work_config"], '{"steps":["build-work"]}\n')
 
         result = detect_phase(tmp_path)
-        assert result["phase"] == "build-work"
+        assert result["phase"] == "build-init"
+        assert result["blocking_item"] == "tasks"
+
+    def test_build_init_hands_off_to_tasks_review_before_build_config(self, tmp_path):
+        state = default_state(tmp_path, topic="tasks-gate")
+        for checkpoint in ("spark", "requirements", "design", "build_init"):
+            state["checkpoints"][checkpoint] = True
+        save_state(tmp_path, state)
+        contract = path_contract(tmp_path, state)
+
+        write(contract["workflow"], 'template: "api-standard"\n')
+        write(contract["artifacts"]["spark"], "# Spark Output\n")
+        write(contract["artifacts"]["requirements"], "# Requirements\n")
+        write(contract["artifacts"]["design"], "# Design\n")
+        write(contract["artifacts"]["design_review"], "# Design Review\n")
+        write(contract["artifacts"]["tasks"], "# Tasks\n\n- [ ] Feature 1: Review the delivery plan\n")
+        write_json(
+            contract["feature_list"],
+            {
+                "project": "tasks-gate",
+                "features": [
+                    {"id": 1, "title": "Feature 1", "status": "failing", "dependencies": []}
+                ],
+            },
+        )
+
+        result = detect_phase(tmp_path)
+        assert result["phase"] == "tasks"
+        assert result["reason_code"] == "missing_approval"
+        assert result["blocking_item"] == "tasks"
 
     def test_v2_quick_mode_goes_straight_to_build_work(self, tmp_path):
         state = default_state(tmp_path, topic="quick-fix")

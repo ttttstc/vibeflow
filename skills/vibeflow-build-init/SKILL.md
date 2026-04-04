@@ -37,8 +37,8 @@ description: "设计文档存在但 feature-list.json 尚未创建时使用 — 
 
 **权威来源规则：**
 - 如 `design.md` 中存在 `Build Contract` + `Implementation Contract` TOML 代码块，必须以这些设计契约为权威来源生成 `feature-list.json`
-- 只有旧项目或设计文档尚未升级时，才回退到 `tasks.md` / 默认值推断
-- 如检测到设计契约但解析失败、缺少 `Build Contract`、或 feature 契约不完整，必须阻塞 build-init，不得悄悄回退到 `tasks.md`
+- 不再从旧的 `tasks.md` 或默认值推断生成正式实施清单
+- 如缺少 `Build Contract`、缺少 feature 契约、或设计契约解析失败，必须阻塞 build-init
 
 ```json
 {
@@ -73,7 +73,7 @@ description: "设计文档存在但 feature-list.json 尚未创建时使用 — 
 如设计契约已经声明 `constraints[]`、`assumptions[]`、`required_configs[]`，优先采用设计文档中的执行版本；SRS 作为追溯和补全来源。
 
 ### 5. 分解需求为功能
-优先从设计文档中每个 feature 的 `Implementation Contract` 填充 `features[]`；如项目仍是旧格式，再从 SRS 文档和设计文档的**开发计划**（任务分解章节）回退生成。
+从设计文档中每个 feature 的 `Implementation Contract` 填充 `features[]`。
 
 - 每个 FR-xxx -> 一个或多个功能条目，含 `id`、`category`、`title`、`description`、`priority`、`status`（始终为 `"failing"`）、`verification_steps`、`dependencies`
 - `verification_steps` 应追溯到 SRS 验收标准（Given/When/Then）
@@ -128,6 +128,17 @@ description: "设计文档存在但 feature-list.json 尚未创建时使用 — 
 - `design_contract.integration_points`
 
 这些任务包是 Build 阶段后续独立实施单元的正式输入，不应依赖长会话上下文记忆。
+
+### 5.2 生成全量交付计划
+在 `docs/changes/<change-id>/tasks.md` 生成面向人工审核的**全量交付计划**，至少包含：
+
+- 所有 feature 的执行顺序
+- 依赖关系和关键路径
+- 每个 feature 的验证方式
+- 文件范围 / 集成点摘要
+- 明确的人工确认提示
+
+在用户审核并确认同意之前，不得进入 `build-config` 或 `build-work`。
 
 ### 6. 填充 required_configs
 从 SRS（IFR-xxx 接口需求）和设计文档：
@@ -188,8 +199,12 @@ description: "设计文档存在但 feature-list.json 尚未创建时使用 — 
 python scripts/new-vibeflow-work-config.py --project-root .
 ```
 
-### 15. 进入构建
-不要在这里停下来等待下一条用户指令。完成初始化后立即重新检测 phase，继续 Build 自动执行链路；仅在调试或恢复时，才手动转入 `vibeflow-build-work`。
+### 15. 进入 tasks 审核闸门
+完成初始化后，进入 `tasks` 阶段等待人工审核全量交付计划。
+
+- `build-init` 负责生成 `feature-list.json`、实施任务包和 `tasks.md`
+- `tasks` 负责人工审核与确认
+- 只有 `tasks` 获批后，才能继续 `build-config` 和 `build-work`
 
 ## 生成的持久化工件
 
@@ -197,6 +212,7 @@ python scripts/new-vibeflow-work-config.py --project-root .
 |------|------|
 | `feature-list.json` | 带状态的结构化任务清单 |
 | `.vibeflow/packets/<change-id>/feature-*.json` | 每个 feature 的实施任务包 |
+| `docs/changes/<change-id>/tasks.md` | 面向人工审核的全量交付计划 |
 | `.vibeflow/logs/session-log.md` | 逐会话进度日志 |
 | `RELEASE_NOTES.md` | 活跃的发布说明 |
 | `.vibeflow/guides/build.md` | 项目专属构建指南 |
@@ -208,5 +224,5 @@ python scripts/new-vibeflow-work-config.py --project-root .
 
 **调用者：** vibeflow-router 的 Build 自动继续链路，或调试/恢复场景下的手动调用
 **读取：** `docs/changes/<change-id>/requirements.md` + `docs/changes/<change-id>/design.md` + `.vibeflow/workflow.yaml`
-**链接到：** Build 自动继续链路（默认） / `vibeflow-build-work`（手动 fallback）
+**链接到：** `tasks`（人工审核交付计划） -> Build 自动继续链路
 **产出：** feature-list.json + 上述所有工件

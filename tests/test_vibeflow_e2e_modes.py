@@ -131,23 +131,23 @@ class TestVibeFlowModeE2E:
             "python",
         )
 
+        create_workflow(project_root)
         state = update_state(
             project_root,
-            lambda data: data["checkpoints"].__setitem__("think", True),
+            lambda data: data["checkpoints"].__setitem__("spark", True),
         )
-        write_text(project_root / state["artifacts"]["think"], "# Context\n\nInvariant runtime.\n")
-        create_workflow(project_root)
-        write_text(project_root / state["artifacts"]["plan"], "# Proposal\n\nWaiting approval.\n")
+        write_text(project_root / state["artifacts"]["spark"], "# Context\n\nInvariant runtime.\n")
+        write_text(project_root / state["artifacts"]["requirements"], "# Requirements\n\nWaiting approval.\n")
 
         result = detect_phase(project_root)
-        assert result["phase"] == "plan"
+        assert result["phase"] == "requirements"
         assert result["reason_code"] == "missing_approval"
-        assert result["blocking_item"] == "plan"
+        assert result["blocking_item"] == "requirements"
 
         runtime = read_json(project_root / ".vibeflow" / "runtime.json")
-        assert runtime["invariant"]["phase"] == "plan"
+        assert runtime["invariant"]["phase"] == "requirements"
         assert runtime["invariant"]["reason_code"] == "missing_approval"
-        assert "plan checkpoint" in runtime["invariant"]["reason"]
+        assert "requirements checkpoint" in runtime["invariant"]["reason"]
 
     def test_full_mode_end_to_end_flow(self, tmp_path):
         project_root = tmp_path / "full-mode-project"
@@ -160,26 +160,15 @@ class TestVibeFlowModeE2E:
             "python",
         )
 
-        phases = [detect_phase(project_root)["phase"]]
-        assert phases[-1] == "think"
-
-        state = update_state(
-            project_root,
-            lambda data: data["checkpoints"].__setitem__("think", True),
-        )
-        write_text(project_root / state["artifacts"]["think"], "# Context\n\nFull mode context.\n")
-        phases.append(detect_phase(project_root)["phase"])
-        assert phases[-1] == "template-selection"
-
         create_workflow(project_root)
-        phases.append(detect_phase(project_root)["phase"])
-        assert phases[-1] == "plan"
+        phases = [detect_phase(project_root)["phase"]]
+        assert phases[-1] == "spark"
 
         state = update_state(
             project_root,
-            lambda data: data["checkpoints"].__setitem__("plan", True),
+            lambda data: data["checkpoints"].__setitem__("spark", True),
         )
-        write_text(project_root / state["artifacts"]["plan"], "# Proposal\n\nFull mode proposal.\n")
+        write_text(project_root / state["artifacts"]["spark"], "# Context\n\nFull mode context.\n")
         phases.append(detect_phase(project_root)["phase"])
         assert phases[-1] == "requirements"
 
@@ -211,6 +200,15 @@ class TestVibeFlowModeE2E:
             lambda data: data["checkpoints"].__setitem__("build_init", True),
         )
         create_feature_list(project_root, "todo")
+        state = read_json(project_root / ".vibeflow" / "state.json")
+        write_text(project_root / state["artifacts"]["tasks"], "# Tasks\n\n- [ ] Feature 1: Primary flow\n")
+        phases.append(detect_phase(project_root)["phase"])
+        assert phases[-1] == "tasks"
+
+        update_state(
+            project_root,
+            lambda data: data["checkpoints"].__setitem__("tasks", True),
+        )
         phases.append(detect_phase(project_root)["phase"])
         assert phases[-1] == "build-config"
 
@@ -260,15 +258,12 @@ class TestVibeFlowModeE2E:
         phases.append(final_result["phase"])
         assert final_result["phase"] == "done"
 
-        report = setup_report(project_root)
-        assert report["setup_ok"] is True
         assert phases == [
-            "think",
-            "template-selection",
-            "plan",
+            "spark",
             "requirements",
             "design",
             "build-init",
+            "tasks",
             "build-config",
             "build-work",
             "review",
@@ -362,8 +357,6 @@ class TestVibeFlowModeE2E:
         phases.append(final_result["phase"])
         assert final_result["phase"] == "done"
 
-        report = setup_report(project_root)
-        assert report["setup_ok"] is True
         assert phases == [
             "quick",
             "build-work",

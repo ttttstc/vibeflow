@@ -47,7 +47,7 @@ VibeFlow是一个结构化的六阶段工作流程，用于有目的性地、有
 - 重要系统变更（支付、认证等）
 - 不确定复杂度的任务
 
-**完整流程**：Spark → Requirements → Design → Build → Review → Test
+**完整流程**：Spark → Requirements → Design → Build Init → Tasks Review → Build → Review → Test
 
 **入口**：`/vibeflow`（选择 Full Mode）
 
@@ -101,8 +101,9 @@ VibeFlow是一个严谨的软件开发框架，强调在构建之前思考、在
 ### 步骤4：初始化Build阶段
 
 ```
-Design 确认后进入 Build。
-在 Claude Code 插件里，Build 的默认路径不是逐段手动推进，而是从 build-init 开始自动继续后续链路。
+Design 确认后先进入 `build-init` 生成交付计划。
+在 Claude Code 插件里，Build 的默认路径会先跑 `build-init`，产出 `tasks.md` + `feature-list.json` 并停在 `tasks` 人工确认闸门。
+只有 `tasks` 获批后，才继续后续自动链路。
 只有在调试单个子阶段时，才单独调用 vibeflow-build-init 或 vibeflow-build-work。
 ```
 
@@ -225,15 +226,16 @@ cat feature-list.json
 
 ### 阶段4：Build（构建）
 
-**目的**：从 `build-init` 起默认自动接管后半程执行链路。
+**目的**：先生成交付计划并获得人工确认，再自动接管后半程执行链路。
 
 **何时进入**：Design 阶段批准后。
 
-**关键产出物**：`feature-list.json`
+**关键产出物**：`feature-list.json`、`docs/changes/<change-id>/tasks.md`
 
 **默认执行方式**：
-- 进入 `build-init` 后，不再逐段停顿等待用户
-- router 会持续执行 `build-init -> build-config -> build-work -> review -> test`
+- `build-init` 先生成 `feature-list.json`、任务包、`tasks.md`
+- 在 `tasks` 阶段展示全量交付计划并等待人工确认
+- 获批后 router 持续执行 `build-config -> build-work -> review -> test`
 - 直到 `done`、阻塞、或需要人工确认
 
 **子技能（默认作为内部子步骤 / fallback）**：

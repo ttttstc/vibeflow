@@ -57,6 +57,11 @@ class TestVibeFlowDashboard:
         assert build_card["status"] == "completed"
         assert any(item["key"] == "review" for item in snapshot["artifacts"])
         assert snapshot["features"]["total"] >= 1
+        assert "归档文档" in snapshot["friendly_message"]
+        assert "requirements:" in snapshot["friendly_message"]
+        assert "design:" in snapshot["friendly_message"]
+        assert "tasks:" in snapshot["friendly_message"]
+        assert "review:" in snapshot["friendly_message"]
 
     def test_dashboard_server_serves_html_json_and_sse(self, tmp_path):
         project_root = copy_sample_project(tmp_path, "dashboard-server")

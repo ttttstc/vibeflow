@@ -207,6 +207,7 @@ def prepare_sample_for_full_autopilot(project_root: Path, *, start_from_build_in
     state["mode"] = "full"
     state["current_phase"] = "design"
     state["checkpoints"]["build_init"] = not start_from_build_init
+    state["checkpoints"]["tasks"] = False
     state["checkpoints"]["build_config"] = False
     state["checkpoints"]["build_work"] = False
     state["checkpoints"]["review"] = False
@@ -316,7 +317,7 @@ reflect:
 """,
     )
     state = read_json(project_root / ".vibeflow" / "state.json")
-    for checkpoint in ("spark", "requirements", "design", "build_init", "build_config"):
+    for checkpoint in ("spark", "requirements", "design", "build_init", "tasks", "build_config"):
         state["checkpoints"][checkpoint] = True
     state["current_phase"] = "build-work"
     write_json(project_root / ".vibeflow" / "state.json", state)
@@ -324,6 +325,7 @@ reflect:
     write_text(project_root / state["artifacts"]["requirements"], "# Requirements\n\nParallel build requirements.\n")
     write_text(project_root / state["artifacts"]["design"], "# Design\n\nParallel build design.\n")
     write_text(project_root / state["artifacts"]["design_review"], "# Design Review\n\nApproved.\n")
+    write_text(project_root / state["artifacts"]["tasks"], "# Tasks\n\n- [ ] Feature 1: Feature A\n- [ ] Feature 2: Feature B\n- [ ] Feature 3: Feature C\n")
     run_python(ROOT / "scripts" / "new-vibeflow-work-config.py", "--project-root", project_root)
 
     write_text(
@@ -433,7 +435,7 @@ build:
 """,
     )
     state = read_json(project_root / ".vibeflow" / "state.json")
-    for checkpoint in ("spark", "requirements", "design", "build_init", "build_config"):
+    for checkpoint in ("spark", "requirements", "design", "build_init", "tasks", "build_config"):
         state["checkpoints"][checkpoint] = True
     state["current_phase"] = "build-work"
     write_json(project_root / ".vibeflow" / "state.json", state)
@@ -441,6 +443,7 @@ build:
     write_text(project_root / state["artifacts"]["requirements"], "# Requirements\n\nConflicting build requirements.\n")
     write_text(project_root / state["artifacts"]["design"], "# Design\n\nConflicting build design.\n")
     write_text(project_root / state["artifacts"]["design_review"], "# Design Review\n\nApproved.\n")
+    write_text(project_root / state["artifacts"]["tasks"], "# Tasks\n\n- [ ] Feature 1: Shared Feature A\n- [ ] Feature 2: Shared Feature B\n")
     run_python(ROOT / "scripts" / "new-vibeflow-work-config.py", "--project-root", project_root)
 
     write_text(
@@ -522,7 +525,64 @@ class TestVibeFlowAutopilot:
         change_root = project_root / state["active_change"]["root"]
         write_text(change_root / "context.md", "# Spark\n\nDeliver a small authenticated API workflow.\n")
         write_text(change_root / "requirements.md", "# Requirements\n\n- FR-001 Auth flow\n- FR-002 Audit trail\n")
-        write_text(change_root / "design.md", "# Design\n\n## 4.1 Auth\n\nImplement auth.\n\n## 4.2 Audit\n\nImplement audit.\n")
+        write_text(
+            change_root / "design.md",
+            """# Design
+
+## 3. Build Contract
+```toml
+project = "packet-build-init"
+language = "python"
+test_framework = "pytest"
+coverage_tool = "pytest-cov"
+mutation_tool = "mutmut"
+constraints = ["Keep the authenticated API workflow small and explicit."]
+assumptions = ["Two implementation features are sufficient for the initial delivery plan."]
+```
+
+## 4. Key Feature Designs
+
+### 4.1 Feature: Implement auth flow (FR-001)
+
+#### 4.1.6 Implementation Contract
+```toml
+feature_id = 1
+title = "Implement auth flow"
+category = "delivery"
+description = "Deliver the authentication flow."
+objective = "Implement auth flow"
+priority = "high"
+dependencies = []
+file_scope = ["src/auth.py", "tests/test_auth.py"]
+verification_commands = ['python -c "print(123)"']
+verification_steps = ["Run the auth verification command and verify it succeeds."]
+done_criteria = ["Authentication flow is implemented and verified."]
+requirements_refs = ["FR-001"]
+integration_points = ["src/auth.py:login"]
+autopilot_commands = ['python -c "print(123)"']
+```
+
+### 4.2 Feature: Implement audit trail (FR-002)
+
+#### 4.2.6 Implementation Contract
+```toml
+feature_id = 2
+title = "Implement audit trail"
+category = "delivery"
+description = "Deliver the audit trail."
+objective = "Implement audit trail"
+priority = "medium"
+dependencies = [1]
+file_scope = ["src/audit.py", "tests/test_audit.py"]
+verification_commands = ['python -c "print(456)"']
+verification_steps = ["Run the audit verification command and verify it succeeds."]
+done_criteria = ["Audit trail is implemented and verified."]
+requirements_refs = ["FR-002"]
+integration_points = ["src/audit.py:record"]
+autopilot_commands = ['python -c "print(456)"']
+```
+""",
+        )
         write_text(change_root / "design-review.md", "# Design Review\n\nApproved.\n")
         write_text(project_root / "rules" / "implementation.md", "# Implementation Rules\n\nPrefer explicit adapters over inline API glue.\n")
         write_text(
@@ -547,8 +607,8 @@ class TestVibeFlowAutopilot:
         )
 
         result = run_autopilot(project_root, "--stop-at", "build-config")
-        assert result["status"] == "stopped"
-        assert result["final_phase"] == "build-config"
+        assert result["status"] == "waiting_manual"
+        assert result["final_phase"] == "tasks"
 
         feature_payload = read_json(project_root / "feature-list.json")
         assert len(feature_payload["features"]) == 2
@@ -576,6 +636,9 @@ class TestVibeFlowAutopilot:
         assert packet["source_snippets"]["requirements_summary"]
         assert packet["source_snippets"]["design_summary"]
         assert packet["source_snippets"]["rules_summary"]
+        tasks_text = (change_root / "tasks.md").read_text(encoding="utf-8")
+        assert "full delivery plan" in tasks_text
+        assert "Implementation must not start until this plan is reviewed and explicitly approved." in tasks_text
 
     def test_build_init_prefers_design_execution_contracts_and_writes_design_refs(self, tmp_path):
         project_root = tmp_path / "contract-build-init"
@@ -667,8 +730,8 @@ autopilot_commands = ['python -c "print(456)"']
         )
 
         result = run_autopilot(project_root, "--stop-at", "build-config")
-        assert result["status"] == "stopped"
-        assert result["final_phase"] == "build-config"
+        assert result["status"] == "waiting_manual"
+        assert result["final_phase"] == "tasks"
 
         feature_payload = read_json(project_root / "feature-list.json")
         assert feature_payload["project"] == "contract-build-init"
@@ -777,6 +840,14 @@ file_scope = ["src/broken.py"]
         phase_before = detect_phase(project_root)
         assert phase_before["phase"] == "build-init"
 
+        first_result = run_autopilot(project_root, "--max-workers", 2)
+        assert first_result["status"] == "waiting_manual"
+        assert first_result["final_phase"] == "tasks"
+
+        state = read_json(project_root / ".vibeflow" / "state.json")
+        state["checkpoints"]["tasks"] = True
+        write_json(project_root / ".vibeflow" / "state.json", state)
+
         result = run_autopilot(project_root, "--max-workers", 2)
         assert result["status"] == "completed"
         assert result["final_phase"] == "done"
@@ -785,6 +856,7 @@ file_scope = ["src/broken.py"]
         assert phase_after["phase"] == "done"
 
         state = read_json(project_root / ".vibeflow" / "state.json")
+        runtime = read_json(project_root / ".vibeflow" / "runtime.json")
         feature_payload = read_json(project_root / "feature-list.json")
         assert [feature["title"] for feature in feature_payload["features"]] == [
             "Normalize priority aliases",
@@ -793,10 +865,16 @@ file_scope = ["src/broken.py"]
         ]
         assert state["checkpoints"]["build_config"] is True
         assert state["checkpoints"]["build_work"] is True
+        assert state["checkpoints"]["tasks"] is True
         assert state["checkpoints"]["review"] is True
         assert state["checkpoints"]["test_system"] is True
         assert state["checkpoints"]["ship"] is True
         assert state["checkpoints"]["reflect"] is True
+        assert "归档文档" in runtime["friendly_message"]
+        assert "requirements:" in runtime["friendly_message"]
+        assert "design:" in runtime["friendly_message"]
+        assert "tasks:" in runtime["friendly_message"]
+        assert "review:" in runtime["friendly_message"]
 
         review_artifact = project_root / state["artifacts"]["review"]
         system_test_artifact = project_root / state["artifacts"]["system_test"]

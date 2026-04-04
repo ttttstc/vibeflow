@@ -109,6 +109,7 @@ def default_state(project_root: Path, topic: str | None = None) -> dict:
             "requirements": False,
             "design": False,
             "build_init": False,
+            "tasks": False,
             "build_config": False,
             "build_work": False,
             "review": False,
@@ -141,6 +142,7 @@ def default_state(project_root: Path, topic: str | None = None) -> dict:
                 "spark",
                 "requirements",
                 "design",
+                "tasks",
                 "quick",
             ],
             "auto_runnable": [
@@ -449,6 +451,13 @@ def default_policy() -> dict:
                 "required_checkpoints": [],
                 "required_approvals": [],
                 "completion_evidence": ["active_features", "build_init_ready_signal"],
+                "blocking_conditions": [],
+            },
+            "tasks": {
+                "required_artifacts": ["tasks"],
+                "required_checkpoints": [],
+                "required_approvals": ["tasks"],
+                "completion_evidence": ["artifact:tasks"],
                 "blocking_conditions": [],
             },
             "review": {
