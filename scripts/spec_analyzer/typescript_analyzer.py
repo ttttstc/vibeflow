@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 import re
 from pathlib import Path
-from typing import Any
 
 try:
     from ts_morph import Project as TsProject, SyntaxKind
@@ -15,10 +14,7 @@ except ImportError:
 
 
 def analyze_typescript(project_root: Path) -> dict:
-    """Main TypeScript analysis function.
-
-    Returns dict with languages, modules, api_surface, entities, tech_stack.
-    """
+    """Main TypeScript analysis function."""
     ts_files = discover_typescript_files(project_root)
     if not ts_files:
         return empty_analysis()
@@ -63,7 +59,6 @@ def analyze_typescript_with_ts_morph(project_root: Path, ts_files: list[Path], t
             pass
 
     source_files = project.getSourceFiles()
-
     return {
         "languages": [{"name": "typescript", "file_count": len(ts_files)}],
         "modules": build_dependency_graph(source_files, project_root),
@@ -250,7 +245,6 @@ def extract_classes_from_text(content: str, module_name: str) -> list[dict]:
 
 
 def _should_skip(path: Path, project_root: Path) -> bool:
-    """Check if a file should be skipped."""
     ignored_dirs = {
         ".git", ".venv", "venv", "node_modules", "dist", "build",
         "coverage", ".pytest_cache", ".mypy_cache", ".ruff_cache",
@@ -261,20 +255,17 @@ def _should_skip(path: Path, project_root: Path) -> bool:
 
 
 def parse_tsconfig(project_root: Path) -> dict | None:
-    """Find and parse tsconfig.json."""
     tsconfig_path = project_root / "tsconfig.json"
     if not tsconfig_path.exists():
         return None
 
     try:
-        import json
         return json.loads(tsconfig_path.read_text(encoding="utf-8"))
     except Exception:
         return None
 
 
 def build_dependency_graph(source_files: list, project_root: Path) -> list[dict]:
-    """Build dependency graph from import/export statements."""
     modules = []
     seen = set()
 
@@ -283,7 +274,6 @@ def build_dependency_graph(source_files: list, project_root: Path) -> list[dict]
             file_path = Path(sf.getFilePath())
             rel_path = file_path.relative_to(project_root)
             module_name = str(rel_path.with_suffix("")).replace("/", ".").replace("\\", ".")
-
             if module_name in seen:
                 continue
             seen.add(module_name)
@@ -291,11 +281,10 @@ def build_dependency_graph(source_files: list, project_root: Path) -> list[dict]
             deps = set()
             for imp in sf.getImportDeclarations():
                 module_ref = imp.getModuleReference()
-                if hasattr(module_ref, 'getText'):
+                if hasattr(module_ref, "getText"):
                     dep_text = module_ref.getText().strip('"').strip("'")
                     if not dep_text.startswith("."):
                         continue
-                    # Resolve relative import
                     try:
                         resolved = (file_path.parent / dep_text).resolve()
                         if resolved.suffix == "":
@@ -319,130 +308,104 @@ def build_dependency_graph(source_files: list, project_root: Path) -> list[dict]
 
 
 def extract_api_surface(source_files: list) -> dict:
-    """Extract exported functions, classes, interfaces."""
     surface = {}
-
     for sf in source_files:
         try:
             file_path = Path(sf.getFilePath())
             module_name = str(file_path.with_suffix("")).replace("/", ".").replace("\\", ".")
-
             exports = []
-
-            # Export declarations
             for exp in sf.getExportedDeclarations():
                 exports.append(exp.getName())
-
-            # Named exports
             for named in sf.getExportedSymbols():
                 name = named.getName()
                 if not name.startswith("_"):
                     exports.append(name)
-
             if exports:
                 surface[module_name] = exports
         except Exception:
             pass
-
     return surface
 
 
 def extract_data_models(source_files: list) -> list[dict]:
-    """Extract interface and type definitions."""
     entities = []
-
     for sf in source_files:
         try:
             file_path = Path(sf.getFilePath())
             module_name = str(file_path.with_suffix("")).replace("/", ".").replace("\\", ".")
 
-            # Interfaces
             for iface in sf.getInterfaces():
-                if iface.getName().startswith("_"):
+                iface_name = iface.getName()
+                if not iface_name or iface_name.startswith("_"):
                     continue
 
                 properties = []
                 for prop in iface.getProperties():
                     type_str = prop.getType().getText()
-                    properties.append({
-                        "name": prop.getName(),
-                        "type": type_str,
-                    })
+                    properties.append({"name": prop.getName(), "type": type_str})
 
                 entities.append({
                     "module": module_name,
-                    "name": iface.getName(),
+                    "name": iface_name,
                     "bases": [],
                     "fields": properties,
                     "methods": [],
                 })
 
-            # Type aliases
             for type_alias in sf.getTypeAliases():
-                if type_alias.getName().startswith("_"):
+                alias_name = type_alias.getName()
+                if not alias_name or alias_name.startswith("_"):
                     continue
 
                 type_str = type_alias.getTypeNode().getText() if type_alias.getTypeNode() else ""
-
                 entities.append({
                     "module": module_name,
-                    "name": type_alias.getName(),
+                    "name": alias_name,
                     "bases": [],
                     "fields": [{"name": "value", "type": type_str}],
                     "methods": [],
                 })
 
-            # Classes
             for cls in sf.getClasses():
-                if cls.getName().startswith("_"):
+                class_name = cls.getName()
+                if not class_name or class_name.startswith("_"):
                     continue
 
                 methods = []
                 for method in cls.getMethods():
-                    if not method.getName().startswith("_"):
-                        methods.append(method.getName())
+                    method_name = method.getName()
+                    if not method_name.startswith("_"):
+                        methods.append(method_name)
 
+                base_expr = cls.getBaseClass()
+                bases = [base_expr.getName()] if base_expr else []
                 entities.append({
                     "module": module_name,
-                    "name": cls.getName(),
-                    "bases": [base.getText() for base in cls.getBaseClasses()],
+                    "name": class_name,
+                    "bases": bases,
                     "fields": [],
                     "methods": methods,
                 })
         except Exception:
             pass
-
     return entities
 
 
 def detect_tech_stack(project_root: Path) -> list[dict]:
-    """Detect tech stack from package.json."""
     tech_stack = []
-
     package_json_path = project_root / "package.json"
     if not package_json_path.exists():
         return tech_stack
 
     try:
         package_json = json.loads(package_json_path.read_text(encoding="utf-8"))
-
-        # Dependencies
         deps = package_json.get("dependencies", {})
         for name, version in deps.items():
-            tech_stack.append({
-                "name": name,
-                "version": version,
-                "source": "package.json",
-            })
+            tech_stack.append({"name": name, "version": version, "source": "package.json"})
 
-        # Dev dependencies
         dev_deps = package_json.get("devDependencies", {})
         for name, version in dev_deps.items():
-            tech_stack.append({
-                "name": name,
-                "version": version,
-                "source": "package.json",
-            })
+            tech_stack.append({"name": name, "version": version, "source": "package.json"})
     except Exception:
         pass
 

@@ -6,8 +6,6 @@ import argparse
 import difflib
 from datetime import datetime, timezone
 from pathlib import Path
-
-# Add parent directory to path for imports
 import sys
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -16,36 +14,20 @@ from spec_analyzer._utils import read_json
 
 
 def render_module_responsibilities(inferences: dict, modules: list) -> list[str]:
-    """Render module responsibility table rows for Arc42 Section 5.
-
-    Args:
-        inferences: The spec-inferences dict containing module_responsibilities
-        modules: List of module dicts from facts
-
-    Returns:
-        List of Markdown table row strings
-    """
     rows = []
     responsibilities = inferences.get("module_responsibilities", {})
-
-    # Check if we have real data (not just placeholder)
     has_real_data = (
         responsibilities
         and "__PLACEHOLDER__" not in responsibilities
-        and not (
-            len(responsibilities) == 1
-            and "__PLACEHOLDER__" in responsibilities
-        )
+        and not (len(responsibilities) == 1 and "__PLACEHOLDER__" in responsibilities)
     )
 
     if not has_real_data:
-        # Fallback: use module names with "Insufficient data"
         for mod in modules:
             name = mod.get("name", "unknown")
             kind = mod.get("kind", "module")
             rows.append(f"| `{name}` | Insufficient data | {kind} |")
     else:
-        # Use LLM-inferred responsibilities
         for mod in modules:
             name = mod.get("name", "unknown")
             kind = mod.get("kind", "module")
@@ -56,16 +38,7 @@ def render_module_responsibilities(inferences: dict, modules: list) -> list[str]
 
 
 def render_runtime_flows(inferences: dict) -> list[str]:
-    """Render runtime flows as Mermaid sequenceDiagrams for Arc42 Section 6.
-
-    Args:
-        inferences: The spec-inferences dict containing runtime_flows
-
-    Returns:
-        List of Markdown strings
-    """
     flows = inferences.get("runtime_flows", [])
-
     if not flows:
         return ["*No runtime flows recorded — run inference with an LLM to populate this section.*"]
 
@@ -73,7 +46,6 @@ def render_runtime_flows(inferences: dict) -> list[str]:
     for i, flow in enumerate(flows, 1):
         title = flow.get("title", f"Flow {i}")
         steps = flow.get("steps", [])
-
         lines.append(f"### 6.1.{i} {title}")
         lines.append("")
         lines.append("```mermaid")
@@ -88,21 +60,11 @@ def render_runtime_flows(inferences: dict) -> list[str]:
                 lines.append(f"    {participant}->>+{participant}: {action}")
         lines.append("```")
         lines.append("")
-
     return lines
 
 
 def render_tech_stack(facts: dict) -> list[str]:
-    """Render technology stack list for Arc42 Section 4.
-
-    Args:
-        facts: The spec-facts dict containing tech_stack
-
-    Returns:
-        List of Markdown strings
-    """
     tech_stack = facts.get("tech_stack", [])
-
     if not tech_stack:
         return ["*Tech stack not detected from project files.*"]
 
@@ -112,29 +74,17 @@ def render_tech_stack(facts: dict) -> list[str]:
         version = item.get("version", "")
         purpose = item.get("purpose", "")
         lines.append(f"- **{name}** {version}: {purpose}".strip())
-
     return lines
 
 
 def render_data_model(facts: dict) -> list[str]:
-    """Render data model as Mermaid erDiagram for Arc42 Section 8.1.
-
-    Args:
-        facts: The spec-facts dict containing entities and diagrams
-
-    Returns:
-        List of Markdown strings
-    """
     entities = facts.get("entities", [])
     er_diagram = facts.get("diagrams", {}).get("er_diagram_mermaid", "")
-
     if not entities:
         return ["*No data model entities detected from project files.*"]
-
     if er_diagram:
         return [er_diagram]
 
-    # Fallback: generate simple erDiagram from entities
     lines = ["```mermaid", "erDiagram"]
     for entity in entities:
         name = entity.get("name", "Unknown")
@@ -149,22 +99,6 @@ def render_data_model(facts: dict) -> list[str]:
 
 
 def load_custom_standards(project_root: Path) -> dict[str, list[str]]:
-    """Load custom standards from docs/standards/ directory.
-
-    Looks for .md files in docs/standards/ and categorizes them by filename:
-    - coding-standards.md -> Coding Standards section
-    - naming-conventions.md -> Naming Conventions section
-    - architecture-rules.md -> Architecture Rules section
-    - testing-standards.md -> Testing Standards section
-    - deployment-standards.md -> Deployment Standards section
-    - other .md files -> Generic Standards section
-
-    Args:
-        project_root: Root directory of the project
-
-    Returns:
-        Dict mapping section name to list of content lines
-    """
     standards_dir = project_root / "docs" / "standards"
     if not standards_dir.exists() or not standards_dir.is_dir():
         return {}
@@ -177,32 +111,21 @@ def load_custom_standards(project_root: Path) -> dict[str, list[str]]:
         "deployment-standards.md": "8.7 Deployment Standards",
     }
 
-    result = {}
+    result: dict[str, list[str]] = {}
     for md_file in sorted(standards_dir.glob("*.md")):
         section_name = section_mapping.get(md_file.name, f"8.X {md_file.stem.replace('-', ' ').title()}")
         content = md_file.read_text(encoding="utf-8").strip()
-        if content:
-            result[section_name] = content.split("\n")
-            # Remove title lines (lines starting with #) to avoid duplication
-            result[section_name] = [
-                line for line in result[section_name]
-                if not line.strip().startswith("#")
-            ]
-
+        if not content:
+            continue
+        result[section_name] = [
+            line for line in content.split("\n")
+            if not line.strip().startswith("#")
+        ]
     return result
 
 
 def render_api_surface(facts: dict) -> list[str]:
-    """Render API surface for Arc42 Section 8.2.
-
-    Args:
-        facts: The spec-facts dict containing api_surface
-
-    Returns:
-        List of Markdown strings
-    """
     api_surface = facts.get("api_surface", {})
-
     if not api_surface:
         return ["*No API surface detected from project files.*"]
 
@@ -218,19 +141,10 @@ def render_api_surface(facts: dict) -> list[str]:
 
 
 def render_module_graph(facts: dict) -> str:
-    """Render module dependency graph for Arc42 Section 5.1.
-
-    Args:
-        facts: The spec-facts dict containing diagrams
-
-    Returns:
-        Mermaid flowchart string
-    """
     module_graph = facts.get("diagrams", {}).get("module_graph_mermaid", "")
     if module_graph:
         return module_graph
 
-    # Fallback: generate simple graph from modules
     modules = facts.get("modules", [])
     lines = ["```mermaid", "flowchart TD"]
     for mod in modules:
@@ -241,39 +155,19 @@ def render_module_graph(facts: dict) -> str:
 
 
 def assemble_full_spec(facts: dict, inferences: dict, project_name: str, project_root: Path | None = None) -> str:
-    """Assemble complete Arc42 specification document.
-
-    Args:
-        facts: The spec-facts dict
-        inferences: The spec-inferences dict
-        project_name: Name of the project
-        project_root: Root directory of the project (for loading custom standards)
-
-    Returns:
-        Complete Arc42 Markdown document as string
-    """
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-
-    # Load custom standards from docs/standards/
-    custom_standards = {}
-    if project_root:
-        custom_standards = load_custom_standards(project_root)
+    custom_standards = load_custom_standards(project_root) if project_root else {}
     modules = facts.get("modules", [])
     entities = facts.get("entities", [])
     tech_stack = facts.get("tech_stack", [])
 
-    # Check for real module_responsibilities data
     responsibilities = inferences.get("module_responsibilities", {})
     has_responsibilities = (
         responsibilities
         and "__PLACEHOLDER__" not in responsibilities
-        and not (
-            len(responsibilities) == 1
-            and "__PLACEHOLDER__" in responsibilities
-        )
+        and not (len(responsibilities) == 1 and "__PLACEHOLDER__" in responsibilities)
     )
 
-    # Build the document
     lines = [
         f"# {project_name} Architecture Specification",
         "",
@@ -294,7 +188,6 @@ def assemble_full_spec(facts: dict, inferences: dict, project_name: str, project
         "### Technical Constraints",
     ]
 
-    # Add tech stack constraints
     if tech_stack:
         for item in tech_stack:
             constraint = item.get("constraint", "")
@@ -326,12 +219,8 @@ def assemble_full_spec(facts: dict, inferences: dict, project_name: str, project
         "",
         "### 4.1 Technology Choices",
     ])
-
-    # Tech stack section
-    tech_lines = render_tech_stack(facts)
-    lines.extend(tech_lines)
+    lines.extend(render_tech_stack(facts))
     lines.append("")
-
     lines.extend([
         "### 4.2 Architecture Patterns",
         "- Modular script-based architecture",
@@ -345,18 +234,13 @@ def assemble_full_spec(facts: dict, inferences: dict, project_name: str, project
         "",
     ])
 
-    # Module dependency graph
-    module_graph = render_module_graph(facts)
-    lines.append(module_graph)
+    lines.append(render_module_graph(facts))
     lines.append("")
     lines.append("### 5.2 Module Catalog")
     lines.append("")
     lines.append("| Module | Responsibility | Kind |")
     lines.append("|--------|----------------|------|")
-
-    # Module responsibilities table
-    resp_lines = render_module_responsibilities(inferences, modules)
-    lines.extend(resp_lines)
+    lines.extend(render_module_responsibilities(inferences, modules))
     lines.append("")
     if has_responsibilities:
         lines.append("<!-- LLM-INFERRED: module_responsibilities -->")
@@ -365,10 +249,7 @@ def assemble_full_spec(facts: dict, inferences: dict, project_name: str, project
     lines.append("")
     lines.append("### 6.1 Key Runtime Flows")
     lines.append("")
-
-    # Runtime flows section
-    flow_lines = render_runtime_flows(inferences)
-    lines.extend(flow_lines)
+    lines.extend(render_runtime_flows(inferences))
     lines.append("")
     if inferences.get("runtime_flows"):
         lines.append("<!-- LLM-INFERRED: runtime_flows -->")
@@ -386,10 +267,7 @@ def assemble_full_spec(facts: dict, inferences: dict, project_name: str, project
         "### 8.1 Data Model",
         "",
     ])
-
-    # Data model section
-    data_model_lines = render_data_model(facts)
-    lines.extend(data_model_lines)
+    lines.extend(render_data_model(facts))
     lines.append("")
     if entities:
         lines.append("<!-- LLM-INFERRED: data_model_entities -->")
@@ -398,13 +276,9 @@ def assemble_full_spec(facts: dict, inferences: dict, project_name: str, project
         "### 8.2 API Surface",
         "",
     ])
-
-    # API surface section
-    api_lines = render_api_surface(facts)
-    lines.extend(api_lines)
+    lines.extend(render_api_surface(facts))
     lines.append("")
 
-    # Inject custom standards from docs/standards/
     for section_name, section_lines in sorted(custom_standards.items()):
         lines.append(f"### {section_name}")
         lines.append("")
@@ -433,7 +307,6 @@ def assemble_full_spec(facts: dict, inferences: dict, project_name: str, project
         "|------|------------|",
     ])
 
-    # Build glossary from module names and entities
     seen_terms = set()
     for mod in modules:
         name = mod.get("name", "").split(".")[-1].replace("_", " ").title()
@@ -443,25 +316,10 @@ def assemble_full_spec(facts: dict, inferences: dict, project_name: str, project
 
     lines.append("")
     lines.append("*Generated by VibeFlow spec_analyzer*")
-
     return "\n".join(lines)
 
 
-def generate_spec_delta(
-    old_spec_path: Path,
-    new_spec_path: Path,
-    change_id: str,
-) -> str:
-    """Generate a diff between old and new full-spec.md files.
-
-    Args:
-        old_spec_path: Path to the previous full-spec.md
-        new_spec_path: Path to the new full-spec.md
-        change_id: Unique identifier for this change
-
-    Returns:
-        Path to the generated delta file
-    """
+def generate_spec_delta(old_spec_path: Path, new_spec_path: Path, change_id: str) -> str:
     old_content = old_spec_path.read_text(encoding="utf-8") if old_spec_path.exists() else ""
     new_content = new_spec_path.read_text(encoding="utf-8") if new_spec_path.exists() else ""
     return generate_spec_delta_from_content(
@@ -481,9 +339,6 @@ def generate_spec_delta_from_content(
     old_label: str,
     new_label: str,
 ) -> str:
-    """Generate a delta document from two in-memory spec snapshots."""
-
-    # Generate unified diff
     diff = difflib.unified_diff(
         old_content.splitlines(keepends=True),
         new_content.splitlines(keepends=True),
@@ -493,12 +348,10 @@ def generate_spec_delta_from_content(
     )
     diff_text = "".join(diff)
 
-    # Calculate statistics
     old_lines = len(old_content.splitlines())
     new_lines = len(new_content.splitlines())
     line_diff = new_lines - old_lines
 
-    # Count module changes (simple heuristic: look for added/removed module lines)
     old_modules = set()
     new_modules = set()
     for line in old_content.splitlines():
@@ -514,10 +367,7 @@ def generate_spec_delta_from_content(
 
     added_modules = new_modules - old_modules
     removed_modules = old_modules - new_modules
-    added_count = len(added_modules)
-    removed_count = len(removed_modules)
 
-    # Generate delta document
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
     delta_lines = [
         f"# Spec Delta: {change_id}",
@@ -528,8 +378,8 @@ def generate_spec_delta_from_content(
         "## Change Summary",
         "",
         f"- **Lines**: {old_lines} -> {new_lines} ({'+' if line_diff >= 0 else ''}{line_diff})",
-        f"- **Modules Added**: {added_count}",
-        f"- **Modules Removed**: {removed_count}",
+        f"- **Modules Added**: {len(added_modules)}",
+        f"- **Modules Removed**: {len(removed_modules)}",
         "",
     ]
 
@@ -549,58 +399,28 @@ def generate_spec_delta_from_content(
         "## Full Diff",
         "",
         "```diff",
+        diff_text if diff_text else "(No changes detected)",
+        "```",
     ])
-
-    if diff_text:
-        delta_lines.append(diff_text)
-    else:
-        delta_lines.append("(No changes detected)")
-
-    delta_lines.append("```")
-
     return "\n".join(delta_lines)
 
 
-def assemble(
-    project_root: Path,
-    facts_path: Path,
-    inferences_path: Path,
-    output_path: Path,
-) -> None:
-    """Main entry point for assembly.
-
-    Args:
-        project_root: Root directory of the project
-        facts_path: Path to .spec-facts.json
-        inferences_path: Path to .spec-inferences.json
-        output_path: Path to write full-spec.md
-    """
-    # Read input files
+def assemble(project_root: Path, facts_path: Path, inferences_path: Path, output_path: Path) -> None:
     facts = read_json(facts_path, default={})
     inferences = read_json(inferences_path, default={})
-
-    # Extract project name from directory
     project_name = project_root.name
 
     existing_spec_content = output_path.read_text(encoding="utf-8") if output_path.exists() else None
-
-    # Generate full spec
     spec_content = assemble_full_spec(facts, inferences, project_name, project_root)
 
-    # Ensure output directory exists
     output_path.parent.mkdir(parents=True, exist_ok=True)
-
-    # Write the spec
     output_path.write_text(spec_content, encoding="utf-8")
     print(f"Full spec written to: {output_path}")
 
-    # Generate delta only when an older snapshot existed before this write.
     if existing_spec_content is not None:
-        # Create changes directory
         change_id = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
         delta_dir = project_root / "docs" / "changes" / change_id
         delta_dir.mkdir(parents=True, exist_ok=True)
-
         delta_content = generate_spec_delta_from_content(
             existing_spec_content,
             spec_content,
@@ -614,38 +434,15 @@ def assemble(
 
 
 def main():
-    """CLI entry point."""
     parser = argparse.ArgumentParser(
         description="Assemble Arc42 full-spec.md from spec-facts.json and spec-inferences.json"
     )
-    parser.add_argument(
-        "--project-root",
-        type=Path,
-        default=Path("."),
-        help="Root directory of the project",
-    )
-    parser.add_argument(
-        "--facts",
-        type=Path,
-        default=None,
-        help="Path to .spec-facts.json",
-    )
-    parser.add_argument(
-        "--inferences",
-        type=Path,
-        default=None,
-        help="Path to .spec-inferences.json",
-    )
-    parser.add_argument(
-        "--output",
-        type=Path,
-        default=None,
-        help="Output path for full-spec.md",
-    )
-
+    parser.add_argument("--project-root", type=Path, default=Path("."), help="Root directory of the project")
+    parser.add_argument("--facts", type=Path, default=None, help="Path to .spec-facts.json")
+    parser.add_argument("--inferences", type=Path, default=None, help="Path to .spec-inferences.json")
+    parser.add_argument("--output", type=Path, default=None, help="Output path for full-spec.md")
     args = parser.parse_args()
 
-    # Resolve paths
     project_root = args.project_root.resolve()
     facts_path = args.facts or (project_root / "docs" / "architecture" / ".spec-facts.json")
     inferences_path = args.inferences or (project_root / "docs" / "architecture" / ".spec-inferences.json")
