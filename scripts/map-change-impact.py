@@ -12,7 +12,7 @@ from vibeflow_paths import load_state, path_contract
 def main() -> None:
     parser = argparse.ArgumentParser(description="Generate change-scoped codebase impact analysis.")
     parser.add_argument("--project-root", default=".")
-    parser.add_argument("--source", choices=("requirements", "design"), default="requirements")
+    parser.add_argument("--source", choices=("spark", "design", "tasks", "requirements"), default="design")
     parser.add_argument("--refresh-map", choices=("auto", "force", "skip"), default="auto")
     parser.add_argument("--include-impact-json", action="store_true")
     parser.add_argument("--json", action="store_true", dest="as_json")

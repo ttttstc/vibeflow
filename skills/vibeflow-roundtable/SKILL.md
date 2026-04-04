@@ -28,7 +28,7 @@ description: |
 
 ## 输入
 
-- `docs/changes/<change-id>/context.md`（Spark 步骤 3 的输出）
+- `docs/changes/<change-id>/brief.md`（Spark 步骤 3 的输出）
 
 ---
 
@@ -108,7 +108,7 @@ description: |
 
 ## 输出
 
-将圆桌结论追加到 `docs/changes/<change-id>/context.md`：
+将圆桌结论追加到 `docs/changes/<change-id>/brief.md`：
 
 ```markdown
 ---
@@ -130,13 +130,13 @@ description: |
 
 | 文件 | 内容 | 必须存在 |
 |------|------|----------|
-| `docs/changes/<change-id>/context.md` | 追加 Roundtable 结论 | ✅（增量追加） |
+| `docs/changes/<change-id>/brief.md` | 追加 Roundtable 结论 | ✅（增量追加） |
 
 ---
 
 ## 集成
 
 **入口：** Spark 步骤 3 后，用户选择启用圆桌会议
-**产出：** 圆桌结论追加至 `context.md`
+**产出：** 圆桌结论追加至 `brief.md`
 **后续：** 用户确认后继续 Spark 步骤 4（复杂度/风险扫描）
 **跳过：** 用户选择跳过则直接继续步骤 4

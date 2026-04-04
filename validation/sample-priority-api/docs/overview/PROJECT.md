@@ -24,3 +24,23 @@ This sample project validates the VibeFlow delivery flow on a small backend-styl
 - `docs/overview/`: long-lived project context
 - `docs/changes/`: change-by-change delivery records
 
+## Current Capabilities
+
+- Normalize priority aliases
+- Summarize normalized work items
+- Publish runnable example and delivery artifacts
+
+## Core User Flows
+
+- Capture the main stable user flow here when the product surface stabilizes.
+- Keep this section long-lived; do not rewrite it for every individual change.
+
+## Non-Goals
+
+- Record what this project intentionally does not do when boundaries become explicit.
+
+## Update Policy
+
+- Update this file when project positioning, stable capabilities, or product boundaries change.
+- Do not rewrite it for every small implementation detail.
+

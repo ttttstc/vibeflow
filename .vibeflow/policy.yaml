@@ -1,22 +1,10 @@
 version: 1
 phases:
-  think:
-    required_artifacts: ["think"]
+  spark:
+    required_artifacts: ["spark"]
     required_checkpoints: []
-    required_approvals: ["think"]
-    completion_evidence: ["artifact:think"]
-    blocking_conditions: []
-  plan:
-    required_artifacts: ["plan"]
-    required_checkpoints: []
-    required_approvals: ["plan"]
-    completion_evidence: ["artifact:plan"]
-    blocking_conditions: []
-  requirements:
-    required_artifacts: ["requirements"]
-    required_checkpoints: []
-    required_approvals: ["requirements"]
-    completion_evidence: ["artifact:requirements"]
+    required_approvals: ["spark"]
+    completion_evidence: ["artifact:spark"]
     blocking_conditions: []
   design:
     required_artifacts: ["design", "design_review"]
@@ -24,9 +12,15 @@ phases:
     required_approvals: ["design"]
     completion_evidence: ["artifact:design", "artifact:design_review"]
     blocking_conditions: []
-  build-init:
-    required_artifacts: ["feature_list"]
+  tasks:
+    required_artifacts: ["tasks"]
     required_checkpoints: []
+    required_approvals: ["tasks"]
+    completion_evidence: ["artifact:tasks"]
+    blocking_conditions: []
+  build-init:
+    required_artifacts: ["tasks"]
+    required_checkpoints: ["tasks"]
     required_approvals: []
     completion_evidence: ["active_features", "build_init_ready_signal"]
     blocking_conditions: []

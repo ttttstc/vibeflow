@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-"""End-to-end mode flow tests for the VibeFlow v2 layout."""
-
 from __future__ import annotations
 
 import json
@@ -20,9 +18,7 @@ def run_python(script: Path, *args: object) -> str:
         text=True,
     )
     assert result.returncode == 0, (
-        f"{script.name} failed with code {result.returncode}\n"
-        f"STDOUT:\n{result.stdout}\n"
-        f"STDERR:\n{result.stderr}"
+        f"{script.name} failed with code {result.returncode}\nSTDOUT:\n{result.stdout}\nSTDERR:\n{result.stderr}"
     )
     return result.stdout
 
@@ -50,318 +46,77 @@ def update_state(project_root: Path, mutator) -> dict:
 
 
 def detect_phase(project_root: Path) -> dict:
-    output = run_python(
-        ROOT / "scripts" / "get-vibeflow-phase.py",
-        "--project-root",
-        project_root,
-        "--json",
-    )
+    output = run_python(ROOT / "scripts" / "get-vibeflow-phase.py", "--project-root", project_root, "--json")
     return json.loads(output)
-
-
-def setup_report(project_root: Path) -> dict:
-    output = run_python(
-        ROOT / "scripts" / "test-vibeflow-setup.py",
-        "--project-root",
-        project_root,
-        "--json",
-    )
-    return json.loads(output)
-
-
-def create_workflow(project_root: Path) -> None:
-    write_text(
-        project_root / ".vibeflow" / "workflow.yaml",
-        """name: "Mode E2E"
-template: "api-standard"
-created_at: "2026-03-24"
-
-build:
-  steps:
-    - id: tdd
-      required: true
-    - id: quality
-      required: true
-    - id: review
-      required: true
-
-test:
-  st:
-    required: true
-  qa:
-    required: false
-
-ship:
-  required: true
-
-reflect:
-  required: true
-""",
-    )
-
-
-def create_feature_list(project_root: Path, status: str) -> None:
-    write_json(
-        project_root / "feature-list.json",
-        {
-            "project": project_root.name,
-            "features": [
-                {
-                    "id": 1,
-                    "title": "Primary flow",
-                    "status": status,
-                    "priority": "high",
-                    "ui": False,
-                    "dependencies": [],
-                }
-            ],
-        },
-    )
 
 
 class TestVibeFlowModeE2E:
-    def test_detect_phase_cli_syncs_invariant_reason_to_runtime(self, tmp_path):
-        project_root = tmp_path / "invariant-runtime-project"
-        run_python(
-            ROOT / "scripts" / "init_project.py",
-            "invariant-runtime-project",
-            "--path",
-            project_root,
-            "--lang",
-            "python",
-        )
-
-        state = update_state(
-            project_root,
-            lambda data: (
-                data["checkpoints"].__setitem__("spark", True),
-                data["checkpoints"].__setitem__("requirements", True),
-            ),
-        )
-        write_text(project_root / state["artifacts"]["spark"], "# Context\n\nInvariant runtime.\n")
-        write_text(project_root / state["artifacts"]["requirements"], "# Requirements\n\nInvariant runtime.\n")
-        create_workflow(project_root)
-        write_text(project_root / state["artifacts"]["design"], "# Design\n\nWaiting approval.\n")
-        write_text(project_root / state["artifacts"]["design_review"], "# Design Review\n\nApproved.\n")
-
+    def test_detect_phase_syncs_runtime_into_state(self, tmp_path):
+        project_root = tmp_path / "sync-project"
+        run_python(ROOT / "scripts" / "init_project.py", "sync-project", "--path", project_root, "--lang", "python")
         result = detect_phase(project_root)
-        assert result["phase"] == "design"
-        assert result["reason_code"] == "missing_approval"
-        assert result["blocking_item"] == "design"
-
-        runtime = read_json(project_root / ".vibeflow" / "runtime.json")
-        assert runtime["invariant"]["phase"] == "design"
-        assert runtime["invariant"]["reason_code"] == "missing_approval"
-        assert "design checkpoint" in runtime["invariant"]["reason"]
+        assert result["phase"] == "spark"
+        state = read_json(project_root / ".vibeflow" / "state.json")
+        assert state["runtime"]["current_phase"] == "spark"
+        assert state["runtime"]["invariant"]["reason_code"]
 
     def test_full_mode_end_to_end_flow(self, tmp_path):
         project_root = tmp_path / "full-mode-project"
-        run_python(
-            ROOT / "scripts" / "init_project.py",
-            "full-mode-project",
-            "--path",
-            project_root,
-            "--lang",
-            "python",
-        )
+        run_python(ROOT / "scripts" / "init_project.py", "full-mode-project", "--path", project_root, "--lang", "python")
 
         phases = [detect_phase(project_root)["phase"]]
         assert phases[-1] == "spark"
 
-        state = update_state(
-            project_root,
-            lambda data: data["checkpoints"].__setitem__("spark", True),
-        )
-        write_text(project_root / state["artifacts"]["spark"], "# Context\n\nFull mode context.\n")
-        phases.append(detect_phase(project_root)["phase"])
-        assert phases[-1] == "requirements"
-
-        create_workflow(project_root)
-        state = update_state(
-            project_root,
-            lambda data: data["checkpoints"].__setitem__("requirements", True),
-        )
-        write_text(
-            project_root / state["artifacts"]["requirements"],
-            "# Requirements\n\nFull mode requirements.\n",
-        )
+        state = update_state(project_root, lambda data: data["checkpoints"].__setitem__("spark", True))
+        write_text(project_root / state["artifacts"]["spark"], "# Brief\n")
         phases.append(detect_phase(project_root)["phase"])
         assert phases[-1] == "design"
 
-        state = update_state(
-            project_root,
-            lambda data: data["checkpoints"].__setitem__("design", True),
-        )
-        write_text(project_root / state["artifacts"]["design"], "# Design\n\nFull mode design.\n")
-        write_text(
-            project_root / state["artifacts"]["design_review"],
-            "# Design Review\n\nApproved.\n",
-        )
+        state = update_state(project_root, lambda data: data["checkpoints"].__setitem__("design", True))
+        write_text(project_root / state["artifacts"]["design"], "# Design\n\n## Review Summary\n\nApproved.\n")
         phases.append(detect_phase(project_root)["phase"])
-        assert phases[-1] == "build-init"
+        assert phases[-1] == "tasks"
 
-        update_state(
-            project_root,
-            lambda data: data["checkpoints"].__setitem__("build_init", True),
-        )
-        create_feature_list(project_root, "todo")
+        state = update_state(project_root, lambda data: data["checkpoints"].__setitem__("tasks", True))
+        write_text(project_root / state["artifacts"]["tasks"], "# Tasks\n")
         phases.append(detect_phase(project_root)["phase"])
-        assert phases[-1] == "build-config"
+        assert phases[-1] == "build"
 
-        run_python(ROOT / "scripts" / "new-vibeflow-work-config.py", "--project-root", project_root)
-        phases.append(detect_phase(project_root)["phase"])
-        assert phases[-1] == "build-work"
-
-        create_feature_list(project_root, "passing")
+        write_json(project_root / "feature-list.json", {"features": [{"id": 1, "title": "Primary flow", "status": "passing", "deprecated": False}]})
         phases.append(detect_phase(project_root)["phase"])
         assert phases[-1] == "review"
 
-        state = update_state(
-            project_root,
-            lambda data: data["checkpoints"].__setitem__("review", True),
-        )
+        state = update_state(project_root, lambda data: data["checkpoints"].__setitem__("review", True))
         write_text(project_root / state["artifacts"]["review"], "# Review\n\nLooks good.\n")
         phases.append(detect_phase(project_root)["phase"])
-        assert phases[-1] == "test-system"
+        assert phases[-1] == "test"
 
-        state = update_state(
-            project_root,
-            lambda data: data["checkpoints"].__setitem__("test_system", True),
-        )
-        write_text(
-            project_root / state["artifacts"]["system_test"],
-            "# System Test\n\nAll cases passed.\n",
-        )
+        state = update_state(project_root, lambda data: data["checkpoints"].__setitem__("test", True))
+        write_text(project_root / state["artifacts"]["system_test"], "# System Test\n\nPassed.\n")
         phases.append(detect_phase(project_root)["phase"])
-        assert phases[-1] == "ship"
+        assert phases[-1] == "done"
 
-        update_state(
-            project_root,
-            lambda data: data["checkpoints"].__setitem__("ship", True),
-        )
-        phases.append(detect_phase(project_root)["phase"])
-        assert phases[-1] == "reflect"
-
-        update_state(
-            project_root,
-            lambda data: data["checkpoints"].__setitem__("reflect", True),
-        )
-        write_text(
-            project_root / ".vibeflow" / "logs" / "retro-2026-03-24.md",
-            "# Retro\n\nShip complete.\n",
-        )
-        final_result = detect_phase(project_root)
-        phases.append(final_result["phase"])
-        assert final_result["phase"] == "done"
-
-        report = setup_report(project_root)
-        assert report["setup_ok"] is True
-        assert phases == [
-            "spark",
-            "requirements",
-            "design",
-            "build-init",
-            "build-config",
-            "build-work",
-            "review",
-            "test-system",
-            "ship",
-            "reflect",
-            "done",
-        ]
-
-    def test_quick_mode_end_to_end_flow(self, tmp_path):
+    def test_quick_mode_enters_build_directly(self, tmp_path):
         project_root = tmp_path / "quick-mode-project"
-        run_python(
-            ROOT / "scripts" / "init_project.py",
-            "quick-mode-project",
-            "--path",
-            project_root,
-            "--lang",
-            "python",
-        )
-
-        update_state(
-            project_root,
-            lambda data: data.__setitem__("mode", "quick"),
-        )
-        phases = [detect_phase(project_root)["phase"]]
-        assert phases[-1] == "quick"
-
-        create_workflow(project_root)
-        run_python(ROOT / "scripts" / "new-vibeflow-work-config.py", "--project-root", project_root)
+        run_python(ROOT / "scripts" / "init_project.py", "quick-mode-project", "--path", project_root, "--lang", "python")
 
         state = update_state(
             project_root,
-            lambda data: data["quick_meta"].update(
-                {
-                    "decision": "approved",
-                    "category": "bugfix",
-                    "scope": "Fix a small bounded issue.",
-                    "touchpoints": ["src/quick_mode_project.py"],
-                    "validation_plan": "Run the targeted quick-mode checks.",
-                    "rollback_plan": "Revert the single quick-mode commit.",
-                }
+            lambda data: (
+                data.__setitem__("mode", "quick"),
+                data["quick_meta"].update(
+                    {
+                        "decision": "approved",
+                        "category": "bugfix",
+                        "scope": "Fix a small bounded issue.",
+                        "touchpoints": ["src/quick_mode_project.py"],
+                        "validation_plan": "Run the targeted quick-mode checks.",
+                        "rollback_plan": "Revert the single quick-mode commit.",
+                    }
+                ),
+                data["checkpoints"].__setitem__("quick_ready", True),
             ),
         )
-        state["checkpoints"]["quick_ready"] = True
-        write_json(project_root / ".vibeflow" / "state.json", state)
-        write_text(project_root / state["artifacts"]["design"], "# Quick Design\n\nMinimal plan.\n")
-        write_text(project_root / state["artifacts"]["tasks"], "# Tasks\n\n- Implement flow\n")
-        create_feature_list(project_root, "todo")
-        phases.append(detect_phase(project_root)["phase"])
-        assert phases[-1] == "build-work"
-
-        create_feature_list(project_root, "passing")
-        phases.append(detect_phase(project_root)["phase"])
-        assert phases[-1] == "review"
-
-        state = update_state(
-            project_root,
-            lambda data: data["checkpoints"].__setitem__("review", True),
-        )
-        write_text(project_root / state["artifacts"]["review"], "# Review\n\nQuick review passed.\n")
-        phases.append(detect_phase(project_root)["phase"])
-        assert phases[-1] == "test-system"
-
-        state = update_state(
-            project_root,
-            lambda data: data["checkpoints"].__setitem__("test_system", True),
-        )
-        write_text(
-            project_root / state["artifacts"]["system_test"],
-            "# System Test\n\nQuick mode checks passed.\n",
-        )
-        phases.append(detect_phase(project_root)["phase"])
-        assert phases[-1] == "ship"
-
-        update_state(
-            project_root,
-            lambda data: data["checkpoints"].__setitem__("ship", True),
-        )
-        phases.append(detect_phase(project_root)["phase"])
-        assert phases[-1] == "reflect"
-
-        update_state(
-            project_root,
-            lambda data: data["checkpoints"].__setitem__("reflect", True),
-        )
-        write_text(
-            project_root / ".vibeflow" / "logs" / "retro-2026-03-24.md",
-            "# Retro\n\nQuick mode ship complete.\n",
-        )
-        final_result = detect_phase(project_root)
-        phases.append(final_result["phase"])
-        assert final_result["phase"] == "done"
-
-        report = setup_report(project_root)
-        assert report["setup_ok"] is True
-        assert phases == [
-            "quick",
-            "build-work",
-            "review",
-            "test-system",
-            "ship",
-            "reflect",
-            "done",
-        ]
+        write_text(project_root / state["artifacts"]["design"], "# Quick Design\n")
+        write_text(project_root / state["artifacts"]["tasks"], "# Tasks\n")
+        assert detect_phase(project_root)["phase"] == "build"

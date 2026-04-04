@@ -5,7 +5,7 @@ Initialize a vibeflow project structure.
 Creates the deterministic scaffold artifacts needed for multi-session agent work:
 - feature-list.json (empty template with tech_stack, quality_gates, required_configs)
 - .vibeflow/state.json (centralized workflow state)
-- .vibeflow/logs/session-log.md (human-readable progress log)
+- .vibeflow/logs/session-log.md (human-readable progress log, generated lazily)
 - docs/overview/ (global project context for new contributors)
 - RELEASE_NOTES.md (living release notes, Keep a Changelog format)
 - CLAUDE.md (appended with vibeflow reference for cross-session continuity)
@@ -33,7 +33,7 @@ if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
 from vibeflow_overview import ensure_overview_docs  # noqa: E402
-from vibeflow_paths import default_runtime, default_state, save_runtime, save_state  # noqa: E402
+from vibeflow_paths import default_state, save_state  # noqa: E402
 
 
 CLAUDE_MD_MARKER = "<!-- vibeflow -->"
@@ -42,16 +42,15 @@ _VIBEFLOW_REFERENCE_BODY = (
     "\n\n<!-- vibeflow -->\n"
     "## VibeFlow\n\n"
     "This project uses a multi-session agent workflow.\n"
-    "Flow: Think → Plan → Requirements → Design → Build Init → Build Work → Review → Test System → QA → Ship → Reflect.\n\n"
+    "Flow: Spark → Design → Tasks → Build → Review → Test → Ship → Reflect.\n\n"
     "Incremental development: requests live under `.vibeflow/increments/`, active work packages live under `docs/changes/<change-id>/`.\n\n"
     "Key files: `docs/overview/CURRENT-STATE.md` (project snapshot), "
     "`docs/overview/ARCHITECTURE.md` (global architecture), "
-    "`docs/changes/<change-id>/requirements.md` (requirements), "
+    "`docs/changes/<change-id>/brief.md` (goal, scope, and constraints), "
     "`docs/changes/<change-id>/design.md` (design), "
+    "`docs/changes/<change-id>/tasks.md` (execution handoff), "
     "`feature-list.json` (task inventory), "
-    "`.vibeflow/state.json` (workflow state), "
-    "`.vibeflow/runtime.json` (live workflow runtime), "
-    "`.vibeflow/logs/session-log.md` (session log), "
+    "`.vibeflow/state.json` (workflow state and runtime snapshot), "
     "`RELEASE_NOTES.md` (changelog), "
     "`docs/test-cases/feature-*.md` (per-feature ST test cases), "
     "`.vibeflow/increments/requests/*.json` (increment requests).\n"
@@ -198,7 +197,9 @@ This project is managed with VibeFlow.
 
 ## Start Here
 
-- `docs/overview/README.md` - global project context and reading order
+- `docs/overview/CURRENT-STATE.md` - current project snapshot and next reading order
+- `docs/overview/PROJECT.md` - long-lived project positioning and capabilities
+- `docs/overview/ARCHITECTURE.md` - long-lived architecture and module boundaries
 - `docs/changes/` - change-by-change delivery records
 - `feature-list.json` - implementation progress
 - `RELEASE_NOTES.md` - shipped changes
@@ -292,9 +293,6 @@ def main():
     save_state(project_path, state)
     print(f"Created: {project_path / '.vibeflow' / 'state.json'}")
 
-    save_runtime(project_path, default_runtime())
-    print(f"Created: {project_path / '.vibeflow' / 'runtime.json'}")
-
     # queue/history files
     queue_path = os.path.join(increments_dir, "queue.json")
     with open(queue_path, "w", encoding="utf-8") as f:
@@ -305,17 +303,6 @@ def main():
     with open(history_path, "w", encoding="utf-8") as f:
         json.dump([], f, indent=2, ensure_ascii=False)
     print(f"Created: {history_path}")
-
-    phase_history_path = os.path.join(vibeflow_dir, "phase-history.json")
-    with open(phase_history_path, "w", encoding="utf-8") as f:
-        json.dump([], f, indent=2, ensure_ascii=False)
-    print(f"Created: {phase_history_path}")
-
-    # session log
-    session_log = os.path.join(logs_dir, "session-log.md")
-    with open(session_log, "w", encoding="utf-8") as f:
-        f.write(create_session_log(args.project_name))
-    print(f"Created: {session_log}")
 
     # RELEASE_NOTES.md
     rn_path = os.path.join(out_dir, "RELEASE_NOTES.md")
@@ -393,7 +380,6 @@ def main():
         "validate_st_cases.py",
         "validate_increment_request.py",
         "check_st_readiness.py",
-        "new-vibeflow-work-config.py",
         "test-vibeflow-setup.py",
         "migrate-vibeflow-v2.py",
         "vibeflow_overview.py",
@@ -423,15 +409,16 @@ def main():
     os.makedirs(test_cases_dir, exist_ok=True)
     print(f"Created: {test_cases_dir}")
 
-    # docs/templates dir — copy ST case template
+    # docs/templates dir — copy shared templates
     templates_dir = os.path.join(out_dir, "docs", "templates")
     os.makedirs(templates_dir, exist_ok=True)
     plugin_templates_dir = os.path.join(_PLUGIN_ROOT, "docs", "templates")
-    st_template_src = os.path.join(plugin_templates_dir, "st-case-template.md")
-    st_template_dst = os.path.join(templates_dir, "st-case-template.md")
-    if os.path.exists(st_template_src) and os.path.abspath(st_template_src) != os.path.abspath(st_template_dst):
-        shutil.copy2(st_template_src, st_template_dst)
-        print(f"Copied: st-case-template.md -> {templates_dir}")
+    for template_name in ("st-case-template.md", "tasks-template.md"):
+        template_src = os.path.join(plugin_templates_dir, template_name)
+        template_dst = os.path.join(templates_dir, template_name)
+        if os.path.exists(template_src) and os.path.abspath(template_src) != os.path.abspath(template_dst):
+            shutil.copy2(template_src, template_dst)
+            print(f"Copied: {template_name} -> {templates_dir}")
 
     # examples dir + README.md
     examples_dir = os.path.join(out_dir, "examples")
@@ -442,7 +429,7 @@ def main():
     print(f"Created: {examples_readme}")
 
     print(f"\nProject '{args.project_name}' initialized at {out_dir}")
-    print("Created: feature-list.json, CLAUDE.md, .vibeflow/state.json, session-log, RELEASE_NOTES.md, examples/, scripts/ (with helper scripts), docs/overview/, docs/changes/<change-id>/, docs/test-cases/, docs/templates/")
+    print("Created: feature-list.json, CLAUDE.md, .vibeflow/state.json, RELEASE_NOTES.md, examples/, scripts/ (with helper scripts), docs/overview/, docs/changes/<change-id>/, docs/test-cases/, docs/templates/")
     print("TODO (LLM generates during Initializer phase):")
     print("  - .vibeflow/guides/build.md  (tailored Worker guide from SKILL.md + references + design doc)")
     print("  - init.sh / init.ps1         (environment bootstrap from design doc tech stack)")

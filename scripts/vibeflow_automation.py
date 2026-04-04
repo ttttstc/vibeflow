@@ -41,30 +41,25 @@ from vibeflow_rules import evaluate_executable_rule_checks, load_project_rules, 
 
 MANUAL_ONLY_PHASES = {
     "increment",
-    "think",
     "template-selection",
-    "plan",
-    "requirements",
+    "spark",
     "design",
+    "tasks",
     "quick",
 }
 
 AUTO_RUNNABLE_PHASES = {
-    "build-init",
-    "build-config",
-    "build-work",
+    "build",
     "review",
-    "test-system",
-    "test-qa",
+    "test",
     "ship",
     "reflect",
 }
 
 RETRYABLE_PHASES = {
-    "build-work",
+    "build",
     "review",
-    "test-system",
-    "test-qa",
+    "test",
 }
 
 _PHASE_MODULE = None
@@ -196,12 +191,10 @@ def persist_runtime(
 
 def friendly_message_for_phase(phase: str, *, status: str = "running", detail: str = "") -> str:
     base = {
-        "build-init": "正在整理构建清单，准备进入实现。",
-        "build-config": "正在生成构建配置，马上进入实现阶段。",
-        "build-work": "正在推进功能实现和验证链路。",
+        "tasks": "正在把设计翻译成执行级任务清单，马上进入构建准备。",
+        "build": "正在推进 Build：准备执行输入、实现功能并补齐验证证据。",
         "review": "正在做整体审查，确认这轮改动站得住。",
-        "test-system": "正在跑系统级测试，确认链路真的通。",
-        "test-qa": "正在做界面层验证，盯着交互和体验。",
+        "test": "正在跑测试链路，确认系统和必要的 QA 证据都齐了。",
         "ship": "正在收口发布产物，快到终点了。",
         "reflect": "正在生成复盘，让这轮工作有个结尾。",
         "done": "这轮 workflow 已经收口完成。",
@@ -279,13 +272,26 @@ def extract_features_from_tasks(tasks_path: Path) -> list[dict]:
     if not tasks_path.exists():
         return []
 
-    titles = []
-    for raw in tasks_path.read_text(encoding="utf-8").splitlines():
+    text = tasks_path.read_text(encoding="utf-8")
+    feature_titles: list[str] = []
+    for raw in text.splitlines():
         line = raw.strip()
-        if line.startswith("- [ ] "):
-            titles.append(line[6:].strip())
-        elif line.startswith("- "):
-            titles.append(line[2:].strip())
+        if line.startswith("## Feature "):
+            title = line[len("## Feature ") :].strip()
+            if " - " in title:
+                _feature_id, feature_title = title.split(" - ", 1)
+                title = feature_title.strip()
+            if title:
+                feature_titles.append(title)
+
+    titles = feature_titles
+    if not titles:
+        for raw in text.splitlines():
+            line = raw.strip()
+            if line.startswith("- [ ] "):
+                titles.append(line[6:].strip())
+            elif line.startswith("- "):
+                titles.append(line[2:].strip())
 
     deduped = []
     seen = set()
@@ -1005,17 +1011,18 @@ def write_review_artifact(path: Path, spec_checks: list[dict], quality_checks: l
     return write_text(path, "\n".join(lines).rstrip() + "\n")
 
 
-def execute_build_init(project_root: Path, state: dict, runtime: dict) -> dict:
+def prepare_feature_payload(project_root: Path, state: dict) -> tuple[dict | None, str]:
+    contract = path_contract(project_root, state)
+    tasks_path = contract["artifacts"]["tasks"]
+    if not tasks_path.exists():
+        return None, f"Execution planning gate failed: {tasks_path} is missing."
+
     feature_path = feature_list_path(project_root)
     if not feature_path.exists():
         try:
             payload = create_default_feature_payload(project_root, state)
         except ValueError as exc:
-            detail = str(exc)
-            append_runtime_event(runtime, kind="phase", title="Build Init failed", detail=detail, phase="build-init", status="error")
-            record_phase_run(runtime, phase="build-init", status="failed", detail=detail)
-            append_session_log(project_root, f"Build init failed: {detail}")
-            return {"ok": False, "detail": detail}
+            return None, str(exc)
         save_feature_payload(project_root, payload)
         source = "design execution contracts" if load_design_execution_contracts(project_root, state).get("detected") else "tasks/defaults"
         detail = f"Created {feature_path.name} with {len(payload.get('features', []))} feature(s) from {source}."
@@ -1025,11 +1032,7 @@ def execute_build_init(project_root: Path, state: dict, runtime: dict) -> dict:
             try:
                 payload = create_default_feature_payload(project_root, state)
             except ValueError as exc:
-                detail = str(exc)
-                append_runtime_event(runtime, kind="phase", title="Build Init failed", detail=detail, phase="build-init", status="error")
-                record_phase_run(runtime, phase="build-init", status="failed", detail=detail)
-                append_session_log(project_root, f"Build init failed: {detail}")
-                return {"ok": False, "detail": detail}
+                return None, str(exc)
             save_feature_payload(project_root, payload)
             source = "design execution contracts" if load_design_execution_contracts(project_root, state).get("detected") else "tasks/defaults"
             detail = f"Filled empty {feature_path.name} from {source}."
@@ -1040,72 +1043,45 @@ def execute_build_init(project_root: Path, state: dict, runtime: dict) -> dict:
     save_feature_payload(project_root, payload)
     contract_count = len(payload.get("features", []))
     detail = f"{detail.rstrip('.')} Materialized {contract_count} normalized feature contract(s)."
-
-    set_checkpoint(state, "build_init", True, phase="build-init")
-    save_state(project_root, state)
-    refresh_current_state_safe(project_root, state, runtime, phase="build-init")
-    append_phase_history(project_root, {"timestamp": now_iso(), "phase": "build-init", "status": "completed", "detail": detail})
-    append_runtime_event(runtime, kind="phase", title="Build Init completed", detail=detail, phase="build-init", status="success")
-    record_phase_run(runtime, phase="build-init", status="completed", detail=detail)
-    append_session_log(project_root, detail)
-    return {"ok": True, "detail": detail}
-
-
-def execute_build_config(project_root: Path, state: dict, runtime: dict) -> dict:
-    result = subprocess.run(
-        [sys.executable, str(SCRIPT_DIR / "new-vibeflow-work-config.py"), "--project-root", str(project_root)],
-        cwd=str(REPO_ROOT),
-        text=True,
-        capture_output=True,
-    )
-    detail = (result.stdout or result.stderr or "").strip() or "Generated work-config.json."
-    if result.returncode != 0:
-        append_runtime_event(runtime, kind="phase", title="Build Config failed", detail=detail, phase="build-config", status="error")
-        record_phase_run(runtime, phase="build-config", status="failed", detail=detail)
-        append_session_log(project_root, f"Build config failed: {detail}")
-        return {"ok": False, "detail": detail}
-
-    set_checkpoint(state, "build_config", True, phase="build-config")
-    if feature_list_path(project_root).exists():
-        set_checkpoint(state, "build_init", True)
-    save_state(project_root, state)
-    refresh_current_state_safe(project_root, state, runtime, phase="build-config")
-    append_phase_history(project_root, {"timestamp": now_iso(), "phase": "build-config", "status": "completed", "detail": detail})
-    append_runtime_event(runtime, kind="phase", title="Build Config completed", detail=detail, phase="build-config", status="success")
-    record_phase_run(runtime, phase="build-config", status="completed", detail=detail)
-    append_session_log(project_root, detail)
-    return {"ok": True, "detail": detail}
-
+    return payload, detail
 
 def pending_active_features(payload: dict) -> list[dict]:
     return [feature for feature in active_features(payload) if feature.get("status") != "passing"]
 
 
-def execute_build_work(project_root: Path, state: dict, runtime: dict, *, parallel: bool = True, max_workers: int = 2) -> dict:
-    payload = load_feature_payload(project_root)
-    if not payload:
-        return {"ok": False, "detail": "feature-list.json is missing."}
+def execute_build(project_root: Path, state: dict, runtime: dict, *, parallel: bool = True, max_workers: int = 2) -> dict:
+    payload, prep_detail = prepare_feature_payload(project_root, state)
+    if payload is None:
+        detail = prep_detail
+        append_runtime_event(runtime, kind="phase", title="Build blocked", detail=detail, phase="build", status="error")
+        record_phase_run(runtime, phase="build", status="failed", detail=detail)
+        append_session_log(project_root, f"Build blocked: {detail}")
+        return {"ok": False, "detail": detail}
+
+    append_runtime_event(runtime, kind="phase", title="Build prepared", detail=prep_detail, phase="build", status="success")
+    record_phase_run(runtime, phase="build", status="running", detail=prep_detail)
+    append_session_log(project_root, prep_detail)
 
     while True:
         payload = sync_feature_contracts(project_root, state, payload)
         save_feature_payload(project_root, payload)
         pending = pending_active_features(payload)
         if not pending:
-            set_checkpoint(state, "build_work", True, phase="build-work")
+            set_checkpoint(state, "build", True, phase="build")
             save_state(project_root, state)
-            refresh_current_state_safe(project_root, state, runtime, phase="build-work")
+            refresh_current_state_safe(project_root, state, runtime, phase="build")
             detail = "All active features are passing."
-            append_phase_history(project_root, {"timestamp": now_iso(), "phase": "build-work", "status": "completed", "detail": detail})
-            append_runtime_event(runtime, kind="phase", title="Build Work completed", detail=detail, phase="build-work", status="success")
-            record_phase_run(runtime, phase="build-work", status="completed", detail=detail)
+            append_phase_history(project_root, {"timestamp": now_iso(), "phase": "build", "status": "completed", "detail": detail})
+            append_runtime_event(runtime, kind="phase", title="Build completed", detail=detail, phase="build", status="success")
+            record_phase_run(runtime, phase="build", status="completed", detail=detail)
             append_session_log(project_root, detail)
             return {"ok": True, "detail": detail}
 
         ready = find_ready_features(payload)
         if not ready:
             detail = "No ready features found. Check dependencies or failing prerequisites."
-            append_runtime_event(runtime, kind="phase", title="Build Work blocked", detail=detail, phase="build-work", status="warning")
-            record_phase_run(runtime, phase="build-work", status="blocked", detail=detail)
+            append_runtime_event(runtime, kind="phase", title="Build blocked", detail=detail, phase="build", status="warning")
+            record_phase_run(runtime, phase="build", status="blocked", detail=detail)
             append_session_log(project_root, detail)
             return {"ok": False, "detail": detail}
 
@@ -1118,12 +1094,12 @@ def execute_build_work(project_root: Path, state: dict, runtime: dict, *, parall
         append_runtime_event(
             runtime,
             kind="phase",
-            title="Build Work running",
+            title="Build running",
             detail=f"Executing {len(batch)} feature(s): {', '.join(str(item.get('id')) for item in batch)}. {batch_reason}",
-            phase="build-work",
+            phase="build",
             status="info",
         )
-        record_phase_run(runtime, phase="build-work", status="running", detail=f"{len(batch)} feature(s) scheduled. {batch_reason}")
+        record_phase_run(runtime, phase="build", status="running", detail=f"{len(batch)} feature(s) scheduled. {batch_reason}")
         for feature in batch:
             record_feature_run(runtime, feature_id=feature.get("id"), title=feature.get("title", "Untitled"), status="running")
         save_runtime(project_root, runtime)
@@ -1160,7 +1136,7 @@ def execute_build_work(project_root: Path, state: dict, runtime: dict, *, parall
                 project_root,
                 {
                     "timestamp": now_iso(),
-                    "phase": "build-work",
+                    "phase": "build",
                     "type": "feature",
                     "feature_id": feature_id,
                     "title": result["title"],
@@ -1173,22 +1149,22 @@ def execute_build_work(project_root: Path, state: dict, runtime: dict, *, parall
                 save_feature_payload(project_root, payload)
                 save_state(project_root, state)
                 detail = f"Feature #{feature_id} failed: {result['detail']}"
-                append_runtime_event(runtime, kind="phase", title="Build Work failed", detail=detail, phase="build-work", status="error")
-                record_phase_run(runtime, phase="build-work", status="failed", detail=detail)
+                append_runtime_event(runtime, kind="phase", title="Build failed", detail=detail, phase="build", status="error")
+                record_phase_run(runtime, phase="build", status="failed", detail=detail)
                 save_runtime(project_root, runtime)
                 return {"ok": False, "detail": detail, "feature_id": feature_id}
 
         save_feature_payload(project_root, payload)
         save_state(project_root, state)
-        refresh_current_state_safe(project_root, state, runtime, phase="build-work")
+        refresh_current_state_safe(project_root, state, runtime, phase="build")
         save_runtime(project_root, runtime)
 
         if not parallel:
             break
 
     detail = "A serial build step completed. Re-run build work to continue."
-    append_runtime_event(runtime, kind="phase", title="Build Work progressed", detail=detail, phase="build-work", status="success")
-    record_phase_run(runtime, phase="build-work", status="partial", detail=detail)
+    append_runtime_event(runtime, kind="phase", title="Build progressed", detail=detail, phase="build", status="success")
+    record_phase_run(runtime, phase="build", status="partial", detail=detail)
     save_runtime(project_root, runtime)
     return {"ok": True, "detail": detail}
 
@@ -1238,7 +1214,7 @@ def execute_review(project_root: Path, state: dict, runtime: dict) -> dict:
     return {"ok": True, "detail": detail}
 
 
-def execute_test_system(project_root: Path, state: dict, runtime: dict) -> dict:
+def execute_test(project_root: Path, state: dict, runtime: dict) -> dict:
     payload = load_feature_payload(project_root)
     commands = system_test_commands(project_root, payload)
     if not commands:
@@ -1251,49 +1227,34 @@ def execute_test_system(project_root: Path, state: dict, runtime: dict) -> dict:
         sections.append((command, f"Exit code: {result['returncode']}\n\n```text\n{output}\n```"))
         if result["returncode"] != 0:
             detail = f"System test failed: {command}"
-            append_runtime_event(runtime, kind="phase", title="System Test failed", detail=detail, phase="test-system", status="error")
-            record_phase_run(runtime, phase="test-system", status="failed", detail=detail)
+            append_runtime_event(runtime, kind="phase", title="Test failed", detail=detail, phase="test", status="error")
+            record_phase_run(runtime, phase="test", status="failed", detail=detail)
             return {"ok": False, "detail": detail}
 
     contract = path_contract(project_root, state)
     write_phase_artifact(contract["artifacts"]["system_test"], "System Test", sections)
-    set_checkpoint(state, "test_system", True, phase="test-system")
+
+    qa_required = qa_test_commands(payload)
+    if qa_required:
+        qa_sections = []
+        for command in qa_required:
+            result = run_command(command, cwd=project_root, timeout=900)
+            output = (result["stdout"] or result["stderr"] or "").strip() or "No output."
+            qa_sections.append((command, f"Exit code: {result['returncode']}\n\n```text\n{output}\n```"))
+            if result["returncode"] != 0:
+                detail = f"QA failed: {command}"
+                append_runtime_event(runtime, kind="phase", title="Test failed", detail=detail, phase="test", status="error")
+                record_phase_run(runtime, phase="test", status="failed", detail=detail)
+                return {"ok": False, "detail": detail}
+        write_phase_artifact(contract["artifacts"]["qa"], "QA", qa_sections)
+
+    set_checkpoint(state, "test", True, phase="test")
     save_state(project_root, state)
-    refresh_current_state_safe(project_root, state, runtime, phase="test-system")
-    detail = "System tests passed."
-    append_phase_history(project_root, {"timestamp": now_iso(), "phase": "test-system", "status": "completed", "detail": detail})
-    append_runtime_event(runtime, kind="phase", title="System Test completed", detail=detail, phase="test-system", status="success")
-    record_phase_run(runtime, phase="test-system", status="completed", detail=detail)
-    append_session_log(project_root, detail)
-    return {"ok": True, "detail": detail}
-
-
-def execute_test_qa(project_root: Path, state: dict, runtime: dict) -> dict:
-    payload = load_feature_payload(project_root)
-    commands = qa_test_commands(payload)
-    if not commands:
-        return {"ok": False, "detail": "QA is required but no qa_command is configured in feature-list.json real_test block."}
-
-    sections = []
-    for command in commands:
-        result = run_command(command, cwd=project_root, timeout=900)
-        output = (result["stdout"] or result["stderr"] or "").strip() or "No output."
-        sections.append((command, f"Exit code: {result['returncode']}\n\n```text\n{output}\n```"))
-        if result["returncode"] != 0:
-            detail = f"QA failed: {command}"
-            append_runtime_event(runtime, kind="phase", title="QA failed", detail=detail, phase="test-qa", status="error")
-            record_phase_run(runtime, phase="test-qa", status="failed", detail=detail)
-            return {"ok": False, "detail": detail}
-
-    contract = path_contract(project_root, state)
-    write_phase_artifact(contract["artifacts"]["qa"], "QA", sections)
-    set_checkpoint(state, "test_qa", True, phase="test-qa")
-    save_state(project_root, state)
-    refresh_current_state_safe(project_root, state, runtime, phase="test-qa")
-    detail = "QA checks passed."
-    append_phase_history(project_root, {"timestamp": now_iso(), "phase": "test-qa", "status": "completed", "detail": detail})
-    append_runtime_event(runtime, kind="phase", title="QA completed", detail=detail, phase="test-qa", status="success")
-    record_phase_run(runtime, phase="test-qa", status="completed", detail=detail)
+    refresh_current_state_safe(project_root, state, runtime, phase="test")
+    detail = "Test checks passed."
+    append_phase_history(project_root, {"timestamp": now_iso(), "phase": "test", "status": "completed", "detail": detail})
+    append_runtime_event(runtime, kind="phase", title="Test completed", detail=detail, phase="test", status="success")
+    record_phase_run(runtime, phase="test", status="completed", detail=detail)
     append_session_log(project_root, detail)
     return {"ok": True, "detail": detail}
 
@@ -1367,12 +1328,9 @@ def execute_phase(project_root: Path, phase: str, *, parallel_build: bool = True
     )
 
     handlers = {
-        "build-init": lambda: execute_build_init(project_root, state, runtime),
-        "build-config": lambda: execute_build_config(project_root, state, runtime),
-        "build-work": lambda: execute_build_work(project_root, state, runtime, parallel=parallel_build, max_workers=max_workers),
+        "build": lambda: execute_build(project_root, state, runtime, parallel=parallel_build, max_workers=max_workers),
         "review": lambda: execute_review(project_root, state, runtime),
-        "test-system": lambda: execute_test_system(project_root, state, runtime),
-        "test-qa": lambda: execute_test_qa(project_root, state, runtime),
+        "test": lambda: execute_test(project_root, state, runtime),
         "ship": lambda: execute_ship(project_root, state, runtime),
         "reflect": lambda: execute_reflect(project_root, state, runtime),
     }

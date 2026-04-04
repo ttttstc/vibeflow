@@ -141,13 +141,15 @@ def migrate_increment_requests(project_root: Path, force: bool = False) -> tuple
 
     history_target = increment_history_path(project_root)
     legacy_phase_history = project_root / ".vibeflow" / "phase-history.json"
-    if (force or not history_target.exists()) and legacy_phase_history.exists():
+    phase_history = []
+    if legacy_phase_history.exists():
         phase_history = json.loads(legacy_phase_history.read_text(encoding="utf-8"))
+    if (force or not history_target.exists()) and phase_history:
         increment_entries = [entry for entry in phase_history if isinstance(entry, dict) and entry.get("increment_id")]
         history_target.parent.mkdir(parents=True, exist_ok=True)
         history_target.write_text(json.dumps(increment_entries, indent=2, ensure_ascii=False), encoding="utf-8")
 
-    return migrated, skipped
+    return migrated, skipped, phase_history
 
 
 def main():
@@ -171,8 +173,8 @@ def main():
     migrated = []
 
     think_src = vibeflow_dir / "think-output.md"
-    if copy_if_exists(think_src, change_root / "context.md", force=args.force):
-        migrated.append(("think", change_root / "context.md"))
+    if copy_if_exists(think_src, change_root / "brief.md", force=args.force):
+        migrated.append(("think", change_root / "brief.md"))
 
     if write_combined_file(
         change_root / "proposal.md",
@@ -255,10 +257,11 @@ def main():
         target = project_root / ".vibeflow" / "guides" / "services.md"
         copy_if_exists(services_guide_src, target, force=args.force)
 
-    migrated_requests, skipped_requests = migrate_increment_requests(project_root, force=args.force)
+    migrated_requests, skipped_requests, phase_history = migrate_increment_requests(project_root, force=args.force)
 
     artifacts = existing_state["artifacts"]
     checkpoints = existing_state["checkpoints"]
+    existing_state["phase_history"] = phase_history
 
     # Handle both v1 (think/plan) and v2 (spark) artifact formats
     if "think" in artifacts:
@@ -271,8 +274,8 @@ def main():
         # No spark artifact found
         checkpoints["spark"] = False
 
-    checkpoints["requirements"] = Path(project_root / artifacts["requirements"]).exists()
     checkpoints["design"] = Path(project_root / artifacts["design"]).exists() and Path(project_root / artifacts["design_review"]).exists()
+    checkpoints["tasks"] = Path(project_root / artifacts["tasks"]).exists()
     checkpoints["build_init"] = (project_root / "feature-list.json").exists()
     checkpoints["build_config"] = (project_root / ".vibeflow" / "work-config.json").exists()
     checkpoints["build_work"] = all_features_passing(project_root / "feature-list.json")
@@ -299,10 +302,10 @@ def main():
         existing_state["current_phase"] = "build-config"
     elif checkpoints["build_init"]:
         existing_state["current_phase"] = "build-init"
+    elif checkpoints["tasks"]:
+        existing_state["current_phase"] = "tasks"
     elif checkpoints["design"]:
         existing_state["current_phase"] = "design"
-    elif checkpoints["requirements"]:
-        existing_state["current_phase"] = "requirements"
     elif checkpoints["spark"]:
         existing_state["current_phase"] = "spark"
 

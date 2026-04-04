@@ -1,11 +1,11 @@
 ---
 name: vibeflow-spark
-description: "Spark 阶段 — 灵感迸发。将灵感、想法、价值和方向彻底想清楚，通过价值评估后自动进入 Requirements。"
+description: "Spark 阶段 — 灵感迸发。将灵感、方向、边界、验收标准和约束彻底想清楚，通过价值评估后自动进入 Design。"
 ---
 
 # Spark — 灵感迸发
 
-合并原 Think + Plan 阶段，一次性完成问题探索、方向确定和价值评估。
+合并原 Think + Plan，并吸收原 requirements 的“边界契约”职责，一次性完成问题探索、方向确定、验收标准和价值评估。
 
 **启动输入：** 用户的功能需求描述
 **启动宣告：** "正在使用 vibeflow-spark — 灵感迸发阶段。"
@@ -77,7 +77,7 @@ Skill: vibeflow-deepresearch（如评估通过）
 **用户选择启用时：**
 Skill: `vibeflow-roundtable`
 
-圆桌结论将追加至 `context.md`，用户确认后继续。
+圆桌结论将追加至 `brief.md`，用户确认后继续。
 
 **用户选择跳过时：**
 直接继续步骤 4。
@@ -105,8 +105,8 @@ Skill: vibeflow-plan-value-review
 
 | 结论 | 决策 | 行动 |
 |------|------|------|
-| EXPANSION / SELECTIVE | 通过 | 进入 Requirements |
-| HOLD | 通过+警示 | 进入 Requirements，记录风险 |
+| EXPANSION / SELECTIVE | 通过 | 进入 Design |
+| HOLD | 通过+警示 | 进入 Design，记录风险 |
 | REDUCTION | 条件通过 | 与用户确认缩减方案 |
 | 拒绝 | 拒绝 | 项目终止 |
 
@@ -136,13 +136,21 @@ Skill: vibeflow-plan-value-review
 [来自价值评估的核心结论]
 
 ## 决策
-**是否进入 Requirements**: 是 / 否
+**是否进入 Design**: 是 / 否
+
+## Scope And Acceptance
+- Goals
+- Non-goals
+- Acceptance criteria
+- Constraints
+- Assumptions
+- Open questions
 ```
 
-### 7. 自动进入 Requirements
+### 7. 自动进入 Design
 
 价值评估通过后：
-- 自动进入 Requirements 阶段
+- 自动进入 Design 阶段
 - 无需用户额外确认
 
 ---
@@ -151,13 +159,13 @@ Skill: vibeflow-plan-value-review
 
 | 文件 | 内容 | 必须存在 |
 |------|------|----------|
-| `docs/changes/<change-id>/context.md` | Direction + 复杂度评估 + Proposal | ✅ |
+| `docs/changes/<change-id>/brief.md` | Goal + Scope + Constraints + Acceptance | ✅ |
 
 ---
 
 ## 记录到 phase-history
 
-将结果追加到 `.vibeflow/phase-history.json`：
+将结果追加到 `.vibeflow/state.json.phase_history`：
 
 ```json
 {
@@ -177,6 +185,6 @@ Skill: vibeflow-plan-value-review
 ## 集成
 
 **入口：** 用户输入功能需求
-**产出：** `docs/changes/<change-id>/context.md`
-**Gate：** 价值评估拒绝 = 项目终止；通过 = 自动进入 Requirements
-**链接到：** vibeflow-requirements（通过时）/ 项目终止（拒绝时）
+**产出：** `docs/changes/<change-id>/brief.md`
+**Gate：** 价值评估拒绝 = 项目终止；通过 = 自动进入 Design
+**链接到：** vibeflow-design（通过时）/ 项目终止（拒绝时）

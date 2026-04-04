@@ -152,11 +152,10 @@ def render_overview_readme(project_root: Path, state: dict) -> str:
             "",
             "## Read in this order",
             "",
-            f"1. [PROJECT.md](PROJECT.md) - What this project is and why it exists",
-            f"2. [CURRENT-STATE.md](CURRENT-STATE.md) - Where the project stands right now",
-            f"3. [PRODUCT.md](PRODUCT.md) - User-facing capabilities and product boundaries",
-            f"4. [ARCHITECTURE.md](ARCHITECTURE.md) - System structure and technical flow",
-            f"5. [Current Change Package]({change_link}/) - The active delivery package",
+            f"1. [CURRENT-STATE.md](CURRENT-STATE.md) - Where the project stands right now",
+            f"2. [PROJECT.md](PROJECT.md) - What this project is and what it is intentionally trying to be",
+            f"3. [ARCHITECTURE.md](ARCHITECTURE.md) - System structure and technical flow",
+            f"4. [Current Change Package]({change_link}/) - The active delivery package",
             "",
             "## Quick links",
             "",
@@ -174,6 +173,8 @@ def render_project_doc(project_root: Path, state: dict) -> str:
     change_link = active_change_link(state)
     summary = read_project_summary(project_root) or f"`{name}` is managed with VibeFlow. This document is the long-lived project brief for new contributors."
     context = str(state.get("context") or "greenfield")
+    feature_summary = feature_status_summary(project_root)
+    feature_lines = [f"- {title}" for title in feature_summary["titles"]] or ["- Add the current user-facing capabilities here."]
     return "\n".join(
         [
             f"# Project - {name}",
@@ -202,36 +203,14 @@ def render_project_doc(project_root: Path, state: dict) -> str:
             "- `docs/overview/`: long-lived project context",
             "- `docs/changes/`: change-by-change delivery records",
             "",
-        ]
-    ) + "\n"
-
-
-def render_product_doc(project_root: Path, state: dict) -> str:
-    summary = feature_status_summary(project_root)
-    change_link = active_change_link(state)
-    feature_lines = [f"- {title}" for title in summary["titles"]] or ["- Add the current user-facing capabilities here."]
-    project_summary = read_project_summary(project_root)
-    return "\n".join(
-        [
-            "# Product",
-            "",
-            "## Summary",
-            "",
-            project_summary or "This file tracks the stable, user-facing shape of the project.",
-            "",
-            "## Current Product Shape",
-            "",
-            f"- Active change package: [Current Change]({change_link}/)",
-            f"- Tracked feature count: {summary['total']}",
-            "",
             "## Current Capabilities",
             "",
             *feature_lines,
             "",
             "## Core User Flows",
             "",
-            "- Capture the main user-facing flow here when the product surface stabilizes.",
-            "- Keep this section stable across individual code changes.",
+            "- Capture the main stable user flow here when the product surface stabilizes.",
+            "- Keep this section long-lived; do not rewrite it for every individual change.",
             "",
             "## Non-Goals",
             "",
@@ -239,7 +218,7 @@ def render_product_doc(project_root: Path, state: dict) -> str:
             "",
             "## Update Policy",
             "",
-            "- Update this file when user-facing capabilities or product boundaries change.",
+            "- Update this file when project positioning, stable capabilities, or product boundaries change.",
             "- Do not rewrite it for every small implementation detail.",
             "",
         ]
@@ -279,7 +258,7 @@ def render_architecture_doc(project_root: Path, state: dict, contract: dict) -> 
             "## Delivery Files",
             "",
             "- `docs/overview/`: long-lived project context",
-            "- `docs/changes/<change-id>/`: per-change requirements, design, tasks, and verification",
+            "- `docs/changes/<change-id>/`: per-change context, design, tasks, and verification",
             "- `feature-list.json`: feature execution state",
             "- `.vibeflow/`: workflow state and internal execution files",
             "",
@@ -318,7 +297,6 @@ def render_current_state_doc(project_root: Path, state: dict, contract: dict) ->
             "## Recommended Reading",
             "",
             "- [Project brief](PROJECT.md)",
-            "- [Product](PRODUCT.md)",
             "- [Architecture](ARCHITECTURE.md)",
             f"- [Active change package]({change_link}/)",
             f"- [feature-list.json](../../feature-list.json)",
@@ -339,7 +317,7 @@ def render_current_state_doc(project_root: Path, state: dict, contract: dict) ->
             "",
             "## Key Files To Open Next",
             "",
-            f"- [Requirements]({change_link}/requirements.md)",
+            f"- [Brief]({change_link}/brief.md)",
             f"- [Design]({change_link}/design.md)",
             f"- [Tasks]({change_link}/tasks.md)",
             f"- [Verification]({change_link}/verification/)",
@@ -347,7 +325,7 @@ def render_current_state_doc(project_root: Path, state: dict, contract: dict) ->
             "## Notes",
             "",
             "- This file is refreshed automatically to summarize the latest project state.",
-            "- Stable project positioning belongs in PROJECT.md and PRODUCT.md.",
+            "- Stable project positioning belongs in PROJECT.md.",
             "",
         ]
     ) + "\n"
@@ -358,9 +336,7 @@ def ensure_overview_docs(project_root: Path, state: dict | None = None, *, force
     contract = path_contract(project_root, loaded_state)
     contract["overview_root"].mkdir(parents=True, exist_ok=True)
     writer = write_text if force else write_if_missing
-    writer(contract["overview"]["readme"], render_overview_readme(project_root, loaded_state))
     writer(contract["overview"]["project"], render_project_doc(project_root, loaded_state))
-    writer(contract["overview"]["product"], render_product_doc(project_root, loaded_state))
     writer(contract["overview"]["architecture"], render_architecture_doc(project_root, loaded_state, contract))
     refresh_current_state(project_root, loaded_state)
     return contract["overview"]

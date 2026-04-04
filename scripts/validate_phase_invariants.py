@@ -15,39 +15,33 @@ from vibeflow_paths import checkpoint_done, load_policy, load_state, path_contra
 
 
 PHASE_LABELS = {
-    "think": "Think",
-    "plan": "Plan",
-    "requirements": "Requirements",
+    "spark": "Spark",
     "design": "Design",
-    "build-init": "Build init",
+    "tasks": "Tasks",
+    "build": "Build",
     "review": "Review",
-    "test-system": "System test",
+    "test": "Test",
     "ship": "Ship",
 }
 
 ARTIFACT_LABELS = {
-    "think": "Think artifact",
-    "plan": "Plan artifact",
-    "requirements": "Requirements artifact",
+    "spark": "Spark artifact",
     "design": "Design artifact",
-    "design_review": "Design review artifact",
+    "tasks": "Tasks artifact",
     "review": "Review artifact",
     "system_test": "System test artifact",
     "qa": "QA artifact",
     "feature_list": "feature-list.json",
-    "work_config": ".vibeflow/work-config.json",
     "release_notes": "RELEASE_NOTES.md",
 }
 
 CHECKPOINT_LABELS = {
-    "think": "think checkpoint",
-    "plan": "plan checkpoint",
-    "requirements": "requirements checkpoint",
+    "spark": "spark checkpoint",
     "design": "design checkpoint",
-    "build_init": "build-init checkpoint",
+    "tasks": "tasks checkpoint",
+    "build": "build checkpoint",
     "review": "review checkpoint",
-    "test_system": "test-system checkpoint",
-    "test_qa": "test-qa checkpoint",
+    "test": "test checkpoint",
     "ship": "ship checkpoint",
     "reflect": "reflect checkpoint",
 }
@@ -58,7 +52,6 @@ BLOCKING_LABELS = {
 
 EVIDENCE_LABELS = {
     "active_features": "active features declared in feature-list.json",
-    "build_init_ready_signal": "build-init readiness signal",
     "release_notes_exists": "release notes file",
 }
 
@@ -75,16 +68,9 @@ def has_active_features(feature_list_path: Path) -> bool:
     return bool(features)
 
 
-def build_artifacts_ready(feature_list_path: Path, *, build_init_done: bool = False, work_config_exists: bool = False) -> bool:
-    if not has_active_features(feature_list_path):
-        return False
-    return build_init_done or work_config_exists or has_active_features(feature_list_path)
-
-
 def artifact_lookup(contract: dict) -> dict[str, Path]:
     lookup = dict(contract["artifacts"])
     lookup["feature_list"] = contract["feature_list"]
-    lookup["work_config"] = contract["work_config"]
     lookup["release_notes"] = contract["release_notes"]
     return lookup
 
@@ -126,18 +112,6 @@ def evaluate_evidence(evidence: str, *, state: dict, contract: dict) -> tuple[bo
     if evidence == "active_features":
         ok = has_active_features(contract["feature_list"])
         return ok, "feature-list.json has active features." if ok else "feature-list.json has no active features."
-
-    if evidence == "build_init_ready_signal":
-        ok = build_artifacts_ready(
-            contract["feature_list"],
-            build_init_done=checkpoint_done(state, "build_init"),
-            work_config_exists=contract["work_config"].exists(),
-        )
-        return ok, (
-            "build-init readiness signal is present."
-            if ok
-            else "build-init readiness signal is missing (need active features in feature-list.json)."
-        )
 
     if evidence == "release_notes_exists":
         ok = contract["release_notes"].exists()

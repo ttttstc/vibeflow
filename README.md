@@ -38,11 +38,11 @@ VibeFlow 是一个面向 Claude Code 的 AI 工程交付框架。它把一次软
 
 | 概念 | 在 VibeFlow 中的定义 |
 |---|---|
-| AI 交付编排 | `Think -> Plan -> Requirements -> Design -> Build -> Review -> Test -> Ship / Reflect` 是一条标准交付链路 |
-| Spec-Driven | 先写 `requirements.md` 和 `design.md`，再进入实现与验证 |
+| AI 交付编排 | `Spark -> Design -> Tasks -> Build -> Review -> Test -> Ship / Reflect` 是一条标准交付链路 |
+| Spec-Driven | 先写 `brief.md`、`design.md`、`tasks.md`，再进入实现与验证 |
 | 文件驱动 | `.vibeflow/state.json`、`workflow.yaml`、`feature-list.json` 决定当前阶段和执行状态 |
 | Agent Harness | router、skills、quality gates、safety rails 一起约束 AI 的执行边界 |
-| 自动续跑 | 进入 `build-init` 后，系统默认自动推进实现、审查、测试与收尾 |
+| 自动续跑 | 进入 `Build` 后，系统默认自动推进实现、审查、测试与收尾 |
 
 ### 适合什么团队
 
@@ -115,8 +115,8 @@ VibeFlow 是一个面向 Claude Code 的 AI 工程交付框架。它把一次软
 
 1. 安装并激活插件后，在项目里运行 `/vibeflow`
 2. 第一次进入时选择 `Full Mode` 或 `Quick Mode`
-3. 在 `Think -> Plan -> Requirements -> Design` 完成必要确认
-4. 一旦进入 `build-init`，系统默认自动继续 `Build -> Review -> Test -> Ship / Reflect`
+3. 在 `Spark -> Design -> Tasks` 完成必要确认
+4. 一旦进入 `Build`，系统默认自动继续 `Review -> Test -> Ship / Reflect`
 5. 想看进度时用 `/vibeflow-status` 或 `/vibeflow-dashboard`
 
 一句话理解：
@@ -159,7 +159,7 @@ VibeFlow 是一个面向 Claude Code 的 AI 工程交付框架。它把一次软
 
 ### 1. 结构化交付流程
 
-- `Think -> Plan -> Requirements -> Design` 负责想清楚问题、边界和方案
+- `Spark -> Design -> Tasks` 负责想清楚问题、方案和执行顺序
 - `Build -> Review -> Test` 负责把实现、审查和验证真正跑完
 - `Ship / Reflect` 作为可选收尾，处理发布和复盘
 
@@ -187,8 +187,8 @@ VibeFlow 把状态留在仓库里，而不是留在一次聊天里。
 
 默认行为是：
 
-- 进入 `build-init`
-- 自动继续 `build-config -> build-work -> review -> test -> ship -> reflect`
+- 进入 `Build`
+- 系统先完成内部准备，再自动继续 `Review -> Test -> Ship -> Reflect`
 - 直到完成、阻塞，或遇到需要你确认的地方
 
 ### 4. 更稳的实现链路
@@ -210,8 +210,9 @@ VibeFlow 不只适合新项目，也适合在已有仓库上持续做改动。
 它现在已经能：
 - 维护项目级代码结构地图
 - 为本次变更生成影响分析
-- 在 Requirements / Design 阶段引用这些上下文
-- <img width="1376" height="768" alt="image" src="https://github.com/user-attachments/assets/e658a4ca-75ba-414a-845a-71a9e623debb" />
+- 在 Spark / Design 阶段引用这些上下文
+
+<img width="1376" height="768" alt="image" src="https://github.com/user-attachments/assets/e658a4ca-75ba-414a-845a-71a9e623debb" />
 
 
 ### 6. 本地 live 看板
@@ -223,7 +224,7 @@ VibeFlow 不只适合新项目，也适合在已有仓库上持续做改动。
 - 主阶段状态
 - feature 状态
 - 关键产物是否生成
-- 最近事件和友好提示
+- 最近事件、恢复原因和下一步建议
 
 ### 7. 质量闭环
 
@@ -261,10 +262,12 @@ VibeFlow 不只有一条固定强度的流程。
 
 - `README.md`
   项目入口，先了解项目是什么、怎么运行
-- `docs/overview/README.md`
-  全局文档导航，告诉你先看项目背景、现状还是架构
 - `docs/overview/CURRENT-STATE.md`
   当前项目快照：做到哪了、当前 active change 是什么、下一步建议看什么
+- `docs/overview/PROJECT.md`
+  全局项目说明：项目定位、长期能力和边界
+- `docs/overview/ARCHITECTURE.md`
+  长期稳定的系统结构和模块边界
 - `docs/changes/<change-id>/`
   本次变更的完整方案和验证结果
 - `feature-list.json`
@@ -272,25 +275,26 @@ VibeFlow 不只有一条固定强度的流程。
 - `RELEASE_NOTES.md`
   已交付内容和发布结果
 
+如果 Claude 意外关闭，再次运行 `/vibeflow` 时会直接恢复到上次中断的位置，并显式提示：
+
+- 当前停在什么阶段
+- 为什么停在这里
+- 你现在应该做什么
+- 建议先打开哪些文件
+
 ## 关键产物
 
 | 文件 | 作用 |
 |---|---|
-| `docs/overview/README.md` | 全局文档导航，第一次接手项目时先看这里 |
 | `docs/overview/PROJECT.md` | 项目背景、范围和长期上下文 |
-| `docs/overview/PRODUCT.md` | 产品能力、边界和用户视角 |
 | `docs/overview/ARCHITECTURE.md` | 项目级架构说明 |
 | `docs/overview/CURRENT-STATE.md` | 当前项目现状快照 |
-| `.vibeflow/state.json` | 当前工作流真相：模式、阶段、工作包、checkpoint |
-| `.vibeflow/runtime.json` | 运行态覆盖层：当前动作、友好提示、最近事件、heartbeat |
-| `.vibeflow/codebase-map.json` | 项目级代码结构地图，给现有项目改动复用 |
+| `.vibeflow/state.json` | 当前工作流真相：模式、阶段、工作包、checkpoint、phase history，以及恢复所需的运行态提示 |
 | `rules/` | 项目自定义约束目录；存在时会作为 spec 补充输入，并优先于根目录 `CLAUDE.md` / `AGENT.md` |
 | `feature-list.json` | Build 阶段的功能清单和执行真相，优先由 `design.md` 中的执行契约派生 |
-| `docs/changes/<change-id>/context.md` | 这次工作的起点、边界和目标 |
-| `docs/changes/<change-id>/proposal.md` | 这次方案的范围和价值判断 |
-| `docs/changes/<change-id>/requirements.md` | 本次需求定义 |
-| `docs/changes/<change-id>/design.md` | 本次实现方案，也是 Build Contract / Implementation Contract 的权威来源 |
-| `docs/changes/<change-id>/tasks.md` | 可落地任务清单和说明性索引，不再承载主要执行事实 |
+| `docs/changes/<change-id>/brief.md` | 这次工作的起点、目标、范围、约束和验收边界 |
+| `docs/changes/<change-id>/design.md` | 本次实现方案，也是评审结论与 Build Contract / Implementation Contract 的权威来源 |
+| `docs/changes/<change-id>/tasks.md` | execution-grade 任务清单，供 Build 直接消费 |
 | `docs/changes/<change-id>/codebase-impact.md` | 本次变更影响到哪些模块和测试 |
 | `docs/changes/<change-id>/verification/review.md` | 全局审查结果 |
 | `docs/changes/<change-id>/verification/system-test.md` | 系统测试结果 |
@@ -303,7 +307,7 @@ VibeFlow 不只有一条固定强度的流程。
 - 看这次工作：`docs/changes/<change-id>/`
 - 看实施进度：`feature-list.json`
 
-`.vibeflow/` 里的文件默认不用盯着看，它们主要是系统内部运行状态。
+`.vibeflow/` 里的文件默认不用盯着看，除 `state.json` 外大多数都属于系统内部运行状态或派生产物。
 
 ---
 

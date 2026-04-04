@@ -148,6 +148,50 @@ def render_data_model(facts: dict) -> list[str]:
     return lines
 
 
+def load_custom_standards(project_root: Path) -> dict[str, list[str]]:
+    """Load custom standards from docs/standards/ directory.
+
+    Looks for .md files in docs/standards/ and categorizes them by filename:
+    - coding-standards.md -> Coding Standards section
+    - naming-conventions.md -> Naming Conventions section
+    - architecture-rules.md -> Architecture Rules section
+    - testing-standards.md -> Testing Standards section
+    - deployment-standards.md -> Deployment Standards section
+    - other .md files -> Generic Standards section
+
+    Args:
+        project_root: Root directory of the project
+
+    Returns:
+        Dict mapping section name to list of content lines
+    """
+    standards_dir = project_root / "docs" / "standards"
+    if not standards_dir.exists() or not standards_dir.is_dir():
+        return {}
+
+    section_mapping = {
+        "coding-standards.md": "8.3 Coding Standards",
+        "naming-conventions.md": "8.4 Naming Conventions",
+        "architecture-rules.md": "8.5 Architecture Rules",
+        "testing-standards.md": "8.6 Testing Standards",
+        "deployment-standards.md": "8.7 Deployment Standards",
+    }
+
+    result = {}
+    for md_file in sorted(standards_dir.glob("*.md")):
+        section_name = section_mapping.get(md_file.name, f"8.X {md_file.stem.replace('-', ' ').title()}")
+        content = md_file.read_text(encoding="utf-8").strip()
+        if content:
+            result[section_name] = content.split("\n")
+            # Remove title lines (lines starting with #) to avoid duplication
+            result[section_name] = [
+                line for line in result[section_name]
+                if not line.strip().startswith("#")
+            ]
+
+    return result
+
+
 def render_api_surface(facts: dict) -> list[str]:
     """Render API surface for Arc42 Section 8.2.
 
@@ -196,18 +240,24 @@ def render_module_graph(facts: dict) -> str:
     return "\n".join(lines)
 
 
-def assemble_full_spec(facts: dict, inferences: dict, project_name: str) -> str:
+def assemble_full_spec(facts: dict, inferences: dict, project_name: str, project_root: Path | None = None) -> str:
     """Assemble complete Arc42 specification document.
 
     Args:
         facts: The spec-facts dict
         inferences: The spec-inferences dict
         project_name: Name of the project
+        project_root: Root directory of the project (for loading custom standards)
 
     Returns:
         Complete Arc42 Markdown document as string
     """
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+    # Load custom standards from docs/standards/
+    custom_standards = {}
+    if project_root:
+        custom_standards = load_custom_standards(project_root)
     modules = facts.get("modules", [])
     entities = facts.get("entities", [])
     tech_stack = facts.get("tech_stack", [])
@@ -353,6 +403,14 @@ def assemble_full_spec(facts: dict, inferences: dict, project_name: str) -> str:
     api_lines = render_api_surface(facts)
     lines.extend(api_lines)
     lines.append("")
+
+    # Inject custom standards from docs/standards/
+    for section_name, section_lines in sorted(custom_standards.items()):
+        lines.append(f"### {section_name}")
+        lines.append("")
+        lines.extend(section_lines)
+        lines.append("")
+
     lines.extend([
         "## 9. Architecture Decisions",
         "",
@@ -404,20 +462,33 @@ def generate_spec_delta(
     Returns:
         Path to the generated delta file
     """
-    old_content = ""
-    if old_spec_path.exists():
-        old_content = old_spec_path.read_text(encoding="utf-8")
+    old_content = old_spec_path.read_text(encoding="utf-8") if old_spec_path.exists() else ""
+    new_content = new_spec_path.read_text(encoding="utf-8") if new_spec_path.exists() else ""
+    return generate_spec_delta_from_content(
+        old_content,
+        new_content,
+        change_id=change_id,
+        old_label=str(old_spec_path),
+        new_label=str(new_spec_path),
+    )
 
-    new_content = ""
-    if new_spec_path.exists():
-        new_content = new_spec_path.read_text(encoding="utf-8")
+
+def generate_spec_delta_from_content(
+    old_content: str,
+    new_content: str,
+    *,
+    change_id: str,
+    old_label: str,
+    new_label: str,
+) -> str:
+    """Generate a delta document from two in-memory spec snapshots."""
 
     # Generate unified diff
     diff = difflib.unified_diff(
         old_content.splitlines(keepends=True),
         new_content.splitlines(keepends=True),
-        fromfile=str(old_spec_path),
-        tofile=str(new_spec_path),
+        fromfile=old_label,
+        tofile=new_label,
         lineterm="",
     )
     diff_text = "".join(diff)
@@ -511,12 +582,10 @@ def assemble(
     # Extract project name from directory
     project_name = project_root.name
 
-    # Check for existing spec to generate delta
-    old_spec_path = output_path
-    new_spec_path = output_path
+    existing_spec_content = output_path.read_text(encoding="utf-8") if output_path.exists() else None
 
     # Generate full spec
-    spec_content = assemble_full_spec(facts, inferences, project_name)
+    spec_content = assemble_full_spec(facts, inferences, project_name, project_root)
 
     # Ensure output directory exists
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -525,14 +594,20 @@ def assemble(
     output_path.write_text(spec_content, encoding="utf-8")
     print(f"Full spec written to: {output_path}")
 
-    # Generate delta if old spec exists
-    if old_spec_path.exists():
+    # Generate delta only when an older snapshot existed before this write.
+    if existing_spec_content is not None:
         # Create changes directory
         change_id = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
         delta_dir = project_root / "docs" / "changes" / change_id
         delta_dir.mkdir(parents=True, exist_ok=True)
 
-        delta_content = generate_spec_delta(old_spec_path, new_spec_path, change_id)
+        delta_content = generate_spec_delta_from_content(
+            existing_spec_content,
+            spec_content,
+            change_id=change_id,
+            old_label=f"{output_path} (previous)",
+            new_label=str(output_path),
+        )
         delta_path = delta_dir / "spec-delta.md"
         delta_path.write_text(delta_content, encoding="utf-8")
         print(f"Spec delta written to: {delta_path}")

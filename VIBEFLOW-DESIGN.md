@@ -1,8 +1,8 @@
 # VibeFlow Design
 
-> Version: v1.4
-> Date: 2026-03-23
-> Status: Full local workflow scaffold implemented + 7-phase architecture
+> Version: v1.5
+> Date: 2026-04-04
+> Status: Simplified surface aligned to `Spark -> Design -> Tasks -> Build -> Review -> Test -> Ship -> Reflect`
 
 ## Related Docs
 
@@ -10,65 +10,55 @@
 - [USAGE.md](USAGE.md) - 实际使用说明和项目产物概览
 - [ARCHITECTURE.md](ARCHITECTURE.md) - 状态机、路由和组件关系
 
-## Overview
+## 1. Overview
 
-VibeFlow is a 7-phase workflow for iterative product delivery:
+VibeFlow is a repo-local control plane for AI delivery.
 
-**决策阶段（Human）：**
-1. Think
-2. Plan
-3. Requirements
-4. Design
+Its job is to keep the workflow legible, resumable, and artifact-driven without rebuilding the host agent runtime.
 
-**执行阶段（Automated via Build Continuation）：**
-5. Build
-6. Review
-7. Test
+User-facing lifecycle:
 
-**可选阶段：**
-- Ship（发布）
-- Reflect（复盘）
+1. Spark
+2. Design
+3. Tasks
+4. Build
+5. Review
+6. Test
+7. Ship
+8. Reflect
 
-The repository contains the complete local scaffold for all phases.
-All project-facing names are unified under `vibeflow`.
-
-## Naming Rules
+## 2. Naming Rules
 
 Use only these project-facing names:
 
-- skills live under `skills/`
-- runtime state lives under `.vibeflow/`
-- design contract is `VIBEFLOW-DESIGN.md`
-- helper scripts live under `scripts/`
-- templates live under `templates/`
+- workflow state lives under `.vibeflow/`
+- change artifacts live under `docs/changes/`
+- long-lived project docs live under `docs/overview/`
+- execution truth lives in `feature-list.json`
 
-## File Layout
+Do not expose internal subphases such as old build/test micro-steps as separate product phases.
+
+## 3. File Layout
 
 ```text
 skills/
   vibeflow/
   vibeflow-router/
-  vibeflow-think/
-  vibeflow-office-hours/           # YC Office Hours (optional pre-Think)
-  vibeflow-plan/
-  vibeflow-plan-value-review/      # CEO value review
-  vibeflow-plan-eng-review/        # Engineering review (Design phase Step 5.1)
-  vibeflow-plan-design-review/     # Design review (Design phase Step 5.2)
-  vibeflow-requirements/
-  vibeflow-design/                 # Tech design (UCD inlined + 3-perspective review)
-  vibeflow-brainstorming/          # Problem exploration (optional pre-Design)
+  vibeflow-spark/
+  vibeflow-office-hours/
+  vibeflow-plan-value-review/
+  vibeflow-plan-eng-review/
+  vibeflow-plan-design-review/
+  vibeflow-design/
+  vibeflow-tasks/
+  vibeflow-brainstorming/
   vibeflow-build-init/
-  vibeflow-build-config/
   vibeflow-build-work/
   vibeflow-tdd/
   vibeflow-quality/
   vibeflow-feature-st/
   vibeflow-spec-review/
   vibeflow-review/
-  vibeflow-careful/                # Safety: destructive command warnings
-  vibeflow-freeze/                 # Safety: edit boundary restrictions
-  vibeflow-guard/                  # Safety: careful + freeze combined
-  vibeflow-unfreeze/              # Safety: clear freeze boundary
   vibeflow-test-system/
   vibeflow-test-qa/
   vibeflow-ship/
@@ -87,87 +77,66 @@ scripts/
   migrate-vibeflow-v2.py
   promote-vibeflow-quick.py
   new-vibeflow-config.py
-  new-vibeflow-work-config.py
   test-vibeflow-setup.py
+  run-vibeflow-autopilot.py
+  run-vibeflow-dashboard.py
 
 templates/
   prototype.yaml
   web-standard.yaml
   api-standard.yaml
   enterprise.yaml
-
-claude-code/
-  install.sh
-  install.ps1
-
-codex/
-  install.sh
-  install.ps1
-
-opencode/
-  install.sh
-
-.claude-plugin/
-  marketplace.json
-  plugin.json
 ```
 
-## Router State Machine
+## 4. Router State Machine
 
 Routing is file-driven through `scripts/get-vibeflow-phase.py`.
 
 Detected phases:
 
 - `increment`
-- `think`
-- `template-selection`
-- `plan`
-- `requirements`
+- `quick`
+- `spark`
 - `design`
-- `build-init`
-- `build-config`
-- `build-work`
+- `tasks`
+- `build`
 - `review`
-- `test-system`
-- `test-qa`
+- `test`
 - `ship`
 - `reflect`
 - `done`
 
-## Runtime Artifacts
+## 5. Runtime Artifacts
 
-### VibeFlow State (`.vibeflow/`)
+### 5.1 VibeFlow State
 
-- `.vibeflow/state.json` — Workflow state, current phase, active change, artifact map
-- `.vibeflow/state.json.quick_meta` — Quick Mode eligibility, risk, validation, rollback, promotion rules
-- `.vibeflow/workflow.yaml` — Workflow config (from template)
-- `.vibeflow/work-config.json` — Build config (quality gates, enabled steps)
-- `.vibeflow/guides/build.md` — Build session guide
-- `.vibeflow/guides/services.md` — Service lifecycle guide
-- `.vibeflow/logs/session-log.md` — Human-readable progress log
-- `.vibeflow/logs/retro-YYYY-MM-DD.md` — Iteration retrospective
-- `.vibeflow/increments/queue.json` — Pending increments queue
-- `.vibeflow/increments/requests/*.json` — Increment request payloads
-- `.vibeflow/increments/history.json` — Increment processing history
+- `.vibeflow/state.json` — workflow state, current phase, checkpoints, active change, phase history, runtime resume hints
+- `.vibeflow/workflow.yaml` — workflow policy and template-derived behavior
+- `.vibeflow/guides/build.md` — build session guide
+- `.vibeflow/guides/services.md` — service lifecycle guide when services apply
+- `.vibeflow/logs/session-log.md` — progress log, generated on first write
+- `.vibeflow/logs/retro-YYYY-MM-DD.md` — iteration retrospective
+- `.vibeflow/increments/queue.json` — pending increments queue
+- `.vibeflow/increments/requests/*.json` — increment request payloads
+- `.vibeflow/increments/history.json` — increment processing history
 
-### Project Artifacts
+### 5.2 Project Artifacts
 
-- `docs/changes/<change-id>/context.md` — Think artifact
-- `docs/changes/<change-id>/proposal.md` — Plan / value-review artifact
-- `docs/changes/<change-id>/requirements.md` — Software Requirements Specification
-- `docs/changes/<change-id>/ucd.md` — UCD artifact (when UI applies)
-- `docs/changes/<change-id>/design.md` — Technical design document
-- `docs/changes/<change-id>/design-review.md` — Engineering + design review conclusions
-- `docs/changes/<change-id>/tasks.md` — Build task breakdown and human-readable index
-- `docs/changes/<change-id>/verification/review.md` — Global review report
-- `docs/changes/<change-id>/verification/system-test.md` — System test report
-- `docs/changes/<change-id>/verification/qa.md` — QA test report
-- `docs/plans/*-brainstorming.md` — Brainstorming output (optional)
-- `docs/test-cases/feature-*.md` — Feature test case documents
-- `feature-list.json` — Feature inventory (single source of truth during Build, ideally derived from `design.md` execution contracts)
-- `RELEASE_NOTES.md` — Release notes
+- `docs/overview/PROJECT.md` — long-lived project context
+- `docs/overview/ARCHITECTURE.md` — long-lived project architecture
+- `docs/overview/CURRENT-STATE.md` — current workflow snapshot
+- `docs/changes/<change-id>/brief.md` — Spark artifact with goal, scope, constraints, and acceptance
+- `docs/changes/<change-id>/ucd.md` — optional UI design artifact
+- `docs/changes/<change-id>/design.md` — technical design plus review summary and scope decision
+- `docs/changes/<change-id>/tasks.md` — execution-grade handoff
+- `docs/changes/<change-id>/verification/review.md` — global review report
+- `docs/changes/<change-id>/verification/system-test.md` — system test report
+- `docs/changes/<change-id>/verification/qa.md` — QA report when UI applies
+- `docs/test-cases/feature-*.md` — feature test case documents
+- `feature-list.json` — Build truth source
+- `RELEASE_NOTES.md` — release notes
 
-## Templates
+## 6. Templates
 
 The project includes four static templates:
 
@@ -177,65 +146,140 @@ The project includes four static templates:
 - `enterprise`
 
 Template selection writes `.vibeflow/workflow.yaml`.
-Template-derived build trimming writes `.vibeflow/work-config.json`.
 
-## Skill Catalog
+There is no separate user-facing build-config file anymore; execution behavior is read from `workflow.yaml` and current state.
 
-### Core Layer
+## 7. Skill Catalog
 
-- `vibeflow` — Framework entry point
-- `vibeflow-router` — Session router, file-driven phase dispatch, Build handoff into automatic continuation
-- `vibeflow-think` — Think phase: problem framing and template selection
+### 7.1 Core Layer
 
-### Exploratory Layer (Optional)
+- `vibeflow` — framework entry point
+- `vibeflow-router` — session router and phase dispatch
+- `vibeflow-spark` — Spark phase
 
-- `vibeflow-office-hours` — YC Office Hours style brainstorming (pre-Think)
-- `vibeflow-brainstorming` — Problem exploration (pre-Design)
+### 7.2 Exploratory Layer
 
-### Planning Layer
+- `vibeflow-office-hours` — optional pre-Spark brainstorming
+- `vibeflow-brainstorming` — optional pre-Design exploration
 
-- `vibeflow-plan` — Plan phase entry: CEO value review gate
-- `vibeflow-plan-value-review` — CEO/Founder perspective value review (fail-fast gate)
-- `vibeflow-plan-eng-review` — Engineering perspective review (architecture, code quality, testing, performance)
-- `vibeflow-plan-design-review` — Design perspective review (7-round review: IA, interaction, journey, AI slop, design system, a11y, unresolved)
-- `vibeflow-requirements` — Software Requirements Specification (ISO 29148)
-- `vibeflow-design` — Technical design document (with inline UCD + 3-perspective review at Step 5)
+### 7.3 Definition Layer
 
-### Build Layer
+- `vibeflow-plan-value-review` — value review
+- `vibeflow-plan-eng-review` — engineering review
+- `vibeflow-plan-design-review` — design review
+- `vibeflow-design` — technical design and inlined review summary
+- `vibeflow-tasks` — execution-grade planning handoff
 
-- `vibeflow-build-init` — Initialize build artifacts
-- `vibeflow-build-config` — Configure feature implementation details
-- `vibeflow-build-work` — Single-feature orchestrator: TDD → Quality → ST → Review
-- `vibeflow-tdd` — TDD Red-Green-Refactor cycle
-- `vibeflow-quality` — Quality gates: line coverage, branch coverage, mutation score
-- `vibeflow-feature-st` — Feature-level acceptance testing (ISO 29119)
-- `vibeflow-spec-review` — Spec compliance review against SRS and Design
+### 7.4 Build Layer
 
-### Safety Guardrails Layer (Optional)
+- `vibeflow-build-init` — internal Build preparation step
+- `vibeflow-build-work` — internal Build execution step
+- `vibeflow-tdd` — TDD cycle
+- `vibeflow-quality` — quality gates
+- `vibeflow-feature-st` — feature acceptance testing
+- `vibeflow-spec-review` — spec compliance review
 
-- `vibeflow-careful` — Warns before destructive commands (rm -rf, DROP TABLE, etc.)
-- `vibeflow-freeze` — Restricts Edit/Write to specified directory
-- `vibeflow-guard` — Combines careful + freeze for maximum safety mode
-- `vibeflow-unfreeze` — Clears freeze boundary
+### 7.5 Verification and Release Layer
 
-### Verification & Release Layer
+- `vibeflow-review` — holistic review
+- `vibeflow-test-system` — system tests
+- `vibeflow-test-qa` — browser QA
+- `vibeflow-ship` — release and changelog
+- `vibeflow-reflect` — retrospective
 
-- `vibeflow-review` — Cross-feature holistic change review
-- `vibeflow-test-system` — System-level integration tests and NFR validation
-- `vibeflow-test-qa` — Browser-driven QA verification (UI projects only)
-- `vibeflow-ship` — Version release, PR creation, changelog
-- `vibeflow-reflect` — Iteration retrospective and improvement suggestions
+## 8. Internal vs External Mapping
 
-## Implementation Notes
+This table is the canonical translation layer between product-facing names and internal implementation names.
 
-- the repository contains the full local alias layer for all stages
-- routing is deterministic and based on files rather than memory
-- UCD is inlined into the Design phase (Step 1), not a separate phase
-- Plan phase only does CEO value review; eng/design reviews happen at Design phase Step 5
-- safety guardrails are opt-in (not enabled by default)
-- exploratory skills (office-hours, brainstorming) are optional pre-cursors
+### 8.1 Phase Mapping
 
-## Verification
+| 对外产品名 | 内部检测相位 / 技能 / 脚本 | 说明 |
+|---|---|---|
+| `Spark` | `spark` / `vibeflow-spark` | 产出 `brief.md` |
+| `Design` | `design` / `vibeflow-design` | 产出 `design.md`，内含评审结论 |
+| `Tasks` | `tasks` / `vibeflow-tasks` | 产出 execution-grade `tasks.md` |
+| `Build` | `build` / `vibeflow-build-init` + `vibeflow-build-work` | 对外一个阶段，对内包含准备和执行两个子步骤 |
+| `Review` | `review` / `vibeflow-review` | 产出全局审查报告 |
+| `Test` | `test` / `vibeflow-test-system` + `vibeflow-test-qa` | 对外一个阶段，对内按是否需要 UI QA 决定是否追加浏览器验证 |
+| `Ship` | `ship` / `vibeflow-ship` | 产出 `RELEASE_NOTES.md` |
+| `Reflect` | `reflect` / `vibeflow-reflect` | 产出复盘 |
+
+### 8.2 Artifact Mapping
+
+| 对外产物 | 内部实现细节 | 说明 |
+|---|---|---|
+| `brief.md` | Spark artifact | 取代过去更模糊的 `context.md` 叙事 |
+| `design.md` | design + review summary | 不再单独暴露 `design-review.md` |
+| `tasks.md` | execution planning handoff | Build 的正式输入 |
+| `verification/` | `review.md` + `system-test.md` + `qa.md` | 对外按目录理解，对内仍保留分文件 |
+| `.vibeflow/state.json` | state + runtime resume hints | 不再单独暴露 `runtime.json` |
+| `.vibeflow/workflow.yaml` | workflow policy | 不再单独暴露 `work-config.json` |
+
+### 8.3 User-Facing vs Internal Files
+
+| 应该直接面向用户 | 主要供系统内部使用 |
+|---|---|
+| `docs/overview/CURRENT-STATE.md` | `.vibeflow/state.json` |
+| `docs/overview/PROJECT.md` | `.vibeflow/workflow.yaml` |
+| `docs/overview/ARCHITECTURE.md` | `.vibeflow/guides/build.md` |
+| `docs/changes/<change-id>/brief.md` | `.vibeflow/guides/services.md` |
+| `docs/changes/<change-id>/design.md` | `.vibeflow/logs/session-log.md` |
+| `docs/changes/<change-id>/tasks.md` | `.vibeflow/increments/*` |
+| `docs/changes/<change-id>/verification/` | `.vibeflow/build-reports/*` |
+| `feature-list.json` |  |
+
+### 8.4 Recovery Surface Mapping
+
+| 用户看到的恢复提示 | 内部来源 |
+|---|---|
+| 当前停在什么阶段 | `get-vibeflow-phase.py` 输出的 `phase` |
+| 为什么停在这里 | `reason` |
+| 现在应该做什么 | `next_action` |
+| 建议先打开哪些文件 | `open_files` |
+| 是否会自动继续 | `resume_mode` |
+
+## 9. Human-Facing Document Surface
+
+Users normally need only these documents:
+
+- `docs/overview/CURRENT-STATE.md`
+- `docs/overview/PROJECT.md`
+- `docs/overview/ARCHITECTURE.md`
+- `docs/changes/<change-id>/brief.md`
+- `docs/changes/<change-id>/design.md`
+- `docs/changes/<change-id>/tasks.md`
+- `docs/changes/<change-id>/verification/`
+- `feature-list.json`
+
+Everything else in `.vibeflow/` should be treated as internal control-plane state.
+
+## 10. Recovery Behavior
+
+When Claude closes unexpectedly, rerunning `/vibeflow` should restore context from `.vibeflow/state.json`.
+
+The resume surface must explicitly tell the user:
+
+- current phase
+- why the workflow is paused
+- what to do next
+- which files to open
+
+## 11. Design Constraints
+
+- Spark owns the problem brief
+- Design owns the technical solution and review summary
+- Tasks owns the execution-grade handoff
+- Build owns feature execution state
+- Review and Test own verification evidence
+
+VibeFlow should remain a control plane:
+
+- scripts only automate deterministic work
+- state machines only encode stable transitions
+- gates only cover things that are easy to forget and expensive to miss
+- everything else stays with the agent runtime, skill prompts, and repo artifacts
+
+## 12. Verification
 
 Use these commands locally:
 
@@ -243,4 +287,5 @@ Use these commands locally:
 python scripts/get-vibeflow-phase.py
 python scripts/get-vibeflow-phase.py --verbose
 python scripts/test-vibeflow-setup.py --json
+python scripts/run_vibeflow_repo_tests.py
 ```
