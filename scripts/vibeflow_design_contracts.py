@@ -190,7 +190,7 @@ def parse_feature_contract(data: dict, *, feature_context: dict | None, design_p
 
     design_section = str(data.get("design_section") or (feature_context or {}).get("section") or "").strip()
     if not design_section:
-        warnings.append("design_section is missing; packets will reference the whole design document.")
+        warnings.append("design_section is missing; feature contracts will reference the whole design document.")
 
     verification_commands = normalize_string_list(data.get("verification_commands"))
     verification_steps = normalize_string_list(data.get("verification_steps"))

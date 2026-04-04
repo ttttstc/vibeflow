@@ -4,7 +4,7 @@ Check system testing readiness for a vibeflow project.
 
 Verifies:
 - feature-list.json exists and all active features are "passing"
-- requirements and design artifacts exist
+- spark/context or legacy requirements, plus design artifacts, exist
 - UI projects have either a dedicated UCD artifact or an inlined design artifact
 
 The script understands both the legacy docs/plans layout and the v2
@@ -42,7 +42,7 @@ def resolve_paths(project_root: Path) -> dict:
         state = load_state(project_root)
         contract = path_contract(project_root, state)
         artifacts = contract["artifacts"]
-        requirements = artifacts["requirements"]
+        requirements = artifacts["requirements"] if artifacts["requirements"].exists() else artifacts["spark"]
         design = artifacts["design"]
         ucd = artifacts["ucd"] if artifacts["ucd"].exists() else design
         return {
@@ -127,8 +127,11 @@ def check_st_readiness(feature_list_path: Path) -> dict:
         result["srs_found"] = True
         result["srs_path"] = str(requirements)
     else:
-        expected = "docs/changes/<change-id>/requirements.md" if resolved["layout"] == "v2" else "docs/plans/*-srs.md"
-        result["issues"].append(f"Requirements document not found ({expected})")
+        if resolved["layout"] == "v2":
+            expected = "docs/changes/<change-id>/brief.md or requirements.md"
+            result["issues"].append(f"Spark brief artifact not found ({expected})")
+        else:
+            result["issues"].append("Requirements document not found (docs/plans/*-srs.md)")
 
     if design and design.exists():
         result["design_found"] = True
@@ -193,7 +196,7 @@ def main():
         print(f"Deprecated: {result['deprecated_features']} (excluded from checks)")
     if result["failing_features"] > 0:
         print(f"Failing: {result['failing_ids']}")
-    print(f"Requirements: {'found' if result['srs_found'] else 'MISSING'}")
+    print(f"Spark Brief/Requirements: {'found' if result['srs_found'] else 'MISSING'}")
     print(f"Design: {'found' if result['design_found'] else 'MISSING'}")
     if result["has_ui_features"]:
         print(f"UCD: {'found' if result['ucd_found'] else 'MISSING (UI features exist)'}")

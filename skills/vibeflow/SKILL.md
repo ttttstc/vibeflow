@@ -47,7 +47,9 @@ VibeFlow是一个结构化的六阶段工作流程，用于有目的性地、有
 - 重要系统变更（支付、认证等）
 - 不确定复杂度的任务
 
-**完整流程**：Spark → Requirements → Design → Build Init → Tasks Review → Build → Review → Test
+**完整流程**：Spark → Design → Tasks → Build → Review → Test
+
+其中 `Tasks` 不是走过场。必须先展示本次变更的全量交付计划并获得人工确认，才允许进入 `Build`。
 
 **入口**：`/vibeflow`（选择 Full Mode）
 
@@ -59,9 +61,9 @@ VibeFlow是一个严谨的软件开发框架，强调在构建之前思考、在
 
 | 阶段 | 目的 | 关键产出物 |
 |------|------|-----------|
-| 1. Spark（灵感迸发） | 灵感探索、问题框定、DeepResearch、复杂度扫描、CEO 价值评估 | `docs/changes/<change-id>/context.md` |
-| 2. Requirements（需求） | 需求规格说明书 | `docs/changes/<change-id>/requirements.md` |
-| 3. Design（设计） | 技术设计 + 三视角评审 | `docs/changes/<change-id>/design.md` |
+| 1. Spark（灵感迸发） | 灵感探索、问题框定、DeepResearch、复杂度扫描、CEO 价值评估 | `docs/changes/<change-id>/brief.md` |
+| 2. Design（设计） | 技术设计 + 三视角评审 | `docs/changes/<change-id>/design.md` |
+| 3. Tasks（任务化） | 执行级 handoff，生成稳定可消费的 `tasks.md`，并等待人工确认 | `docs/changes/<change-id>/tasks.md` |
 | 4. Build（构建） | 通过TDD、质量关卡、规范审查实现功能 | `feature-list.json` |
 | 5. Review（审查） | 跨功能的整体变更分析 | 审查报告 |
 | 6. Test（测试） | 系统测试和QA验证 | 测试报告 |
@@ -86,25 +88,25 @@ VibeFlow是一个严谨的软件开发框架，强调在构建之前思考、在
 使用vibeflow-spark skill来探索灵感、确定方向并进行价值评估。
 ```
 
-### 步骤2：运行Requirements阶段
-
-```
-使用vibeflow-requirements编写需求规范。
-```
-
-### 步骤3：运行Design阶段
+### 步骤2：运行Design阶段
 
 ```
 使用vibeflow-design编写技术设计。
 ```
 
+### 步骤3：运行Tasks阶段
+
+```
+使用vibeflow-tasks生成执行级任务计划。
+```
+
 ### 步骤4：初始化Build阶段
 
 ```
-Design 确认后先进入 `build-init` 生成交付计划。
-在 Claude Code 插件里，Build 的默认路径会先跑 `build-init`，产出 `tasks.md` + `feature-list.json` 并停在 `tasks` 人工确认闸门。
-只有 `tasks` 获批后，才继续后续自动链路。
-只有在调试单个子阶段时，才单独调用 vibeflow-build-init 或 vibeflow-build-work。
+Design 确认后先进入 Tasks。
+Tasks 展示完整交付计划并获批后才进入 Build。
+在 Claude Code 插件里，Build 的默认路径不是逐段手动推进，而是进入 Build 后自动继续后续链路。
+只有在调试单个内部子步骤时，才单独调用 vibeflow-build-init 或 vibeflow-build-work。
 ```
 
 ---
@@ -135,7 +137,7 @@ VibeFlow需要在仓库根目录有一个`VIBEFLOW-DESIGN.md`。检查：
 cat VIBEFLOW-DESIGN.md
 ```
 
-如果此文件不存在，必须先完成Think和Plan阶段来创建它。
+如果此文件不存在，必须先完成 Spark、Design 和 Tasks 阶段来创建相关交付产物。
 
 ### 3. 验证所有子技能都存在
 
@@ -147,10 +149,12 @@ ls skills/vibeflow-*/
 
 预期技能：
 - vibeflow-router
-- vibeflow-think
-- vibeflow-plan-review
-- vibeflow-requirements
+- vibeflow-spark
+- vibeflow-plan-value-review
+- vibeflow-plan-eng-review
+- vibeflow-plan-design-review
 - vibeflow-design
+- vibeflow-tasks
 - vibeflow-build-init
 - vibeflow-build-work
 - vibeflow-tdd
@@ -181,61 +185,59 @@ cat feature-list.json
 
 **何时进入**：项目开始或面对不清晰的问题时。
 
-**关键产出物**：`docs/changes/<change-id>/context.md`
+**关键产出物**：`docs/changes/<change-id>/brief.md`
 
 **使用的技能**：
 - `vibeflow-spark`
 - `vibeflow-deepresearch`（按需）
 
-**退出标准**：问题框定完成、方向明确、价值评估通过（EXPANSION/SELECTIVE/HOLD），自动进入 Requirements。
+**退出标准**：问题框定完成、方向明确、价值评估通过（EXPANSION/SELECTIVE/HOLD），自动进入 Design。
 
 ---
 
-### 阶段2：Requirements（需求）
-
-**目的**：编写需求规格说明书。
-
-**何时进入**：Spark 阶段价值评估通过后。
-
-**关键产出物**：
-- `docs/changes/<change-id>/requirements.md`
-
-**使用的技能**：
-- `vibeflow-requirements`
-
-**退出标准**：需求文档完成并批准。
-
----
-
-### 阶段3：Design（设计）
+### 阶段2：Design（设计）
 
 **目的**：技术设计 + 三视角评审。
 
-**何时进入**：Requirements 阶段完成后。
+**何时进入**：Spark 阶段完成后。
 
 **关键产出物**：
 - `docs/changes/<change-id>/design.md`
-- `docs/changes/<change-id>/design-review.md`
 
 **使用的技能**：
 - `vibeflow-design`
 
-**退出标准**：技术设计完成，通过 eng review 和 design review。
+**退出标准**：技术设计完成，且 `design.md` 已包含工程审查、设计审查和范围决策结论。
+
+---
+
+### 阶段3：Tasks（任务化）
+
+**目的**：把设计翻译成 execution-grade `tasks.md`，为 Build 提供正式交接输入。
+
+**何时进入**：Design 阶段批准后。
+
+**关键产出物**：
+- `docs/changes/<change-id>/tasks.md`
+
+**使用的技能**：
+- `vibeflow-tasks`
+
+**退出标准**：`tasks.md` 完成、展示为全量交付计划并获人工确认，且可被 Build 直接消费。
 
 ---
 
 ### 阶段4：Build（构建）
 
-**目的**：先生成交付计划并获得人工确认，再自动接管后半程执行链路。
+**目的**：从 Build 开始默认自动接管后半程执行链路。
 
 **何时进入**：Design 阶段批准后。
 
-**关键产出物**：`feature-list.json`、`docs/changes/<change-id>/tasks.md`
+**关键产出物**：`feature-list.json`
 
 **默认执行方式**：
-- `build-init` 先生成 `feature-list.json`、任务包、`tasks.md`
-- 在 `tasks` 阶段展示全量交付计划并等待人工确认
-- 获批后 router 持续执行 `build-config -> build-work -> review -> test`
+- 进入 `build` 后，不再逐段停顿等待用户
+- router 会持续执行 `build -> review -> test`
 - 直到 `done`、阻塞、或需要人工确认
 
 **子技能（默认作为内部子步骤 / fallback）**：
@@ -350,7 +352,7 @@ VibeFlow支持四种工作流程模板。根据项目范围、团队规模和治
 
 **问题**：不定义问题就直接跳入代码会导致范围蔓延、优先级不清和返工。
 
-**预防**：在任何实现之前始终完成 Spark 阶段。`docs/changes/<change-id>/context.md` 产物必须存在并经过价值评估。
+**预防**：在任何实现之前始终完成 Spark 阶段。`docs/changes/<change-id>/brief.md` 产物必须存在并经过价值评估。
 
 ---
 
@@ -358,7 +360,7 @@ VibeFlow支持四种工作流程模板。根据项目范围、团队规模和治
 
 **问题**：在没有批准的需求或设计的情况下尝试构建会导致不对齐和昂贵的返工。
 
-**预防**：每个阶段都有明确的进入标准。在Requirements和Design完全批准之前不要进入Build。
+**预防**：每个阶段都有明确的进入标准。在Spark、Design 和 Tasks 完全批准之前不要进入Build。
 
 ---
 
@@ -388,16 +390,16 @@ VibeFlow支持四种工作流程模板。根据项目范围、团队规模和治
 
 ## 子技能参考
 
-以下15个子技能支持VibeFlow框架：
+以下子技能支持 VibeFlow 框架：
 
 | 技能 | 目的 |
 |------|------|
 | `vibeflow-router` | 在会话开始时路由整个VibeFlow生命周期的工作 |
 | `vibeflow-spark` | 灵感迸发：问题框定、DeepResearch、复杂度扫描、CEO 价值评估 |
 | `vibeflow-deepresearch` | 深度调研：竞品分析、技术栈分析、能力矩阵、产品护城河调研 |
-| `vibeflow-requirements` | 编写批准的需求规范（SRS） |
 | `vibeflow-design` | 在初始化之前编写技术设计（含 UCD 内联：视觉风格、Token、组件提示词） |
-| `vibeflow-build-init` | 在设计批准后初始化实现产物 |
+| `vibeflow-tasks` | 生成 execution-grade 全量交付计划，并在人工确认后交给 Build |
+| `vibeflow-build-init` | Build 内部准备步骤：初始化实现产物 |
 | `vibeflow-build-work` | 驱动功能通过TDD到质量关卡再到规范审查 |
 | `vibeflow-tdd` | 构建阶段内的红-绿-重构步骤 |
 | `vibeflow-quality` | 构建期间覆盖率和变异质量关卡 |

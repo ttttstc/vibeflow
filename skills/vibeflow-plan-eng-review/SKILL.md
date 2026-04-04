@@ -314,7 +314,7 @@ After completing all review sections, check if additional reviews would be valua
 Use AskUserQuestion with only the applicable options:
 - **A)** Run vibeflow-plan-design-review (only if UI scope detected)
 - **B)** Run vibeflow-plan-value-review (only if significant product change)
-- **C)** Done with review — proceed to requirements phase
+- **C)** Done with review — proceed to design completion or tasks handoff
 
 ## Unresolved decisions
 If the user does not respond to an AskUserQuestion or interrupts to move on, note which decisions were left unresolved. At the end of the review, list these as "Unresolved decisions that may bite you later" — never silently default to an option.
@@ -372,7 +372,7 @@ If the user does not respond to an AskUserQuestion or interrupts to move on, not
 ## 集成
 
 **调用者：** vibeflow-design（design 阶段 Step 5.1，用户审批之后执行）
-**依赖：** `docs/changes/<change-id>/design.md`（设计文档）、`.vibeflow/workflow.yaml`、`docs/changes/<change-id>/context.md`
+**依赖：** `docs/changes/<change-id>/design.md`（设计文档）、`.vibeflow/workflow.yaml`、`docs/changes/<change-id>/brief.md`
 **产出：** `docs/changes/<change-id>/design-review.md`（Engineering Review 小节）
 **Gate：** 评审中发现的严重问题（critical）需要处理后才能进入 scope decision
 **链接到：** vibeflow-plan-design-review（design 阶段 Step 5.2） → scope decision

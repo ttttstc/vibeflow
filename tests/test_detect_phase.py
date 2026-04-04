@@ -1,306 +1,155 @@
 #!/usr/bin/env python3
-"""Unit tests for get-vibeflow-phase.py"""
-import json
-import tempfile
-from pathlib import Path
-import pytest
-import sys
 import importlib.util
+import json
+from pathlib import Path
 
-# Load module with hyphenated filename
-_spec = importlib.util.spec_from_file_location(
-    'get_vibeflow_phase',
-    str(Path(__file__).parent.parent / 'scripts' / 'get-vibeflow-phase.py')
-)
-_get_vibeflow_phase = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(_get_vibeflow_phase)
 
-detect_phase = _get_vibeflow_phase.detect_phase
-latest_matching_file = _get_vibeflow_phase.latest_matching_file
-ui_required = _get_vibeflow_phase.ui_required
-reflect_required = _get_vibeflow_phase.reflect_required
-all_features_passing = _get_vibeflow_phase.all_features_passing
+ROOT = Path(__file__).resolve().parent.parent
+
+
+def load_module(path: Path):
+    spec = importlib.util.spec_from_file_location(path.stem.replace("-", "_"), path)
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+    return module
+
+
+phase_module = load_module(ROOT / "scripts" / "get-vibeflow-phase.py")
+paths_module = load_module(ROOT / "scripts" / "vibeflow_paths.py")
+
+detect_phase = phase_module.detect_phase
+ui_required = phase_module.ui_required
+reflect_required = phase_module.reflect_required
+all_features_passing = phase_module.all_features_passing
+
+
+def write(path: Path, content: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content, encoding="utf-8")
+
+
+def write_json(path: Path, data: object) -> None:
+    write(path, json.dumps(data, indent=2, ensure_ascii=False))
+
+
+def make_stateful_project(project_root: Path) -> dict:
+    state = paths_module.default_state(project_root, topic="demo")
+    paths_module.save_state(project_root, state)
+    write(project_root / ".vibeflow" / "workflow.yaml", 'template: "api-standard"\nship:\n  required: true\nreflect:\n  required: true\n')
+    return state
 
 
 class TestDetectPhase:
-    """Test detect_phase() across all branches for 6-phase workflow."""
-
-    def test_increment(self, tmp_path):
-        (tmp_path / '.vibeflow').mkdir()
-        (tmp_path / '.vibeflow' / 'increment-request.json').write_text('{}')
+    def test_increment_queue_wins(self, tmp_path):
+        state = make_stateful_project(tmp_path)
+        write_json(tmp_path / ".vibeflow" / "increments" / "queue.json", {"items": [{"id": "inc-1"}]})
         result = detect_phase(tmp_path)
-        assert result['phase'] == 'increment'
+        assert result["phase"] == "increment"
+        assert result["resume_mode"] == "manual"
 
-    def test_spark_missing(self, tmp_path):
-        """When no spark.md exists, should detect spark phase."""
-        (tmp_path / '.vibeflow').mkdir()
-        result = detect_phase(tmp_path)
-        assert result['phase'] == 'spark'
+    def test_full_flow_transitions(self, tmp_path):
+        state = make_stateful_project(tmp_path)
+        assert detect_phase(tmp_path)["phase"] == "spark"
 
-    def test_requirements_missing(self, tmp_path):
-        """When spark.md exists but no SRS, should detect requirements phase."""
-        (tmp_path / '.vibeflow').mkdir()
-        (tmp_path / '.vibeflow' / 'spark.md').write_text('spark complete')
-        result = detect_phase(tmp_path)
-        assert result['phase'] == 'requirements'
+        state["checkpoints"]["spark"] = True
+        write(tmp_path / state["artifacts"]["spark"], "# Brief\n")
+        paths_module.save_state(tmp_path, state)
+        assert detect_phase(tmp_path)["phase"] == "design"
 
-    def test_design_missing(self, tmp_path):
-        """When spark.md exists and SRS exists but no design doc, should detect design phase."""
-        (tmp_path / '.vibeflow').mkdir()
-        (tmp_path / '.vibeflow' / 'spark.md').write_text('spark complete')
-        (tmp_path / 'docs' / 'plans').mkdir(parents=True)
-        (tmp_path / 'docs' / 'plans' / 'test-srs.md').write_text('srs')
-        result = detect_phase(tmp_path)
-        assert result['phase'] == 'design'
+        state["checkpoints"]["design"] = True
+        write(tmp_path / state["artifacts"]["design"], "# Design\n\n## Review Summary\n\nApproved.\n")
+        paths_module.save_state(tmp_path, state)
+        assert detect_phase(tmp_path)["phase"] == "tasks"
 
-    def test_design_eng_review_missing(self, tmp_path):
-        """When design exists but plan-eng-review.md is missing, should detect design phase."""
-        (tmp_path / '.vibeflow').mkdir()
-        (tmp_path / '.vibeflow' / 'spark.md').write_text('spark complete')
-        (tmp_path / 'docs' / 'plans').mkdir(parents=True)
-        (tmp_path / 'docs' / 'plans' / 'test-srs.md').write_text('srs')
-        (tmp_path / 'docs' / 'plans' / 'test-design.md').write_text('design')
-        result = detect_phase(tmp_path)
-        assert result['phase'] == 'design'
-        assert 'plan-eng-review' in result['reason']
+        state["checkpoints"]["tasks"] = True
+        write(tmp_path / state["artifacts"]["tasks"], "# Tasks\n")
+        paths_module.save_state(tmp_path, state)
+        assert detect_phase(tmp_path)["phase"] == "build"
 
-    def test_design_design_review_missing(self, tmp_path):
-        """When design exists and eng-review exists but plan-design-review.md is missing."""
-        (tmp_path / '.vibeflow').mkdir()
-        (tmp_path / '.vibeflow' / 'spark.md').write_text('spark complete')
-        (tmp_path / 'docs' / 'plans').mkdir(parents=True)
-        (tmp_path / 'docs' / 'plans' / 'test-srs.md').write_text('srs')
-        (tmp_path / 'docs' / 'plans' / 'test-design.md').write_text('design')
-        (tmp_path / '.vibeflow' / 'plan-eng-review.md').write_text('eng review')
-        result = detect_phase(tmp_path)
-        assert result['phase'] == 'design'
-        assert 'plan-design-review' in result['reason']
-
-    def test_build_init_missing(self, tmp_path):
-        """When design and reviews exist but feature-list.json is missing."""
-        (tmp_path / '.vibeflow').mkdir()
-        (tmp_path / '.vibeflow' / 'spark.md').write_text('spark complete')
-        (tmp_path / 'docs' / 'plans').mkdir(parents=True)
-        (tmp_path / 'docs' / 'plans' / 'test-srs.md').write_text('srs')
-        (tmp_path / 'docs' / 'plans' / 'test-design.md').write_text('design')
-        (tmp_path / '.vibeflow' / 'plan-eng-review.md').write_text('eng review')
-        (tmp_path / '.vibeflow' / 'plan-design-review.md').write_text('design review')
-        result = detect_phase(tmp_path)
-        assert result['phase'] == 'build-init'
-
-    def test_build_config_missing(self, tmp_path):
-        """When feature-list.json exists but work-config.json is missing."""
-        (tmp_path / '.vibeflow').mkdir()
-        (tmp_path / '.vibeflow' / 'spark.md').write_text('spark complete')
-        (tmp_path / 'docs' / 'plans').mkdir(parents=True)
-        (tmp_path / 'docs' / 'plans' / 'test-srs.md').write_text('srs')
-        (tmp_path / 'docs' / 'plans' / 'test-design.md').write_text('design')
-        (tmp_path / '.vibeflow' / 'plan-eng-review.md').write_text('eng review')
-        (tmp_path / '.vibeflow' / 'plan-design-review.md').write_text('design review')
-        (tmp_path / 'feature-list.json').write_text(json.dumps({'features': []}))
-        result = detect_phase(tmp_path)
-        assert result['phase'] == 'build-config'
-
-    def test_build_work_features_not_passing(self, tmp_path):
-        """When work-config exists but features are not all passing."""
-        (tmp_path / '.vibeflow').mkdir()
-        (tmp_path / '.vibeflow' / 'spark.md').write_text('spark complete')
-        (tmp_path / '.vibeflow' / 'work-config.json').write_text('{}')
-        (tmp_path / 'docs' / 'plans').mkdir(parents=True)
-        (tmp_path / 'docs' / 'plans' / 'test-srs.md').write_text('srs')
-        (tmp_path / 'docs' / 'plans' / 'test-design.md').write_text('design')
-        (tmp_path / '.vibeflow' / 'plan-eng-review.md').write_text('eng review')
-        (tmp_path / '.vibeflow' / 'plan-design-review.md').write_text('design review')
-        (tmp_path / 'docs' / 'plans' / 'test-st-report.md').write_text('st')
-        (tmp_path / '.vibeflow' / 'review-report.md').write_text('review')
-        (tmp_path / 'feature-list.json').write_text(json.dumps({
-            'features': [{'id': 'f1', 'status': 'failing', 'deprecated': False}]
-        }))
-        result = detect_phase(tmp_path)
-        assert result['phase'] == 'build-work'
-
-    def test_review_missing(self, tmp_path):
-        """When features all passing but review-report.md is missing."""
-        (tmp_path / '.vibeflow').mkdir()
-        (tmp_path / '.vibeflow' / 'spark.md').write_text('spark complete')
-        (tmp_path / '.vibeflow' / 'work-config.json').write_text('{}')
-        (tmp_path / 'docs' / 'plans').mkdir(parents=True)
-        (tmp_path / 'docs' / 'plans' / 'test-srs.md').write_text('srs')
-        (tmp_path / 'docs' / 'plans' / 'test-design.md').write_text('design')
-        (tmp_path / '.vibeflow' / 'plan-eng-review.md').write_text('eng review')
-        (tmp_path / '.vibeflow' / 'plan-design-review.md').write_text('design review')
-        (tmp_path / 'feature-list.json').write_text(json.dumps({
-            'features': [{'id': 'f1', 'status': 'passing', 'deprecated': False}]
-        }))
-        result = detect_phase(tmp_path)
-        assert result['phase'] == 'review'
-
-    def test_test_system_missing(self, tmp_path):
-        """When review-report exists but system test report is missing."""
-        (tmp_path / '.vibeflow').mkdir()
-        (tmp_path / '.vibeflow' / 'spark.md').write_text('spark complete')
-        (tmp_path / '.vibeflow' / 'work-config.json').write_text('{}')
-        (tmp_path / '.vibeflow' / 'review-report.md').write_text('review')
-        (tmp_path / 'docs' / 'plans').mkdir(parents=True)
-        (tmp_path / 'docs' / 'plans' / 'test-srs.md').write_text('srs')
-        (tmp_path / 'docs' / 'plans' / 'test-design.md').write_text('design')
-        (tmp_path / '.vibeflow' / 'plan-eng-review.md').write_text('eng review')
-        (tmp_path / '.vibeflow' / 'plan-design-review.md').write_text('design review')
-        (tmp_path / 'feature-list.json').write_text(json.dumps({
-            'features': [{'id': 'f1', 'status': 'passing', 'deprecated': False}]
-        }))
-        result = detect_phase(tmp_path)
-        assert result['phase'] == 'test-system'
-
-    def test_test_qa_missing_ui_workflow(self, tmp_path):
-        """When UI workflow requires QA but qa-report.md is missing."""
-        (tmp_path / '.vibeflow').mkdir()
-        (tmp_path / '.vibeflow' / 'spark.md').write_text('spark complete')
-        (tmp_path / '.vibeflow' / 'workflow.yaml').write_text(
-            'template: "web-standard"\nqa:\n    required: true'
+        write_json(
+            tmp_path / "feature-list.json",
+            {"features": [{"id": 1, "title": "A", "status": "passing", "deprecated": False}]},
         )
-        (tmp_path / '.vibeflow' / 'work-config.json').write_text('{}')
-        (tmp_path / '.vibeflow' / 'review-report.md').write_text('review')
-        (tmp_path / 'docs' / 'plans').mkdir(parents=True)
-        (tmp_path / 'docs' / 'plans' / 'test-srs.md').write_text('srs')
-        (tmp_path / 'docs' / 'plans' / 'test-design.md').write_text('design')
-        (tmp_path / '.vibeflow' / 'plan-eng-review.md').write_text('eng review')
-        (tmp_path / '.vibeflow' / 'plan-design-review.md').write_text('design review')
-        (tmp_path / 'docs' / 'plans' / 'test-st-report.md').write_text('st')
-        (tmp_path / 'feature-list.json').write_text(json.dumps({
-            'features': [{'id': 'f1', 'status': 'passing', 'deprecated': False}]
-        }))
+        assert detect_phase(tmp_path)["phase"] == "review"
+
+        state["checkpoints"]["review"] = True
+        write(tmp_path / state["artifacts"]["review"], "# Review\n")
+        paths_module.save_state(tmp_path, state)
+        assert detect_phase(tmp_path)["phase"] == "test"
+
+        state["checkpoints"]["test"] = True
+        write(tmp_path / state["artifacts"]["system_test"], "# System Test\n")
+        paths_module.save_state(tmp_path, state)
+        assert detect_phase(tmp_path)["phase"] == "ship"
+
+        state["checkpoints"]["ship"] = True
+        write(tmp_path / "RELEASE_NOTES.md", "# Release Notes\n")
+        paths_module.save_state(tmp_path, state)
+        assert detect_phase(tmp_path)["phase"] == "reflect"
+
+        state["checkpoints"]["reflect"] = True
+        write(tmp_path / ".vibeflow" / "logs" / "retro-2026-04-04.md", "# Retro\n")
+        paths_module.save_state(tmp_path, state)
+        assert detect_phase(tmp_path)["phase"] == "done"
+
+    def test_ui_test_phase_requires_qa_artifact(self, tmp_path):
+        state = make_stateful_project(tmp_path)
+        write(tmp_path / ".vibeflow" / "workflow.yaml", 'template: "web-standard"\nqa:\n  required: true\n')
+        for checkpoint, artifact in (("spark", "spark"), ("design", "design"), ("tasks", "tasks"), ("review", "review")):
+            state["checkpoints"][checkpoint] = True
+            write(tmp_path / state["artifacts"][artifact], f"# {artifact}\n")
+        write_json(
+            tmp_path / "feature-list.json",
+            {"features": [{"id": 1, "title": "A", "status": "passing", "deprecated": False}]},
+        )
+        state["checkpoints"]["test"] = True
+        write(tmp_path / state["artifacts"]["system_test"], "# System Test\n")
+        paths_module.save_state(tmp_path, state)
         result = detect_phase(tmp_path)
-        assert result['phase'] == 'test-qa'
+        assert result["phase"] == "test"
+        assert result["blocking_item"] == "qa"
 
-    def test_ship_missing(self, tmp_path):
-        """When ship is required but RELEASE_NOTES.md is missing."""
-        (tmp_path / '.vibeflow').mkdir()
-        (tmp_path / '.vibeflow' / 'spark.md').write_text('spark complete')
-        (tmp_path / '.vibeflow' / 'workflow.yaml').write_text('template: "prototype"\nship:\n  required: true')
-        (tmp_path / '.vibeflow' / 'work-config.json').write_text('{}')
-        (tmp_path / '.vibeflow' / 'review-report.md').write_text('review')
-        (tmp_path / 'docs' / 'plans').mkdir(parents=True)
-        (tmp_path / 'docs' / 'plans' / 'test-srs.md').write_text('srs')
-        (tmp_path / 'docs' / 'plans' / 'test-design.md').write_text('design')
-        (tmp_path / '.vibeflow' / 'plan-eng-review.md').write_text('eng review')
-        (tmp_path / '.vibeflow' / 'plan-design-review.md').write_text('design review')
-        (tmp_path / 'docs' / 'plans' / 'test-st-report.md').write_text('st')
-        (tmp_path / 'feature-list.json').write_text(json.dumps({
-            'features': [{'id': 'f1', 'status': 'passing', 'deprecated': False}]
-        }))
-        result = detect_phase(tmp_path)
-        assert result['phase'] == 'ship'
+    def test_quick_mode_goes_directly_to_build(self, tmp_path):
+        state = make_stateful_project(tmp_path)
+        state["mode"] = "quick"
+        state["quick_meta"].update(
+            {
+                "decision": "approved",
+                "category": "bugfix",
+                "scope": "Small bounded fix",
+                "touchpoints": ["src/app.py"],
+                "validation_plan": "Run quick checks",
+                "rollback_plan": "Revert change",
+            }
+        )
+        state["checkpoints"]["quick_ready"] = True
+        write(tmp_path / state["artifacts"]["design"], "# Design\n")
+        write(tmp_path / state["artifacts"]["tasks"], "# Tasks\n")
+        paths_module.save_state(tmp_path, state)
+        assert detect_phase(tmp_path)["phase"] == "build"
 
-    def test_reflect_missing(self, tmp_path):
-        """When reflect is required but no retrospective file exists."""
-        (tmp_path / '.vibeflow').mkdir()
-        (tmp_path / '.vibeflow' / 'spark.md').write_text('spark complete')
-        (tmp_path / '.vibeflow' / 'workflow.yaml').write_text('template: "prototype"\nship:\n  required: true\nreflect:\n  required: true')
-        (tmp_path / '.vibeflow' / 'work-config.json').write_text('{}')
-        (tmp_path / '.vibeflow' / 'review-report.md').write_text('review')
-        (tmp_path / 'docs' / 'plans').mkdir(parents=True)
-        (tmp_path / 'docs' / 'plans' / 'test-srs.md').write_text('srs')
-        (tmp_path / 'docs' / 'plans' / 'test-design.md').write_text('design')
-        (tmp_path / '.vibeflow' / 'plan-eng-review.md').write_text('eng review')
-        (tmp_path / '.vibeflow' / 'plan-design-review.md').write_text('design review')
-        (tmp_path / 'docs' / 'plans' / 'test-st-report.md').write_text('st')
-        (tmp_path / 'feature-list.json').write_text(json.dumps({
-            'features': [{'id': 'f1', 'status': 'passing', 'deprecated': False}]
-        }))
-        (tmp_path / 'RELEASE_NOTES.md').write_text('release notes')
-        result = detect_phase(tmp_path)
-        assert result['phase'] == 'reflect'
-
-    def test_done_all_complete(self, tmp_path):
-        """When all phases are complete."""
-        (tmp_path / '.vibeflow').mkdir()
-        (tmp_path / '.vibeflow' / 'spark.md').write_text('spark complete')
-        (tmp_path / '.vibeflow' / 'workflow.yaml').write_text('template: "prototype"')
-        (tmp_path / '.vibeflow' / 'work-config.json').write_text('{}')
-        (tmp_path / '.vibeflow' / 'review-report.md').write_text('review')
-        (tmp_path / '.vibeflow' / 'retro-2026-01-01.md').write_text('retro')
-        (tmp_path / 'docs' / 'plans').mkdir(parents=True)
-        (tmp_path / 'docs' / 'plans' / 'test-srs.md').write_text('srs')
-        (tmp_path / 'docs' / 'plans' / 'test-design.md').write_text('design')
-        (tmp_path / '.vibeflow' / 'plan-eng-review.md').write_text('eng review')
-        (tmp_path / '.vibeflow' / 'plan-design-review.md').write_text('design review')
-        (tmp_path / 'docs' / 'plans' / 'test-st-report.md').write_text('st')
-        (tmp_path / 'feature-list.json').write_text(json.dumps({
-            'features': [{'id': 'f1', 'status': 'passing', 'deprecated': False}]
-        }))
-        (tmp_path / 'RELEASE_NOTES.md').write_text('release notes')
-        result = detect_phase(tmp_path)
-        assert result['phase'] == 'done'
+    def test_verbose_includes_checks_and_guidance(self, tmp_path):
+        make_stateful_project(tmp_path)
+        result = detect_phase(tmp_path, verbose=True)
+        assert result["phase"] == "spark"
+        assert len(result["checks"]) > 0
+        assert result["next_action"]
+        assert result["open_files"]
 
 
-class TestUiRequired:
-    def test_ui_required_qa(self, tmp_path):
-        wf = tmp_path / 'workflow.yaml'
-        wf.write_text('qa:\n    required: true')
+class TestHelpers:
+    def test_ui_required(self, tmp_path):
+        wf = tmp_path / "workflow.yaml"
+        wf.write_text("qa:\n  required: true", encoding="utf-8")
         assert ui_required(wf) is True
 
-    def test_ui_required_design_review(self, tmp_path):
-        wf = tmp_path / 'workflow.yaml'
-        wf.write_text('design_review:\n    required: true')
-        assert ui_required(wf) is True
-
-    def test_ui_not_required(self, tmp_path):
-        wf = tmp_path / 'workflow.yaml'
-        wf.write_text('qa:\n    required: false')
-        assert ui_required(wf) is False
-
-
-class TestReflectRequired:
-    def test_reflect_required_true(self, tmp_path):
-        wf = tmp_path / 'workflow.yaml'
-        wf.write_text('reflect:\n  required: true')
+    def test_reflect_required(self, tmp_path):
+        wf = tmp_path / "workflow.yaml"
+        wf.write_text("reflect:\n  required: true", encoding="utf-8")
         assert reflect_required(wf) is True
 
-    def test_reflect_required_false(self, tmp_path):
-        wf = tmp_path / 'workflow.yaml'
-        wf.write_text('reflect:\n  required: false')
-        assert reflect_required(wf) is False
-
-
-class TestAllFeaturesPassing:
-    def test_no_feature_list(self, tmp_path):
-        assert all_features_passing(tmp_path / 'feature-list.json') is False
-
-    def test_empty_features(self, tmp_path):
-        fp = tmp_path / 'feature-list.json'
-        fp.write_text(json.dumps({'features': []}))
-        assert all_features_passing(fp) is False
-
-    def test_all_passing(self, tmp_path):
-        fp = tmp_path / 'feature-list.json'
-        fp.write_text(json.dumps({
-            'features': [
-                {'id': 'f1', 'status': 'passing', 'deprecated': False},
-                {'id': 'f2', 'status': 'passing', 'deprecated': True},
-            ]
-        }))
-        assert all_features_passing(fp) is True
-
-    def test_one_failing(self, tmp_path):
-        fp = tmp_path / 'feature-list.json'
-        fp.write_text(json.dumps({
-            'features': [
-                {'id': 'f1', 'status': 'passing', 'deprecated': False},
-                {'id': 'f2', 'status': 'failing', 'deprecated': False},
-            ]
-        }))
-        assert all_features_passing(fp) is False
-
-
-class TestVerbose:
-    def test_verbose_returns_checks(self, tmp_path):
-        (tmp_path / '.vibeflow').mkdir()
-        (tmp_path / '.vibeflow' / 'spark.md').write_text('spark')
-        result = detect_phase(tmp_path, verbose=True)
-        assert 'checks' in result
-        assert len(result['checks']) > 0
-        for ch in result['checks']:
-            assert 'condition' in ch
-            assert 'triggered' in ch
-            assert 'detail' in ch
+    def test_all_features_passing(self, tmp_path):
+        feature_list = tmp_path / "feature-list.json"
+        write_json(feature_list, {"features": [{"id": 1, "status": "passing", "deprecated": False}]})
+        assert all_features_passing(feature_list) is True

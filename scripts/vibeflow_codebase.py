@@ -460,7 +460,7 @@ def ensure_codebase_map(
 
 def read_change_sources(project_root: Path, change_root: Path) -> tuple[dict[str, str], str]:
     files = {
-        "context": change_root / "context.md",
+        "brief": change_root / "brief.md",
         "proposal": change_root / "proposal.md",
         "requirements": change_root / "requirements.md",
         "design": change_root / "design.md",
@@ -594,7 +594,7 @@ def build_change_impact(project_root: Path, state: dict, codebase_map: dict, *, 
         "version": IMPACT_VERSION,
         "change_id": str(active_change.get("id") or project_root.name),
         "generated_at": now_iso(),
-        "source_docs": [str(path) for path in (resolved_change_root / name for name in ("context.md", "proposal.md", "requirements.md", "design.md", "tasks.md")) if path.exists()],
+        "source_docs": [str(path) for path in (resolved_change_root / name for name in ("brief.md", "proposal.md", "requirements.md", "design.md", "tasks.md")) if path.exists()],
         "matched_terms": terms,
         "relevant_modules": relevant_modules,
         "integration_points": integration_points[:8],

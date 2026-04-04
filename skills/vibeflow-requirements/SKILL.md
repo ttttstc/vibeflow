@@ -33,7 +33,7 @@ description: "SRS 文档不存在且无设计文档时使用 — 通过结构化
 ## 步骤 1：探索上下文
 
 1. 通读用户提供的需求文档 / 想法描述
-2. 运行 `python scripts/get-vibeflow-paths.py --json`，读取 `docs/changes/<change-id>/context.md` 获取问题定义和边界
+2. 运行 `python scripts/get-vibeflow-paths.py --json`，读取 `docs/changes/<change-id>/brief.md` 获取问题定义和边界
 3. 阅读 `.vibeflow/workflow.yaml` 了解所选模板的严格度级别
 4. 如是现有项目改动，先运行 `python scripts/map-change-impact.py --project-root . --source requirements`，读取：
    - `docs/changes/<change-id>/codebase-impact.md`

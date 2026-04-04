@@ -6,6 +6,7 @@ The refactor keeps VibeFlow file-driven, but separates:
 - internal state under .vibeflow/
 - change artifacts under docs/changes/<change-id>/
 - build execution state in feature-list.json
+- architecture specs under docs/architecture/
 
 This module is intentionally lightweight so both scripts and tests can import it.
 """
@@ -93,26 +94,29 @@ def default_state(project_root: Path, topic: str | None = None) -> dict:
             "root": change_root,
         },
         "artifacts": {
-            "spark": f"{change_root}/context.md",
-            "requirements": f"{change_root}/requirements.md",
+            "spark": f"{change_root}/brief.md",
+            "requirements": f"{change_root}/brief.md",
             "ucd": f"{change_root}/ucd.md",
             "design": f"{change_root}/design.md",
-            "design_review": f"{change_root}/design-review.md",
+            "design_review": f"{change_root}/design.md",
             "tasks": f"{change_root}/tasks.md",
             "review": f"{change_root}/verification/review.md",
             "system_test": f"{change_root}/verification/system-test.md",
             "qa": f"{change_root}/verification/qa.md",
         },
+        "phase_history": [],
         "checkpoints": {
             "quick_ready": False,
             "spark": False,
-            "requirements": False,
             "design": False,
+            "tasks": False,
+            "build": False,
             "build_init": False,
             "tasks": False,
             "build_config": False,
             "build_work": False,
             "review": False,
+            "test": False,
             "test_system": False,
             "test_qa": False,
             "ship": False,
@@ -140,26 +144,21 @@ def default_state(project_root: Path, topic: str | None = None) -> dict:
             "manual_only": [
                 "increment",
                 "spark",
-                "requirements",
                 "design",
                 "tasks",
                 "quick",
             ],
             "auto_runnable": [
-                "build-init",
-                "build-config",
-                "build-work",
+                "build",
                 "review",
-                "test-system",
-                "test-qa",
+                "test",
                 "ship",
                 "reflect",
             ],
             "retryable": [
-                "build-work",
+                "build",
                 "review",
-                "test-system",
-                "test-qa",
+                "test",
             ],
         },
     }
@@ -176,10 +175,6 @@ def workflow_path(project_root: Path) -> Path:
         if candidate.exists():
             return candidate
     return state_root / "workflow.yaml"
-
-
-def work_config_path(project_root: Path) -> Path:
-    return project_root / ".vibeflow" / "work-config.json"
 
 
 def policy_path(project_root: Path) -> Path:
@@ -206,24 +201,12 @@ def overview_project_path(project_root: Path) -> Path:
     return overview_root(project_root) / "PROJECT.md"
 
 
-def overview_product_path(project_root: Path) -> Path:
-    return overview_root(project_root) / "PRODUCT.md"
-
-
 def overview_architecture_path(project_root: Path) -> Path:
     return overview_root(project_root) / "ARCHITECTURE.md"
 
 
 def overview_current_state_path(project_root: Path) -> Path:
     return overview_root(project_root) / "CURRENT-STATE.md"
-
-
-def phase_history_path(project_root: Path) -> Path:
-    return project_root / ".vibeflow" / "phase-history.json"
-
-
-def runtime_path(project_root: Path) -> Path:
-    return project_root / ".vibeflow" / "runtime.json"
 
 
 def increments_dir(project_root: Path) -> Path:
@@ -262,12 +245,8 @@ def project_rules_dir(project_root: Path) -> Path:
     return project_root / "rules"
 
 
-def build_packets_root(project_root: Path) -> Path:
-    return project_root / ".vibeflow" / "packets"
-
-
-def build_packet_results_root(project_root: Path) -> Path:
-    return project_root / ".vibeflow" / "subagent-results"
+def build_reports_dir(project_root: Path) -> Path:
+    return project_root / ".vibeflow" / "build-reports"
 
 
 def codebase_map_json_path(project_root: Path) -> Path:
@@ -292,28 +271,9 @@ def resolve_artifact_path(project_root: Path, state: dict, key: str) -> Path:
     rel = artifacts.get(key)
     if rel:
         return project_root / Path(rel)
+    if key == "spark":
+        return change_root(project_root, state) / "brief.md"
     return change_root(project_root, state) / f"{key}.md"
-
-
-def packet_namespace(project_root: Path, state: dict) -> str:
-    active = state.get("active_change") or {}
-    return str(active.get("id") or default_change_id())
-
-
-def build_packets_dir(project_root: Path, state: dict) -> Path:
-    return build_packets_root(project_root) / packet_namespace(project_root, state)
-
-
-def build_packet_path(project_root: Path, state: dict, feature_id: int | str) -> Path:
-    return build_packets_dir(project_root, state) / f"feature-{feature_id}.json"
-
-
-def build_packet_results_dir(project_root: Path, state: dict) -> Path:
-    return build_packet_results_root(project_root) / packet_namespace(project_root, state)
-
-
-def build_packet_result_path(project_root: Path, state: dict, feature_id: int | str) -> Path:
-    return build_packet_results_dir(project_root, state) / f"feature-{feature_id}.json"
 
 
 def codebase_impact_json_path(project_root: Path, state: dict) -> Path:
@@ -328,33 +288,31 @@ def path_contract(project_root: Path, state: dict | None = None) -> dict:
     loaded_state = state or load_state(project_root)
     return {
         "state": state_path(project_root),
-        "runtime": runtime_path(project_root),
         "policy": policy_path(project_root),
         "workflow": workflow_path(project_root),
-        "work_config": work_config_path(project_root),
         "feature_list": feature_list_path(project_root),
         "release_notes": release_notes_path(project_root),
         "overview_root": overview_root(project_root),
         "overview": {
             "readme": overview_readme_path(project_root),
             "project": overview_project_path(project_root),
-            "product": overview_product_path(project_root),
             "architecture": overview_architecture_path(project_root),
             "current_state": overview_current_state_path(project_root),
         },
-        "phase_history": phase_history_path(project_root),
         "increment_queue": increment_queue_path(project_root),
         "increment_history": increment_history_path(project_root),
         "increment_requests_dir": increment_requests_dir(project_root),
         "session_log": session_log_path(project_root),
         "build_guide": build_guide_path(project_root),
         "services_guide": services_guide_path(project_root),
+        "build_reports_dir": build_reports_dir(project_root),
         "rules_dir": project_rules_dir(project_root),
         "change_root": change_root(project_root, loaded_state),
-        "packets_dir": build_packets_dir(project_root, loaded_state),
-        "packet_results_dir": build_packet_results_dir(project_root, loaded_state),
         "codebase_map_json": codebase_map_json_path(project_root),
         "codebase_map_md": codebase_map_md_path(project_root),
+        "spec_facts": project_root / "docs" / "architecture" / ".spec-facts.json",
+        "spec_inferences": project_root / "docs" / "architecture" / ".spec-inferences.json",
+        "spec_architecture": project_root / "docs" / "architecture" / "full-spec.md",
         "codebase_impact_json": codebase_impact_json_path(project_root, loaded_state),
         "codebase_impact_md": codebase_impact_md_path(project_root, loaded_state),
         "artifacts": {
@@ -432,25 +390,25 @@ def default_policy() -> dict:
                 "completion_evidence": ["artifact:spark"],
                 "blocking_conditions": [],
             },
-            "requirements": {
-                "required_artifacts": ["requirements"],
-                "required_checkpoints": [],
-                "required_approvals": ["requirements"],
-                "completion_evidence": ["artifact:requirements"],
-                "blocking_conditions": [],
-            },
             "design": {
-                "required_artifacts": ["design", "design_review"],
+                "required_artifacts": ["design"],
                 "required_checkpoints": [],
                 "required_approvals": ["design"],
-                "completion_evidence": ["artifact:design", "artifact:design_review"],
+                "completion_evidence": ["artifact:design"],
                 "blocking_conditions": [],
             },
-            "build-init": {
-                "required_artifacts": ["feature_list"],
+            "tasks": {
+                "required_artifacts": ["tasks"],
                 "required_checkpoints": [],
+                "required_approvals": ["tasks"],
+                "completion_evidence": ["artifact:tasks"],
+                "blocking_conditions": [],
+            },
+            "build": {
+                "required_artifacts": ["tasks"],
+                "required_checkpoints": ["tasks"],
                 "required_approvals": [],
-                "completion_evidence": ["active_features", "build_init_ready_signal"],
+                "completion_evidence": [],
                 "blocking_conditions": [],
             },
             "tasks": {
@@ -467,10 +425,10 @@ def default_policy() -> dict:
                 "completion_evidence": ["artifact:review"],
                 "blocking_conditions": [],
             },
-            "test-system": {
+            "test": {
                 "required_artifacts": ["system_test"],
                 "required_checkpoints": [],
-                "required_approvals": ["test_system"],
+                "required_approvals": ["test"],
                 "completion_evidence": ["artifact:system_test"],
                 "blocking_conditions": [],
             },
@@ -479,6 +437,20 @@ def default_policy() -> dict:
                 "required_checkpoints": [],
                 "required_approvals": ["ship"],
                 "completion_evidence": ["release_notes_exists"],
+                "blocking_conditions": [],
+            },
+            "reflect": {
+                "required_artifacts": [],
+                "required_checkpoints": [],
+                "required_approvals": ["reflect"],
+                "completion_evidence": [],
+                "blocking_conditions": [],
+            },
+            "done": {
+                "required_artifacts": [],
+                "required_checkpoints": [],
+                "required_approvals": [],
+                "completion_evidence": ["all_phases_complete"],
                 "blocking_conditions": [],
             },
         },
@@ -609,10 +581,8 @@ def default_runtime() -> dict:
 
 
 def load_runtime(project_root: Path) -> dict:
-    path = runtime_path(project_root)
-    if not path.exists():
-        return default_runtime()
-    data = json.loads(path.read_text(encoding="utf-8"))
+    state = load_state(project_root)
+    data = state.get("runtime") or {}
     merged = default_runtime()
     merged.update(
         {
@@ -631,15 +601,14 @@ def load_runtime(project_root: Path) -> dict:
 
 
 def save_runtime(project_root: Path, runtime: dict) -> Path:
-    path = runtime_path(project_root)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(runtime, indent=2, ensure_ascii=False), encoding="utf-8")
-    return path
+    state = ensure_state(project_root)
+    state["runtime"] = deepcopy(runtime)
+    return save_state(project_root, state)
 
 
 def ensure_runtime(project_root: Path) -> dict:
-    path = runtime_path(project_root)
-    if path.exists():
+    state = ensure_state(project_root)
+    if isinstance(state.get("runtime"), dict):
         return load_runtime(project_root)
     runtime = default_runtime()
     save_runtime(project_root, runtime)
@@ -785,7 +754,7 @@ def mark_quick_approved(
 
 def promote_quick_to_full(state: dict, reason: str = "", project_root: Path | None = None) -> None:
     state["mode"] = "full"
-    state["current_phase"] = "think"
+    state["current_phase"] = "spark"
     set_checkpoint(state, "quick_ready", False)
 
     meta = quick_meta(state)
@@ -796,21 +765,18 @@ def promote_quick_to_full(state: dict, reason: str = "", project_root: Path | No
 
     for checkpoint in (
         "spark",
-        "requirements",
         "design",
-        "build_init",
-        "build_config",
-        "build_work",
+        "tasks",
+        "build",
         "review",
-        "test_system",
-        "test_qa",
+        "test",
         "ship",
         "reflect",
     ):
         set_checkpoint(state, checkpoint, False)
 
     if project_root is not None:
-        for artifact in (feature_list_path(project_root), work_config_path(project_root)):
+        for artifact in (feature_list_path(project_root),):
             if artifact.exists():
                 artifact.unlink()
 
@@ -819,11 +785,11 @@ def update_active_change(state: dict, change_id: str) -> None:
     root = f"docs/changes/{change_id}"
     state["active_change"] = {"id": change_id, "root": root}
     state["artifacts"] = {
-        "spark": f"{root}/context.md",
-        "requirements": f"{root}/requirements.md",
+        "spark": f"{root}/brief.md",
+        "requirements": f"{root}/brief.md",
         "ucd": f"{root}/ucd.md",
         "design": f"{root}/design.md",
-        "design_review": f"{root}/design-review.md",
+        "design_review": f"{root}/design.md",
         "tasks": f"{root}/tasks.md",
         "review": f"{root}/verification/review.md",
         "system_test": f"{root}/verification/system-test.md",
@@ -832,12 +798,11 @@ def update_active_change(state: dict, change_id: str) -> None:
 
 
 def append_phase_history(project_root: Path, entry: dict) -> Path:
-    path = phase_history_path(project_root)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    if path.exists():
-        history = json.loads(path.read_text(encoding="utf-8"))
-    else:
+    state = load_state(project_root)
+    history = state.setdefault("phase_history", [])
+    if not isinstance(history, list):
         history = []
+        state["phase_history"] = history
     history.append(deepcopy(entry))
-    path.write_text(json.dumps(history, indent=2, ensure_ascii=False), encoding="utf-8")
-    return path
+    save_state(project_root, state)
+    return state_path(project_root)

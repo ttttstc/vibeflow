@@ -13,10 +13,18 @@ $phaseScript = Join-Path $pluginRoot 'scripts\get-vibeflow-phase.py'
 $phaseInfo = if (Test-Path $phaseScript) {
     python $phaseScript --project-root $pluginRoot --json | ConvertFrom-Json
 } else {
-    [pscustomobject]@{ phase = 'think'; reason = 'Phase script missing.' }
+    [pscustomobject]@{ phase = 'spark'; reason = 'Phase script missing.' }
 }
 
-$statusHint = "`n`nDetected phase: $($phaseInfo.phase). Reason: $($phaseInfo.reason)"
+$openFiles = ""
+if ($phaseInfo.open_files) {
+    $openFiles = ($phaseInfo.open_files -join "`n- ")
+    if ($openFiles) {
+        $openFiles = "`nOpen these first:`n- $openFiles"
+    }
+}
+
+$statusHint = "`n`nDetected phase: $($phaseInfo.phase). Reason: $($phaseInfo.reason)`nResume mode: $($phaseInfo.resume_mode)`nNext action: $($phaseInfo.next_action)$openFiles"
 
 $sessionContext = @"
 <EXTREMELY_IMPORTANT>

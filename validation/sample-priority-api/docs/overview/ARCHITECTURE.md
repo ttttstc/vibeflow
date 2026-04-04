@@ -18,7 +18,7 @@
 ## Delivery Files
 
 - `docs/overview/`: long-lived project context
-- `docs/changes/<change-id>/`: per-change requirements, design, tasks, and verification
+- `docs/changes/<change-id>/`: per-change context, design, tasks, and verification
 - `feature-list.json`: feature execution state
 - `.vibeflow/`: workflow state and internal execution files
 

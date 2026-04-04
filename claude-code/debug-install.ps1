@@ -96,7 +96,7 @@ $SkillsDir = Join-Path $TargetDir "skills"
 if (Test-Path $SkillsDir) {
     $skillCount = (Get-ChildItem $SkillsDir -Directory).Count
     Write-Host "   FOUND: $SkillsDir ($skillCount skills)" -ForegroundColor Green
-    $coreSkills = @("vibeflow", "vibeflow-router", "vibeflow-think", "vibeflow-plan", "vibeflow-design")
+    $coreSkills = @("vibeflow", "vibeflow-router", "vibeflow-spark", "vibeflow-design", "vibeflow-tasks")
     foreach ($skill in $coreSkills) {
         $skillPath = Join-Path $SkillsDir $skill
         if (Test-Path $skillPath) {

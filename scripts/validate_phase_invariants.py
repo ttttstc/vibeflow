@@ -15,42 +15,33 @@ from vibeflow_paths import checkpoint_done, load_policy, load_state, path_contra
 
 
 PHASE_LABELS = {
-    "think": "Think",
-    "plan": "Plan",
-    "requirements": "Requirements",
+    "spark": "Spark",
     "design": "Design",
-    "build-init": "Build init",
     "tasks": "Tasks",
+    "build": "Build",
     "review": "Review",
-    "test-system": "System test",
+    "test": "Test",
     "ship": "Ship",
 }
 
 ARTIFACT_LABELS = {
-    "think": "Think artifact",
-    "plan": "Plan artifact",
-    "requirements": "Requirements artifact",
+    "spark": "Spark artifact",
     "design": "Design artifact",
-    "design_review": "Design review artifact",
     "tasks": "Tasks artifact",
     "review": "Review artifact",
     "system_test": "System test artifact",
     "qa": "QA artifact",
     "feature_list": "feature-list.json",
-    "work_config": ".vibeflow/work-config.json",
     "release_notes": "RELEASE_NOTES.md",
 }
 
 CHECKPOINT_LABELS = {
-    "think": "think checkpoint",
-    "plan": "plan checkpoint",
-    "requirements": "requirements checkpoint",
+    "spark": "spark checkpoint",
     "design": "design checkpoint",
-    "build_init": "build-init checkpoint",
     "tasks": "tasks checkpoint",
+    "build": "build checkpoint",
     "review": "review checkpoint",
-    "test_system": "test-system checkpoint",
-    "test_qa": "test-qa checkpoint",
+    "test": "test checkpoint",
     "ship": "ship checkpoint",
     "reflect": "reflect checkpoint",
 }
@@ -61,9 +52,21 @@ BLOCKING_LABELS = {
 
 EVIDENCE_LABELS = {
     "active_features": "active features declared in feature-list.json",
-    "build_init_ready_signal": "build-init readiness signal",
     "release_notes_exists": "release notes file",
+    "all_phases_complete": "all required phases complete",
 }
+
+
+def _workflow_text(path: Path) -> str:
+    return path.read_text(encoding="utf-8") if path.exists() else ""
+
+
+def _workflow_requires(workflow_path: Path, phase_name: str) -> bool:
+    content = _workflow_text(workflow_path)
+    return (
+        (f"{phase_name}:\n  required: true" in content)
+        or (f"{phase_name}:\n    required: true" in content)
+    )
 
 
 def _load_feature_payload(feature_list_path: Path) -> dict:
@@ -78,24 +81,9 @@ def has_active_features(feature_list_path: Path) -> bool:
     return bool(features)
 
 
-def build_packets_ready(feature_list_path: Path, packets_dir: Path) -> bool:
-    data = _load_feature_payload(feature_list_path)
-    features = [feature for feature in data.get("features", []) if not feature.get("deprecated")]
-    if not features:
-        return False
-    for feature in features:
-        feature_id = feature.get("id")
-        if feature_id is None:
-            continue
-        if not (packets_dir / f"feature-{feature_id}.json").exists():
-            return False
-    return True
-
-
 def artifact_lookup(contract: dict) -> dict[str, Path]:
     lookup = dict(contract["artifacts"])
     lookup["feature_list"] = contract["feature_list"]
-    lookup["work_config"] = contract["work_config"]
     lookup["release_notes"] = contract["release_notes"]
     return lookup
 
@@ -138,21 +126,22 @@ def evaluate_evidence(evidence: str, *, state: dict, contract: dict) -> tuple[bo
         ok = has_active_features(contract["feature_list"])
         return ok, "feature-list.json has active features." if ok else "feature-list.json has no active features."
 
-    if evidence == "build_init_ready_signal":
-        ok = (
-            checkpoint_done(state, "build_init")
-            or contract["work_config"].exists()
-            or build_packets_ready(contract["feature_list"], contract["packets_dir"])
-        )
-        return ok, (
-            "build-init readiness signal is present."
-            if ok
-            else "build-init readiness signal is missing (need build_init checkpoint, work-config, or packets)."
-        )
-
     if evidence == "release_notes_exists":
         ok = contract["release_notes"].exists()
         return ok, "RELEASE_NOTES.md exists." if ok else "RELEASE_NOTES.md is missing."
+
+    if evidence == "all_phases_complete":
+        checkpoints = state.get("checkpoints") or {}
+        required = ["spark", "design", "tasks", "build", "review", "test"]
+        if _workflow_requires(contract["workflow"], "ship"):
+            required.append("ship")
+        if _workflow_requires(contract["workflow"], "reflect"):
+            required.append("reflect")
+        missing = [name for name in required if not checkpoint_done(state, name)]
+        ok = not missing
+        if ok:
+            return True, "all required checkpoints are complete."
+        return False, f"missing checkpoints: {', '.join(missing)}."
 
     return False, f"unknown evidence '{evidence}' is not satisfied."
 

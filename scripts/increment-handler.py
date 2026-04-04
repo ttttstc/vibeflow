@@ -46,12 +46,10 @@ LEGACY_REQUEST_PATTERNS = [
     ".vibeflow/increment_request_{id}.json",
 ]
 CHECKPOINT_ORDER = [
-    "think",
-    "plan",
-    "requirements",
+    "spark",
     "design",
-    "build_init",
     "tasks",
+    "build_init",
     "build_config",
     "build_work",
     "review",
@@ -236,8 +234,8 @@ def resolve_doc_target(project_root: Path, doc_type: str) -> Path | None:
         state = load_state(project_root)
         contract = path_contract(project_root, state)
         artifact_map = {
-            "proposal": contract["artifacts"]["plan"],
-            "plan": contract["artifacts"]["plan"],
+            "proposal": contract["artifacts"]["spark"],
+            "plan": contract["artifacts"]["spark"],
             "requirements": contract["artifacts"]["requirements"],
             "srs": contract["artifacts"]["requirements"],
             "ucd": contract["artifacts"]["ucd"],
@@ -317,16 +315,13 @@ def update_state_after_increment(project_root: Path, inc: dict, result: str) -> 
         reset_downstream_checkpoints(state, "build_work")
         next_phase = "build-work"
     elif inc_type == "update_doc":
-        if doc_type in {"proposal", "plan"}:
-            reset_downstream_checkpoints(state, "plan")
-            next_phase = "plan"
-        elif doc_type in {"requirements", "srs"}:
-            reset_downstream_checkpoints(state, "requirements")
-            next_phase = "requirements"
+        if doc_type in {"proposal", "plan", "requirements", "srs"}:
+            reset_downstream_checkpoints(state, "spark")
+            next_phase = "spark"
         elif doc_type in {"design", "ucd", "design_review"}:
             reset_downstream_checkpoints(state, "design")
             next_phase = "design"
-        elif doc_type in {"tasks", "delivery_plan"}:
+        elif doc_type in {"tasks"}:
             reset_downstream_checkpoints(state, "tasks")
             next_phase = "tasks"
         elif doc_type in {"review"}:
