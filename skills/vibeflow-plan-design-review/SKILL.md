@@ -337,7 +337,7 @@ If any below 8: note what's unresolved and why (user chose to defer).
 ## 集成
 
 **调用者：** vibeflow-design（design 阶段 Step 5.2，用户审批 + eng review 之后执行）
-**依赖：** `docs/changes/<change-id>/design.md`（设计文档）、`.vibeflow/workflow.yaml`、`docs/changes/<change-id>/context.md`
+**依赖：** `docs/changes/<change-id>/design.md`（设计文档）、`.vibeflow/workflow.yaml`、`docs/changes/<change-id>/brief.md`
 **产出：** `docs/changes/<change-id>/design-review.md`（Design Review 小节）
 **Gate：** 评审为设计建议性质，但发现的关键设计缺陷影响 scope decision
 **链接到：** scope decision（design 阶段 Step 6）

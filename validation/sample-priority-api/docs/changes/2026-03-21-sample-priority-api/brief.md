@@ -1,4 +1,4 @@
-# Think Output
+# Spark Brief
 
 ## Problem Statement
 The sample project should prove that VibeFlow can take a small backend-style deliverable from idea to shipped artifacts without relying on a UI flow. The deliverable is a Python module that normalizes work-item priorities and returns a deterministic summary report for downstream automation.
@@ -8,7 +8,7 @@ The sample project should prove that VibeFlow can take a small backend-style del
 - A tiny Python package with deterministic business logic
 - Unit tests and one system-level end-to-end test path
 - Requirements, design, feature inventory, release notes, and retrospective artifacts
-- Workflow validation through Think, Plan, Build, Test, Ship, and Reflect outputs
+- Workflow validation through Spark, Design, Tasks, Build, Test, Ship, and Reflect outputs
 
 ### Out of Scope
 - Network server runtime
@@ -36,4 +36,5 @@ The sample project should prove that VibeFlow can take a small backend-style del
 
 ## Recommended Template
 api-standard
-Reason: the sample project is backend-oriented, has no UI, and still benefits from full requirements, design, build, system test, ship, and optional reflect artifacts.
+
+Reason: the sample project is backend-oriented, has no UI, and still benefits from full design, task, build, system test, ship, and optional reflect artifacts.

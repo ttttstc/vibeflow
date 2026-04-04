@@ -21,12 +21,9 @@ from vibeflow_paths import load_runtime, load_state, path_contract  # noqa: E402
 
 
 ARTIFACT_DESCRIPTIONS = {
-    "think": "当前上下文，说明这次工作的起点、边界和目标。",
-    "plan": "方案提案，说明为什么做、范围是什么。",
-    "requirements": "正式需求定义，后续设计和测试都要对齐它。",
+    "spark": "当前上下文，说明这次工作的起点、边界和目标。",
     "ucd": "用户体验说明，用于 UI 或交互细节校准。",
     "design": "实现方案，解释怎么接到当前系统里。",
-    "design_review": "设计评审结论，记录工程和设计视角的反馈。",
     "tasks": "执行清单，把实现工作拆成可落地任务。",
     "review": "全局审查结果，检查结构、风险和一致性。",
     "system_test": "系统测试结果，确认核心链路可跑通。",
@@ -35,13 +32,12 @@ ARTIFACT_DESCRIPTIONS = {
 }
 
 PHASE_GROUPS = [
-    ("think", "Think", ["think"]),
-    ("plan", "Plan", ["plan"]),
-    ("requirements", "Requirements", ["requirements"]),
+    ("spark", "Spark", ["spark"]),
     ("design", "Design", ["design"]),
-    ("build", "Build", ["build-init", "build-config", "build-work"]),
+    ("tasks", "Tasks", ["tasks"]),
+    ("build", "Build", ["build"]),
     ("review", "Review", ["review"]),
-    ("test", "Test", ["test-system", "test-qa"]),
+    ("test", "Test", ["test"]),
     ("ship", "Ship", ["ship"]),
     ("reflect", "Reflect", ["reflect"]),
 ]
@@ -55,17 +51,13 @@ def phase_index(phase: str) -> int:
     order = [
         "increment",
         "quick",
-        "think",
+        "spark",
         "template-selection",
-        "plan",
-        "requirements",
         "design",
-        "build-init",
-        "build-config",
-        "build-work",
+        "tasks",
+        "build",
         "review",
-        "test-system",
-        "test-qa",
+        "test",
         "ship",
         "reflect",
         "done",
@@ -106,16 +98,13 @@ def build_macro_status(
     current_idx = phase_index(current_phase)
 
     if macro_key == "build":
-        done = all(bool((state.get("checkpoints") or {}).get(key)) for key in ("build_init", "build_config", "build_work"))
-        phase_ids = {"build-init", "build-config", "build-work"}
+        done = bool((state.get("checkpoints") or {}).get("build"))
+        phase_ids = {"build"}
     elif macro_key == "test":
-        checkpoints = state.get("checkpoints") or {}
-        test_qa_done = True if not qa_required else bool(checkpoints.get("test_qa"))
-        done = bool(checkpoints.get("test_system")) and test_qa_done
-        phase_ids = {"test-system", "test-qa"}
+        done = bool((state.get("checkpoints") or {}).get("test"))
+        phase_ids = {"test"}
     else:
-        checkpoint_key = "test_system" if macro_key == "test-system" else macro_key
-        done = bool((state.get("checkpoints") or {}).get(checkpoint_key))
+        done = bool((state.get("checkpoints") or {}).get(macro_key))
         phase_ids = {macro_key}
 
     if macro_key == "ship" and not ship_required:
@@ -140,22 +129,11 @@ def build_macro_status(
 
 
 def build_subphase_status(phase: str, detect_info: dict, state: dict, runtime: dict, *, qa_required: bool, ship_required: bool, reflect_required: bool) -> str:
-    if phase == "test-qa" and not qa_required:
-        return "skipped"
     if phase == "ship" and not ship_required:
         return "skipped"
     if phase == "reflect" and not reflect_required:
         return "skipped"
-
-    checkpoint_map = {
-        "test-system": "test_system",
-        "test-qa": "test_qa",
-        "build-init": "build_init",
-        "build-config": "build_config",
-        "build-work": "build_work",
-    }
-    checkpoint_key = checkpoint_map.get(phase, phase)
-    if (state.get("checkpoints") or {}).get(checkpoint_key):
+    if (state.get("checkpoints") or {}).get(phase):
         return "completed"
     if detect_info["phase"] == phase:
         runtime_status = runtime.get("status")
@@ -266,7 +244,9 @@ def build_dashboard_snapshot(project_root: Path) -> dict:
         }
     )
 
-    phase_history = read_json(contract["phase_history"], [])
+    phase_history = state.get("phase_history") or []
+    if not isinstance(phase_history, list):
+        phase_history = []
     events = list(runtime.get("events") or [])
     for entry in phase_history[-30:]:
         events.append(
@@ -283,9 +263,7 @@ def build_dashboard_snapshot(project_root: Path) -> dict:
 
     token_parts = [
         str(file_mtime(contract["state"])),
-        str(file_mtime(contract["runtime"])),
         str(file_mtime(contract["feature_list"])),
-        str(file_mtime(contract["phase_history"])),
         str(file_mtime(contract["release_notes"])),
     ]
     token_parts.extend(str(file_mtime(path)) for path in contract["artifacts"].values())
@@ -306,7 +284,7 @@ def build_dashboard_snapshot(project_root: Path) -> dict:
         friendly_seed = ""
     friendly = friendly_seed or friendly_message_for_phase(
         current_phase,
-        status="waiting_manual" if current_phase in {"think", "plan", "requirements", "design", "quick"} else runtime_status,
+        status="waiting_manual" if current_phase in {"spark", "design", "tasks", "quick"} else runtime_status,
         detail=stop_reason,
     )
 

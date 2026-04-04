@@ -2,10 +2,10 @@
 
 **Date**: YYYY-MM-DD
 **Status**: Approved
-**SRS Reference**: docs/plans/YYYY-MM-DD-<topic>-srs.md
+**Context Reference**: docs/changes/<change-id>/context.md
 
 ## 1. Design Drivers
-[Key SRS inputs: NFR thresholds, constraints, interface requirements that shaped this design]
+[Key spark/context inputs: acceptance criteria, constraints, interface requirements, and scope boundaries that shaped this design]
 
 ## 2. Approach Selection
 [Selected approach with justification. Brief mention of alternatives considered.]
@@ -239,7 +239,7 @@ graph LR
 
 > **Instructions**: Break down features into implementation tasks, ordered by priority and dependency. This feeds directly into `feature-list.json` during Init phase.
 
-The table below is explanatory planning context. The executable handoff for Build is the `Build Contract` block plus every feature's `Implementation Contract` block above.
+The table below is explanatory planning context. The executable handoff for Build is the `Build Contract` block plus every feature's `Implementation Contract` block above. Execution-grade task blocks are generated separately in the `tasks` phase and saved to `docs/changes/<change-id>/tasks.md`.
 
 | Priority | Feature(s) | Dependencies | Milestone | Rationale |
 |---|---|---|---|---|

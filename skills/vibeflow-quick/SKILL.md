@@ -183,8 +183,8 @@ python scripts/promote-vibeflow-quick.py --reason "Scope is no longer safe for Q
 - 把路由切回 Full Mode 的最早缺失阶段
 
 通常会回到：
-- `think`
-- 或 `plan / requirements / design`
+- `spark`
+- 或 `design / tasks`
 
 具体取决于哪些 Full 产物还没补齐。
 

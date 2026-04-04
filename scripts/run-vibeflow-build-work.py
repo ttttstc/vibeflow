@@ -15,7 +15,7 @@ from vibeflow_automation import execute_phase  # noqa: E402
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Execute the VibeFlow build-work phase.")
+    parser = argparse.ArgumentParser(description="Execute the VibeFlow build phase.")
     parser.add_argument("--project-root", default=".")
     parser.add_argument("--max-workers", type=int, default=2)
     parser.add_argument("--serial", action="store_true")
@@ -24,7 +24,7 @@ def main():
 
     result = execute_phase(
         Path(args.project_root),
-        "build-work",
+        "build",
         parallel_build=not args.serial,
         max_workers=args.max_workers,
     )

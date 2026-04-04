@@ -2,17 +2,14 @@ name: "API Standard Engineering"
 template: "api-standard"
 created_at: "2026-03-21"
 
-think:
+spark:
   depth: "standard"
+  ceo_mode: "hold"
 
-plan:
+design:
   reviews:
     ceo: true
-  ceo_mode: "hold"
   specs:
-    - id: requirements
-      skill: "vibeflow-requirements"
-      required: true
     - id: ucd
       skill: "vibeflow-ucd"
       required: false
@@ -20,6 +17,13 @@ plan:
     - id: design
       skill: "vibeflow-design"
       required: true
+
+tasks:
+  skill: "vibeflow-tasks"
+  required: true
+  task_block_minutes:
+    min: 2
+    max: 5
 
 build:
   init_skill: "vibeflow-build-init"

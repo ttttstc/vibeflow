@@ -10,13 +10,25 @@ PHASE_SCRIPT="$PLUGIN_ROOT/scripts/get-vibeflow-phase.py"
 
 router_content=$(cat "$ROUTER_PATH" 2>/dev/null || echo "Error reading vibeflow-router skill.")
 
-phase_info=$(python "$PHASE_SCRIPT" --project-root "$PLUGIN_ROOT" --json 2>/dev/null || echo '{"phase":"think","reason":"Phase script missing."}')
+phase_info=$(python "$PHASE_SCRIPT" --project-root "$PLUGIN_ROOT" --json 2>/dev/null || echo '{"phase":"spark","reason":"Phase script missing."}')
 
 phase=$(echo "$phase_info" | python -c "import sys,json; print(json.load(sys.stdin).get('phase','unknown'))" 2>/dev/null || echo "unknown")
 reason=$(echo "$phase_info" | python -c "import sys,json; print(json.load(sys.stdin).get('reason',''))" 2>/dev/null || echo "")
 
+resume_mode=$(echo "$phase_info" | python -c "import sys,json; print(json.load(sys.stdin).get('resume_mode',''))" 2>/dev/null || echo "")
+next_action=$(echo "$phase_info" | python -c "import sys,json; print(json.load(sys.stdin).get('next_action',''))" 2>/dev/null || echo "")
+open_files=$(echo "$phase_info" | python -c "import sys,json; data=json.load(sys.stdin); print('\n- '.join(data.get('open_files',[])))" 2>/dev/null || echo "")
+
 status_hint="
-Detected phase: $phase. Reason: $reason"
+Detected phase: $phase. Reason: $reason
+Resume mode: $resume_mode
+Next action: $next_action"
+
+if [ -n "$open_files" ]; then
+  status_hint="$status_hint
+Open these first:
+- $open_files"
+fi
 
 session_context="<EXTREMELY_IMPORTANT>
 You are in a vibeflow project.
