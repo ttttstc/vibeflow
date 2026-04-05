@@ -57,19 +57,13 @@ VibeFlow 是一个面向 Claude Code 的 AI 软件交付控制面。
 
 ### 方式一：自己安装
 
-默认安装最新发布版本；指定版本时为命令增加 `VIBEFLOW_VERSION=v1.0.0`。
+默认安装最新发布版本；
 
 | 平台 | 安装命令 | 安装后 |
 |---|---|---|
 | macOS / Linux | `/sh curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.sh \| bash` | 运行 `/plugin install vibeflow@vibeflow` |
 | Windows PowerShell | `irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.ps1 \| iex` | 运行 `/plugin install vibeflow@vibeflow` |
 
-指定版本示例：
-
-| 平台 | 指定版本命令 |
-|---|---|
-| macOS / Linux | `/sh curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.sh \| VIBEFLOW_VERSION=v1.0.0 bash` |
-| Windows | `$env:VIBEFLOW_VERSION="v1.0.0"; irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.ps1 \| iex` |
 
 
 ### 方式二：让 AI 帮你安装
