@@ -1,14 +1,12 @@
 **[中文](README.md) | English**
 
----
-
 <div align="center">
 
 # VibeFlow
 
 ### Make AI produce not just code, but a delivery path that actually completes
 
-> “Well begun is half done.”
+> "Well begun is half done."
 >
 > First establish the form, then let the system carry the work to completion.
 
@@ -18,34 +16,30 @@
 
 ---
 
+<img width="1376" height="768" alt="VibeFlow vs traditional AI coding" src="https://github.com/user-attachments/assets/9a3be1a9-270c-46fc-b303-67b451ed860f" />
+
 ## What VibeFlow Is
 
 VibeFlow is an AI software delivery control plane for Claude Code.
 
 It does not try to think for the agent, and it does not try to rebuild the runtime. Its job is simpler and more useful: it turns one AI-driven software change into a workflow that can actually finish, instead of leaving progress scattered across chat history.
 
-That workflow is not only about writing code. It also covers:
+In one sentence: **VibeFlow turns AI coding from chat-driven improvisation into a delivery workflow.**
 
-- requirements and scope
-- design and task breakdown
-- implementation progress
-- review and test evidence
-- release and retrospective output
+---
 
-In one sentence:
+## Core Capabilities
 
-**VibeFlow turns AI coding from chat-driven improvisation into a delivery workflow.**
-
-## Documentation Map
-
-- [Install](README_EN.md#install)
-- [3-minute quick start](README_EN.md#3-minute-quick-start)
-- [Core capabilities](README_EN.md#core-capabilities)
-- [Common commands](README_EN.md#common-commands)
-- [Detailed usage guide](USAGE.md)
-- [Architecture](ARCHITECTURE.md)
-- [Deep Technical Architecture Overview](https://deepwiki.com/ttttstc/vibeflow/1-vibeflow-overview)
-- [Design contract and implementation notes](VIBEFLOW-DESIGN.md)
+| Capability | What VibeFlow does |
+|---|---|
+| Turns ideas into plans | Clarifies scope, solution, and task breakdown before implementation |
+| Helps work actually finish | Keeps moving through review, testing, release, and reflection |
+| Keeps work resumable | Lets teams continue after interruption, handoff, or a new session |
+| Leaves evidence behind | Preserves review, test, and delivery output instead of hiding progress in chat |
+| Reduces drift | Uses phases, rules, and gates so the model is less likely to wander |
+| Makes complex work steadier | Breaks large work into smaller, recoverable, verifiable chunks |
+| Makes progress visible | Shows what stage you are in, what is blocked, and what comes next |
+| Fits real repositories | Works on ongoing repositories, not only fresh project templates |
 
 ---
 
@@ -53,36 +47,27 @@ In one sentence:
 
 ### Option 1: Install It Yourself
 
-The default behavior installs the latest released version. To pin a version, add `VIBEFLOW_VERSION=v1.0.0`.
+Installs the latest released version by default.
 
 | Platform | Install Command | After Install |
 |---|---|---|
 | macOS / Linux | `/sh curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.sh \| bash` | run `/plugin install vibeflow@vibeflow` |
 | Windows PowerShell | `irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.ps1 \| iex` | run `/plugin install vibeflow@vibeflow` |
 
-Pinned version examples:
+<details>
+<summary>Pin a specific version</summary>
 
-| Platform | Version-Pinned Command |
+| Platform | Command |
 |---|---|
 | macOS / Linux | `/sh curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.sh \| VIBEFLOW_VERSION=v1.0.0 bash` |
 | Windows | `$env:VIBEFLOW_VERSION="v1.0.0"; irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.ps1 \| iex` |
 
-### Verify Installation
-
-Run `/vibeflow` and confirm the VibeFlow entry flow appears.
-
-### Mode Selection on First Run
-
-- First time running `/vibeflow` in a project: choose `Full Mode` or `Quick Mode`
-- If `.vibeflow/state.json` already exists: VibeFlow reuses the stored mode
-- If you explicitly run `/vibeflow-quick`: it enters Quick flow directly
-
-Recommended default:
-- use `Full Mode` unless the change is small, low-risk, and easy to roll back
+</details>
 
 ### Option 2: Ask AI to Install It
 
-If you want Claude Code to handle setup, paste this:
+<details>
+<summary>Paste this into Claude Code</summary>
 
 ```text
 Install VibeFlow for me and make sure it actually works.
@@ -106,9 +91,12 @@ Requirements:
    - how I should start using it
 ```
 
+</details>
+
 ### Other Hosts
 
-If you are not using Claude Code:
+<details>
+<summary>Non-Claude Code install options</summary>
 
 | Host | Command |
 |---|---|
@@ -116,45 +104,20 @@ If you are not using Claude Code:
 | Codex / Windows PowerShell | `irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/codex/install.ps1 \| iex` |
 | OpenCode / macOS / Linux | `curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/opencode/install.sh \| bash` |
 
-### Update and Uninstall
+</details>
 
-Update uses the same commands as install.
+### Verify Installation
 
-macOS / Linux:
+Run `/vibeflow` and confirm the VibeFlow entry flow appears.
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.sh | bash
-```
+<details>
+<summary>Update and Uninstall</summary>
 
-Specific version on macOS / Linux:
+Update uses the same install commands. After updating, restart Claude Code and run `/plugin install vibeflow@vibeflow`.
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.sh | VIBEFLOW_VERSION=v1.0.0 bash
-```
+To uninstall: close Claude Code → remove the marketplace directory → remove the `vibeflow` entry from `known_marketplaces.json` → reopen Claude Code.
 
-Windows PowerShell:
-
-```powershell
-irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.ps1 | iex
-```
-
-Specific version on Windows:
-
-```powershell
-$env:VIBEFLOW_VERSION="v1.0.0"; irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.ps1 | iex
-```
-
-After updating, restart Claude Code and run:
-
-```text
-/plugin install vibeflow@vibeflow
-```
-
-To uninstall:
-1. close Claude Code
-2. remove the marketplace directory
-3. remove the `vibeflow` entry from `known_marketplaces.json`
-4. reopen Claude Code
+</details>
 
 ---
 
@@ -162,30 +125,17 @@ To uninstall:
 
 1. Install and activate the plugin, then run `/vibeflow`
 2. On first run, choose `Full Mode` or `Quick Mode`
-3. Finish the required approvals in `Spark -> Design -> Tasks`
-4. Once the workflow reaches `Build`, the system keeps going through `Review -> Test -> Ship / Reflect`
+3. Finish the required approvals in `Spark → Design → Tasks`
+4. Once the workflow reaches `Build`, the system keeps going through `Review → Test → Ship / Reflect`
 5. Use `/vibeflow-status` or `/vibeflow-dashboard` whenever you want to see progress
 
-Short version:
+Short version: **You make decisions in the first half. The system drives the second half. It comes back only when something is blocked.**
 
-- you make decisions in the first half
-- the system drives the second half
-- it comes back only when something is blocked or needs approval
+<img width="1377" height="768" alt="Mode selection" src="https://github.com/user-attachments/assets/77257c8b-ba38-4f24-a11e-7920e4297165" />
+
+> **Mode selection tip:** Use `Full Mode` unless the change is small, low-risk, and easy to roll back. If `.vibeflow/state.json` already exists, VibeFlow reuses the stored mode automatically.
 
 ---
-
-## Core Capabilities
-
-| Capability | What VibeFlow does |
-|---|---|
-| Turns ideas into plans | Clarifies scope, solution, and task breakdown before implementation |
-| Helps work actually finish | Keeps moving through review, testing, release, and reflection |
-| Keeps work resumable | Lets teams continue after interruption, handoff, or a new session |
-| Leaves evidence behind | Preserves review, test, and delivery output instead of hiding progress in chat |
-| Reduces drift | Uses phases, rules, and gates so the model is less likely to wander |
-| Makes complex work steadier | Breaks large work into smaller, recoverable, verifiable chunks |
-| Makes progress visible | Shows what stage you are in, what is blocked, and what comes next |
-| Fits real repositories | Works on ongoing repositories, not only fresh project templates |
 
 ## Common Commands
 
@@ -201,95 +151,60 @@ Short version:
 
 ---
 
-## What You Get
+## Deep Dive
 
 In a real project, what VibeFlow gives you is not a pile of prompts. It is a delivery mechanism that can keep running.
 
-### 1. A structured delivery flow
+### Structured Delivery Flow
 
-- `Spark -> Design -> Tasks` for framing, solutioning, and execution handoff
-- `Build -> Review -> Test` for implementation and verification
-- optional `Ship / Reflect` for release and learning
+- `Spark → Design → Tasks` for framing, solutioning, and execution handoff
+- `Build → Review → Test` for implementation and verification
+- Optional `Ship / Reflect` for release and learning
 
-### 2. Files as workflow state
+<img width="1376" height="768" alt="Delivery flow" src="https://github.com/user-attachments/assets/410e78e6-70c5-4e72-99e6-0855e6c889eb" />
 
-VibeFlow keeps state in the repo instead of a chat session.
+### Files as Workflow State
 
-Core files include:
-- `.vibeflow/state.json`
-- `feature-list.json`
-- `docs/changes/<change-id>/...`
+VibeFlow keeps state in the repo instead of a chat session. Close the session, switch machines, switch AI models — the work persists.
 
-That gives you:
-- cross-session recovery
-- machine-independent continuity
-- AI-independent continuity
+<img width="1376" height="768" alt="File-driven state" src="https://github.com/user-attachments/assets/eb46f4ea-6510-4118-823b-d2cf2940cb08" />
 
-### 3. Automatic continuation after Build starts
+### Automatic Continuation After Build
 
-Once design is locked, the system does not expect you to manually walk every build sub-step.
+Once design is locked, you don't manually walk every sub-step. The system enters `Build` and auto-continues through `Review → Test → Ship → Reflect`, stopping only when done, blocked, or awaiting approval.
 
-Default behavior:
+### Stable Implementation Loop
 
-- enter `Build`
-- complete internal build preparation, then continue through `Review -> Test -> Ship -> Reflect`
-- stop only when the work is done, blocked, or waiting for approval
+Build is no longer "throw a huge context window at the model and hope it stays focused." Current capabilities include:
 
-### 4. A more stable implementation loop
+- Feature-level implementation inputs with `design.md + tasks.md + feature-list.json + rules/` as primary inputs
+- Normalized feature contracts and execution evidence saved in `feature-list.json`
+- Dependency-aware build execution with safe fallback to serial
+- Review split into "did we build the right thing?" and "is the code solid?"
 
-Build is no longer “throw a huge context window at the model and hope it stays focused.”
+### Existing Repository Support
 
-Current capabilities include:
-- feature-level implementation inputs
-- dependency-aware build execution
-- safe fallback to serial execution
-- review results split into “did we build the right thing?” and “is the code solid?”
+VibeFlow is not only for greenfield work. It maintains a project-level codebase map, generates change-scoped impact analysis, and feeds that context into Spark and Design automatically.
 
-### 5. Support for existing repositories
+<img width="1376" height="768" alt="Existing project support" src="https://github.com/user-attachments/assets/e658a4ca-75ba-414a-845a-71a9e623debb" />
 
-VibeFlow is not only for greenfield work.
+### Local Live Dashboard
 
-It can now:
-- maintain a reusable project-level codebase map
-- generate change-scoped impact analysis
-- feed that context into Spark and Design
+No need to read raw JSON and markdown files. The dashboard shows current mode/phase, workflow stage status, feature status, key artifacts, recent events, and next-action guidance.
 
-### 6. A local live dashboard
+### Quality Loop
 
-You do not need to read raw JSON and markdown files to understand what the system is doing.
+The default path includes: TDD, coverage gates, mutation testing, feature acceptance, global review, system testing, and QA for UI flows when needed.
 
-The dashboard shows:
-- current mode and phase
-- workflow stage status
-- feature status
-- key artifacts
-- recent events, resume reason, and next-action guidance
+### Increments, Release, and Retrospectives
 
-### 7. A quality loop
+Beyond the main workflow: increment request queues, release notes, and retrospective logs.
 
-The default path already includes:
-- TDD
-- coverage gates
-- mutation testing
-- feature acceptance
-- global review
-- system testing
-- QA for UI flows when needed
+### Templates and Safety Guardrails
 
-### 8. Increments, release, and retrospectives
+Four templates control workflow strictness and quality thresholds. `careful / freeze / guard` safety rails restrict destructive commands and edit boundaries.
 
-In addition to the main workflow, VibeFlow also supports:
-- increment request queues
-- release notes
-- retrospective logs
-
-### 9. Template strictness and safety guardrails
-
-VibeFlow is not a single fixed-intensity workflow.
-
-It also includes:
-- four templates to control workflow strictness and quality thresholds
-- `careful / freeze / guard` safety rails for destructive commands and edit boundaries
+<img width="1376" height="768" alt="Templates and safety guardrails" src="https://github.com/user-attachments/assets/1e0cbb71-9abf-4920-8533-509afe333e81" />
 
 ---
 
@@ -305,95 +220,58 @@ Note: `High / Medium / Low` indicates how central that capability is to each fra
 | OMC | Low | Medium | Medium | High | Medium | Medium | Medium | Medium-High |
 | ECC | Medium | High | High | Medium | High | High | Medium | High |
 | Trellis | High | Medium | High | Medium | Medium | High | Medium | Medium-High |
-| VibeFlow | High | High | High | Medium | High | Medium-High | High | Medium-High |
-
-## What To Read In A Generated Project
-
-Inside a target project generated by VibeFlow, most users only need these entry points:
-
-- `README.md`
-  Start here to understand what the project is and how to run it
-- `docs/overview/CURRENT-STATE.md`
-  The current project snapshot: active change, progress, and recommended next files
-- `docs/overview/PROJECT.md`
-  Long-lived project positioning, stable capabilities, and product boundaries
-- `docs/overview/ARCHITECTURE.md`
-  Long-lived architecture and module boundaries
-- `docs/changes/<change-id>/`
-  The full design, tasks, and verification for the current change
-- `feature-list.json`
-  The main implementation progress table
-- `RELEASE_NOTES.md`
-  Shipped changes and release output
-
-Short version:
-
-- whole project context: `docs/overview/`
-- current change: `docs/changes/<change-id>/`
-- implementation progress: `feature-list.json`
-
-Most users do not need to read `.vibeflow/` directly. Those files mainly exist for internal workflow state.
-
-If Claude closes unexpectedly, running `/vibeflow` again resumes from the interrupted step and explicitly tells you:
-
-- the current phase
-- why the workflow is paused there
-- what you should do next
-- which files to open first
-
----
-
-## Workflow at a Glance
-
-```text
-Decision phase (interactive)
-Spark -> Design -> Tasks
-
-Execution phase (automatic continuation)
-Build -> Review -> Test
-
-Optional finish
-Ship -> Reflect
-```
-
-`Quick Mode` compresses the front half, but still keeps Review and Test.  
-`Full Mode` is the default path for most serious work.
+| **VibeFlow** | **High** | **High** | **High** | Medium | **High** | Medium-High | **High** | Medium-High |
 
 ---
 
 ## Key Artifacts
 
+### Project-Level (`docs/overview/`)
+
 | File | Purpose |
 |---|---|
-| `docs/overview/PROJECT.md` | Project background, scope, and long-lived context |
-| `docs/overview/ARCHITECTURE.md` | Project-level architecture summary |
-| `docs/overview/CURRENT-STATE.md` | Current project snapshot |
+| `PROJECT.md` | Project background, scope, and long-lived context |
+| `ARCHITECTURE.md` | Project-level architecture summary |
+| `CURRENT-STATE.md` | Current project snapshot: active change, progress, and recommended next files |
+
+### Change-Level (`docs/changes/<change-id>/`)
+
+| File | Purpose |
+|---|---|
+| `brief.md` | Goal, scope, constraints, and acceptance baseline |
+| `design.md` | Implementation plan and Build Contract source of truth |
+| `tasks.md` | Execution-grade task handoff |
+| `codebase-impact.md` | Modules and tests affected by this change |
+| `verification/review.md` | Global review result |
+| `verification/system-test.md` | System test result |
+| `verification/qa.md` | UI / browser verification result |
+
+### System and Config
+
+| File | Purpose |
+|---|---|
 | `.vibeflow/state.json` | Source of truth for phase, mode, active change, checkpoints, and resume guidance |
-| `rules/` | Optional project custom constraints; when present they are treated as spec-side input and take precedence over root `CLAUDE.md` / `AGENT.md` guidance |
 | `feature-list.json` | Build-time source of truth for features and execution state |
-| `docs/changes/<change-id>/brief.md` | Goal, scope, constraints, and acceptance baseline |
-| `docs/changes/<change-id>/design.md` | Implementation, review summary, and integration plan |
-| `docs/changes/<change-id>/tasks.md` | Execution-grade task handoff |
-| `docs/changes/<change-id>/codebase-impact.md` | What parts of the current repo this change touches |
-| `docs/changes/<change-id>/verification/review.md` | Global review result |
-| `docs/changes/<change-id>/verification/system-test.md` | System test result |
-| `docs/changes/<change-id>/verification/qa.md` | UI / browser verification result |
+| `rules/` | Project custom constraints; takes precedence over `CLAUDE.md` / `AGENT.md` |
 | `RELEASE_NOTES.md` | Release-facing summary |
 
-For deeper operational details, see [USAGE.md](USAGE.md).
+> Short version: project context → `docs/overview/`, current change → `docs/changes/<change-id>/`, implementation progress → `feature-list.json`. Most users don't need to read `.vibeflow/` directly.
+
+> If Claude closes unexpectedly, running `/vibeflow` again resumes from the interrupted step, showing the current phase, why it paused, what to do next, and which files to open first.
 
 ---
 
 ## Best Fit
 
-- New projects from zero to one
-- Existing repositories that keep evolving
-- Teams that want recoverable, traceable AI-assisted delivery
+**Good fit:**
+- New projects from zero to one, or continuous iteration on existing repos
+- Teams that want AI to drive full delivery, not only generate code
+- Teams that need recoverable, traceable, auditable workflows
 - Builders who want the system to keep going after Build starts
-- Projects where a dashboard and artifact trail matter
 
-If you only want AI to make a tiny ad-hoc edit, VibeFlow may feel heavy.  
-If you want to manage the delivery process itself, VibeFlow is a better fit.
+**Not a fit:**
+- You only want AI to make a tiny ad-hoc edit
+- You don't want to maintain state files or verification artifacts
 
 ---
 
@@ -404,9 +282,18 @@ If you want to manage the delivery process itself, VibeFlow is a better fit.
 | [USAGE.md](USAGE.md) | Detailed operating guide, commands, and target-project usage |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Architecture diagrams, state model, and component boundaries |
 | [VIBEFLOW-DESIGN.md](VIBEFLOW-DESIGN.md) | Naming rules, file layout, and implementation conventions |
+| [DeepWiki Architecture](https://deepwiki.com/ttttstc/vibeflow/1-vibeflow-overview) | Online deep-dive architecture docs |
+
+---
+
+## Learning Site
+
+[Visit the learning site](https://ttttstc.github.io/vibeflow)
 
 ---
 
 ## License
 
 MIT
+
+<img width="1376" height="768" alt="VibeFlow" src="https://github.com/user-attachments/assets/3c2f8d03-ae18-41b8-844a-de8cfa45c9c0" />
