@@ -2,22 +2,45 @@
 
 ---
 
+<div align="center">
+
 # VibeFlow
 
-**Make AI deliver not just code, but a shaped piece of software work.**
+### Make AI produce not just code, but a delivery path that actually completes
 
-VibeFlow is a structured delivery framework for Claude Code. LLMs are brilliant improvisers; software delivery is a longer discipline. The hard part is not producing code, but carrying an idea cleanly through requirements, design, implementation, review, testing, release, and reflection until it becomes something shippable, traceable, and worth maintaining. VibeFlow gives that loop more form, memory, and finish, so the model behaves less like a lucky guesser and more like a disciplined engineering team.
-
-> “Well begun is half done.” — Aristotle
+> “Well begun is half done.”
 >
 > First establish the form, then let the system carry the work to completion.
 
+[Install](#install) · [3-Minute Quick Start](#3-minute-quick-start) · [Core Capabilities](#core-capabilities) · [Comparison](#vibeflow-vs-leading-ai-harness-frameworks)
+
+</div>
+
 ---
+
+## What VibeFlow Is
+
+VibeFlow is an AI software delivery control plane for Claude Code.
+
+It does not try to think for the agent, and it does not try to rebuild the runtime. Its job is simpler and more useful: it turns one AI-driven software change into a workflow that can actually finish, instead of leaving progress scattered across chat history.
+
+That workflow is not only about writing code. It also covers:
+
+- requirements and scope
+- design and task breakdown
+- implementation progress
+- review and test evidence
+- release and retrospective output
+
+In one sentence:
+
+**VibeFlow turns AI coding from chat-driven improvisation into a delivery workflow.**
 
 ## Documentation Map
 
-- [Install and get started](README_EN.md#install)
+- [Install](README_EN.md#install)
 - [3-minute quick start](README_EN.md#3-minute-quick-start)
+- [Core capabilities](README_EN.md#core-capabilities)
 - [Common commands](README_EN.md#common-commands)
 - [Detailed usage guide](USAGE.md)
 - [Architecture](ARCHITECTURE.md)
@@ -26,42 +49,9 @@ VibeFlow is a structured delivery framework for Claude Code. LLMs are brilliant 
 
 ---
 
-## Design Model and Tech Stack
-
-VibeFlow is an AI software delivery framework for Claude Code. It turns one software change into explicit stages and keeps state, specs, tasks, and verification results inside the repo so work can resume, review, and hand off cleanly.
-
-### Core Design
-
-| Concept | Definition inside VibeFlow |
-|---|---|
-| AI delivery orchestration | `Spark -> Design -> Tasks -> Build -> Review -> Test -> Ship / Reflect` is the standard delivery chain |
-| Spec-Driven | Implementation starts after `brief.md`, `design.md`, and `tasks.md` are in place |
-| File-driven | `.vibeflow/state.json`, `workflow.yaml`, and `feature-list.json` define phase and execution state |
-| Agent harness | router, skills, quality gates, and safety rails define how the model is allowed to operate |
-| Automatic continuation | once `Build` starts, the system continues implementation, review, testing, and wrap-up by default |
-
-### Best Fit
-
-- Teams that want AI to drive full delivery, not only generate code
-- Teams that want durable traces for requirements, design, review, testing, and release
-- Teams that need cross-session recovery, handoff quality, and model-independent continuity
-- Teams that keep shipping inside existing repositories, not only greenfield projects
-
-If you only want one-shot code generation and do not want state files, specs, or verification artifacts, this framework is not a good fit.
-
-### Tech Stack
-
-- Claude Code plugin commands + local skills
-- Python scripts for router / workflow config / autopilot / dashboard
-- Markdown + JSON + YAML for state and delivery artifacts
-- Bash + PowerShell for installation and host integration
-- Review / system-test / QA / release artifacts as the verification surface
-
----
-
 ## Install
 
-### One-Line Install
+### Option 1: Install It Yourself
 
 The default behavior installs the latest released version. To pin a version, add `VIBEFLOW_VERSION=v1.0.0`.
 
@@ -90,12 +80,12 @@ Run `/vibeflow` and confirm the VibeFlow entry flow appears.
 Recommended default:
 - use `Full Mode` unless the change is small, low-risk, and easy to roll back
 
-### Ask AI to Install It for You
+### Option 2: Ask AI to Install It
 
 If you want Claude Code to handle setup, paste this:
 
 ```text
-Install VibeFlow for me.
+Install VibeFlow for me and make sure it actually works.
 
 Requirements:
 1. Choose the official install command based on the current OS:
@@ -107,11 +97,24 @@ Requirements:
 3. If that fails, install it manually into the Claude Code marketplace directory
 4. After installation, run:
    /plugin install vibeflow@vibeflow
-5. Then tell me:
+5. Verify the result by running /vibeflow after restart or refresh
+6. If something fails, keep debugging until it works or tell me exactly what is blocking it
+7. Then tell me:
    - whether installation succeeded
    - where it was installed
-   - how I should verify it
+   - the installed version
+   - how I should start using it
 ```
+
+### Other Hosts
+
+If you are not using Claude Code:
+
+| Host | Command |
+|---|---|
+| Codex / macOS / Linux | `curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/codex/install.sh \| bash` |
+| Codex / Windows PowerShell | `irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/codex/install.ps1 \| iex` |
+| OpenCode / macOS / Linux | `curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/opencode/install.sh \| bash` |
 
 ### Update and Uninstall
 
@@ -171,6 +174,19 @@ Short version:
 
 ---
 
+## Core Capabilities
+
+| Capability | What VibeFlow does |
+|---|---|
+| Turns ideas into plans | Clarifies scope, solution, and task breakdown before implementation |
+| Helps work actually finish | Keeps moving through review, testing, release, and reflection |
+| Keeps work resumable | Lets teams continue after interruption, handoff, or a new session |
+| Leaves evidence behind | Preserves review, test, and delivery output instead of hiding progress in chat |
+| Reduces drift | Uses phases, rules, and gates so the model is less likely to wander |
+| Makes complex work steadier | Breaks large work into smaller, recoverable, verifiable chunks |
+| Makes progress visible | Shows what stage you are in, what is blocked, and what comes next |
+| Fits real repositories | Works on ongoing repositories, not only fresh project templates |
+
 ## Common Commands
 
 | Need | Command |
@@ -186,6 +202,8 @@ Short version:
 ---
 
 ## What You Get
+
+In a real project, what VibeFlow gives you is not a pile of prompts. It is a delivery mechanism that can keep running.
 
 ### 1. A structured delivery flow
 
@@ -274,6 +292,20 @@ It also includes:
 - `careful / freeze / guard` safety rails for destructive commands and edit boundaries
 
 ---
+
+## VibeFlow vs Leading AI Harness Frameworks
+
+Note: `High / Medium / Low` indicates how central that capability is to each framework.
+
+| Framework | Spec-first | Engineering discipline | Long-task stability | Multi-agent orchestration | Verification loop | Project memory | Delivery wrap-up | Weight |
+|---|---|---|---|---|---|---|---|---|
+| OpenSpec | High | Low | Medium | Low | Low | Medium | Low | Low |
+| Superpowers | Medium | High | Medium | Medium | Medium | Low | Low | Medium |
+| GSD | Medium | Medium | High | Medium | Medium | Medium | Medium | Medium |
+| OMC | Low | Medium | Medium | High | Medium | Medium | Medium | Medium-High |
+| ECC | Medium | High | High | Medium | High | High | Medium | High |
+| Trellis | High | Medium | High | Medium | Medium | High | Medium | Medium-High |
+| VibeFlow | High | High | High | Medium | High | Medium-High | High | Medium-High |
 
 ## What To Read In A Generated Project
 
