@@ -2,15 +2,19 @@
 
 ---
 
+<div align="center">
+
 # VibeFlow
 
-**让 AI 写出的，不只是代码，而是一段有章法的交付。**
+### 让 AI 写出的，不只是代码，而是一条能走完的交付链
 
-VibeFlow 是一个标准化AI工程交付编排框架。大模型擅长即兴，软件工程需要定力。真正稀缺的不是“生成一段代码”，而是把一个想法稳稳穿过需求、设计、实现、审查、测试、发布与复盘，直到它变成一个可以交付、可以追溯、可以继续演化的系统。VibeFlow 做的，就是给这条路铺上轨道，让 AI 少一点碰运气，多一点章法、记忆与收尾。
-
-> “凡事预则立，不预则废。” —《礼记·中庸》
+> “凡事预则立，不预则废。”
 >
 > 先定章法，再求速度；先有节奏，后有规模。
+
+[安装](#安装) · [3 分钟上手](#3-分钟上手) · [核心能力](#核心能力) · [能力对比](#vibeflow-与主流-ai-编排框架能力对比)
+
+</div>
 
 ---
 <img width="1376" height="768" alt="compare" src="https://github.com/user-attachments/assets/9a3be1a9-270c-46fc-b303-67b451ed860f" />
@@ -18,10 +22,29 @@ VibeFlow 是一个标准化AI工程交付编排框架。大模型擅长即兴，
 
 
 
+## VibeFlow 是什么
+
+VibeFlow 是一个面向 Claude Code 的 AI 软件交付控制面。
+
+它不替智能体思考，也不试图再造一个执行内核。它做的事情更直接：把一次 AI 驱动的软件改动组织成一条能真正走完的交付流程，让工作不只“写出来”，还能继续、恢复、交接、审查、测试、发布和复盘。
+
+这条流程不只有“写代码”，还包括：
+
+- 明确需求和范围
+- 写清设计和任务
+- 推进实现
+- 补齐审查和测试证据
+- 完成发布和复盘
+
+一句话理解：
+
+**VibeFlow 把 AI 编码从“聊天里临场发挥”，变成“按交付流程推进”。**
+
 ## 文档导航
 
-- [安装与开始使用](README.md#安装)
+- [安装](README.md#安装)
 - [3 分钟上手](README.md#3-分钟上手)
+- [核心能力](README.md#核心能力)
 - [常用命令](README.md#常用命令)
 - [详细使用指南](USAGE.md)
 - [架构说明](ARCHITECTURE.md)
@@ -30,42 +53,9 @@ VibeFlow 是一个标准化AI工程交付编排框架。大模型擅长即兴，
 
 ---
 
-## 设计理念与技术栈
-
-VibeFlow 是一个面向 Claude Code 的 AI 工程交付框架。它把一次软件改动拆成明确阶段，并把状态、规格、任务和验证结果留在仓库里，让 AI 可以继续、恢复、审查和交接。
-
-### 核心设计
-
-| 概念 | 在 VibeFlow 中的定义 |
-|---|---|
-| AI 交付编排 | `Spark -> Design -> Tasks -> Build -> Review -> Test -> Ship / Reflect` 是一条标准交付链路 |
-| Spec-Driven | 先写 `brief.md`、`design.md`、`tasks.md`，再进入实现与验证 |
-| 文件驱动 | `.vibeflow/state.json`、`workflow.yaml`、`feature-list.json` 决定当前阶段和执行状态 |
-| Agent Harness | router、skills、quality gates、safety rails 一起约束 AI 的执行边界 |
-| 自动续跑 | 进入 `Build` 后，系统默认自动推进实现、审查、测试与收尾 |
-
-### 适合什么团队
-
-- 希望 AI 不只写代码，还能推进完整交付的团队
-- 希望保留需求、设计、评审、测试、发布痕迹的团队
-- 需要跨会话恢复、跨人交接、跨模型延续的团队
-- 需要在已有仓库上持续迭代，而不是只做新项目的团队
-
-如果你只想一次性生成代码，不想维护状态文件、规格文档和验证产物，这个框架就不适合你。
-
-### 技术栈
-
-- Claude Code plugin commands + local skills
-- Python scripts for router / workflow config / autopilot / dashboard
-- Markdown + JSON + YAML for state and delivery artifacts
-- Bash + PowerShell for installation and host integration
-- Review / system-test / QA / release artifacts as verification surface
-
----
-
 ## 安装
 
-### 一句安装命令
+### 方式一：自己安装
 
 默认安装最新发布版本；指定版本时为命令增加 `VIBEFLOW_VERSION=v1.0.0`。
 
@@ -82,12 +72,12 @@ VibeFlow 是一个面向 Claude Code 的 AI 工程交付框架。它把一次软
 | Windows | `$env:VIBEFLOW_VERSION="v1.0.0"; irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.ps1 \| iex` |
 
 
-### 让 AI 帮你安装
+### 方式二：让 AI 帮你安装
 
 如果你想直接让 Claude Code 自己完成安装，粘贴下面这段：
 
 ```text
-帮我安装 VibeFlow
+帮我安装 VibeFlow，并确保最后能正常使用。
 
 要求：
 1. 根据当前系统选择官方安装命令：
@@ -99,16 +89,45 @@ VibeFlow 是一个面向 Claude Code 的 AI 工程交付框架。它把一次软
 3. 如果脚本不可用，再手动安装到 Claude Code marketplace 目录
 4. 安装完成后执行：
    /plugin install vibeflow@vibeflow
-5. 最后告诉我：
+5. 验证安装是否成功：
+   - 重启或刷新 Claude Code 后运行 /vibeflow
+   - 如果没有成功，继续排查直到成功或明确告诉我卡在哪一步
+6. 最后告诉我：
    - 是否安装成功
    - 安装到了哪里
-   - 下一步该怎么验证
+   - 当前安装版本
+   - 下一步该怎么开始使用
 ```
 
 
 ### 验证安装
 
 运行 `/vibeflow`，能看到 VibeFlow 入口说明，就说明插件已正常加载。
+
+### 更新与卸载
+
+更新使用与安装相同的命令。更新后重启 Claude Code，并再次执行：
+
+```text
+/plugin install vibeflow@vibeflow
+```
+
+卸载步骤：
+
+1. 关闭 Claude Code
+2. 删除 marketplace 目录中的 `vibeflow`
+3. 从 `known_marketplaces.json` 中删除 `vibeflow` 条目
+4. 重新打开 Claude Code
+
+### 其他宿主
+
+如果你不是在 Claude Code 中使用，也可以用以下入口：
+
+| 宿主 | 命令 |
+|---|---|
+| Codex / macOS / Linux | `curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/codex/install.sh \| bash` |
+| Codex / Windows PowerShell | `irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/codex/install.ps1 \| iex` |
+| OpenCode / macOS / Linux | `curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/opencode/install.sh \| bash` |
 
 
 ## 3 分钟上手
@@ -141,6 +160,19 @@ VibeFlow 是一个面向 Claude Code 的 AI 工程交付框架。它把一次软
 
 
 
+## 核心能力
+
+| 能力 | VibeFlow 做什么 |
+|---|---|
+| 把想法变成计划 | 先把需求、方案和任务拆清楚，再开始做 |
+| 把改动真正做完 | 不只写代码，还继续推进审查、测试、发布和复盘 |
+| 让工作不中断 | 会话关掉、换人接手、隔天继续，都还能接着跑 |
+| 让结果有证据 | 每次改动都能留下审查、测试和交付痕迹 |
+| 降低跑偏概率 | 用阶段、规则和门禁约束 AI 不要一路猜下去 |
+| 让复杂任务更稳 | 把大任务拆成可推进、可回收、可验证的小块 |
+| 让进度看得见 | 当前做到哪、卡在哪、下一步做什么，都有地方看 |
+| 适配真实仓库 | 可以持续跑在已有项目里，而不只是新建项目模板 |
+
 ## 常用命令
 
 | 需求 | 命令 |
@@ -156,6 +188,8 @@ VibeFlow 是一个面向 Claude Code 的 AI 工程交付框架。它把一次软
 ---
 
 ## 你得到什么
+
+如果把 VibeFlow 用在一个真实项目里，你最终得到的不是一组提示词，而是一套可以持续运行的软件交付机制。
 
 ### 1. 结构化交付流程
 
@@ -255,6 +289,20 @@ VibeFlow 不只有一条固定强度的流程。
 <img width="1376" height="768" alt="image" src="https://github.com/user-attachments/assets/1e0cbb71-9abf-4920-8533-509afe333e81" />
 
 ---
+
+## VibeFlow 与主流 AI 编排框架能力对比
+
+说明：`高 / 中 / 低` 表示该能力是不是这个框架的主轴，不代表绝对优劣。
+
+| 框架 | 规格先行 | 工程纪律 | 长任务稳定 | 多智能体编排 | 验证闭环 | 项目记忆 | 交付收尾 | 重量 |
+|---|---|---|---|---|---|---|---|---|
+| OpenSpec | 高 | 低 | 中 | 低 | 低 | 中 | 低 | 低 |
+| Superpowers | 中 | 高 | 中 | 中 | 中 | 低 | 低 | 中 |
+| GSD | 中 | 中 | 高 | 中 | 中 | 中 | 中 | 中 |
+| OMC | 低 | 中 | 中 | 高 | 中 | 中 | 中 | 中高 |
+| ECC | 中 | 高 | 高 | 中 | 高 | 高 | 中 | 高 |
+| Trellis | 高 | 中 | 高 | 中 | 中 | 高 | 中 | 中高 |
+| VibeFlow | 高 | 高 | 高 | 中 | 高 | 中高 | 高 | 中高 |
 
 ## 生成工程后先看什么
 
