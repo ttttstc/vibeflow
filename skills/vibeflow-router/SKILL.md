@@ -275,8 +275,8 @@ Spark 收口后必须向用户总结方向与范围，并确认是否进入 desi
 
 在进入 Spark 或 Design 阶段之前：
 
-1. 检查 `docs/architecture/full-spec.md` 是否存在
-   - 如果存在 → 继续正常的阶段流程
+1. 检查 `docs/overview/PROJECT.md`、`docs/overview/ARCHITECTURE.md`、`docs/overview/CURRENT-STATE.md` 是否存在且新鲜
+   - 如果存在且新鲜 → 继续正常的阶段流程
 2. 检查项目根目录是否包含源文件（.py, .ts, .tsx, .js, .jsx）
-   - 如果包含 → 在首次进入时提示用户可以运行 `/vibeflow-reverse-spec` 生成架构文档
-3. 如果 `docs/architecture/full-spec.md` 不存在且用户已选择生成 → 调用 `vibeflow-reverse-spec` skill
+   - 如果包含 → 在首次进入时提示用户可以运行 `/vibeflow-reverse-spec` 刷新 overview 文档
+3. 如果 overview 缺失或过期且用户已选择生成 → 调用 `vibeflow-reverse-spec` skill

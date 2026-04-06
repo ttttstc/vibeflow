@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Run full static analysis and produce docs/architecture/.spec-facts.json"""
+"""Run static analysis and produce internal architecture facts."""
 from __future__ import annotations
 
 import argparse
@@ -27,13 +27,13 @@ def run_analysis(
     Args:
         project_root: Root directory of the project to analyze
         include_tests: Whether to include test files
-        output_path: Output path for .spec-facts.json, defaults to docs/architecture/.spec-facts.json
+        output_path: Output path for spec-facts.json, defaults to .vibeflow/analysis/spec-facts.json
 
     Returns:
         The complete spec_facts dict
     """
     if output_path is None:
-        output_path = project_root / "docs" / "architecture" / ".spec-facts.json"
+        output_path = project_root / ".vibeflow" / "analysis" / "spec-facts.json"
 
     # Ensure output directory exists
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -93,7 +93,7 @@ def run_analysis(
 def main():
     """CLI entry point."""
     parser = argparse.ArgumentParser(
-        description="Run static analysis and produce .spec-facts.json"
+        description="Run static analysis and produce internal architecture facts"
     )
     parser.add_argument(
         "--project-root",
@@ -110,7 +110,7 @@ def main():
         "--output",
         type=Path,
         default=None,
-        help="Output path for .spec-facts.json",
+        help="Output path for spec-facts.json",
     )
 
     args = parser.parse_args()
@@ -128,7 +128,7 @@ def main():
             output_path=args.output,
         )
 
-        output_path = args.output or project_root / "docs" / "architecture" / ".spec-facts.json"
+        output_path = args.output or project_root / ".vibeflow" / "analysis" / "spec-facts.json"
         print(f"\nAnalysis complete!")
         print(f"Output written to: {output_path}")
         print(f"Source files analyzed: {result['source_files_count']}")

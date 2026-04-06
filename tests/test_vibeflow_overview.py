@@ -34,15 +34,10 @@ def write_json(path: Path, data: object) -> None:
     write(path, json.dumps(data, indent=2, ensure_ascii=False))
 
 
-def minimal_codebase_map(modules: list[str], entrypoints: list[str] | None = None) -> dict:
-    return {
-        "version": 1,
-        "languages": [{"name": "python", "file_count": 3}],
-        "frameworks": [],
-        "roots": {"source": ["src"], "tests": ["tests"]},
-        "modules": [{"name": module, "path": f"src/{module}"} for module in modules],
-        "entrypoints": [{"path": path} for path in (entrypoints or ["src/main.py"])],
-    }
+def seed_repo(tmp_path: Path, module_name: str) -> None:
+    write(tmp_path / "src" / module_name / "__init__.py", "")
+    write(tmp_path / "src" / "main.py", "from src import main\n")
+    write(tmp_path / "tests" / f"test_{module_name}.py", "def test_smoke():\n    assert True\n")
 
 
 class TestVibeFlowOverview:
@@ -50,7 +45,7 @@ class TestVibeFlowOverview:
         state = paths_module.default_state(tmp_path, topic="demo")
         paths_module.save_state(tmp_path, state)
         write_json(tmp_path / "feature-list.json", {"project": "demo", "features": [{"title": "同步工作流"}]})
-        write_json(tmp_path / ".vibeflow" / "codebase-map.json", minimal_codebase_map(["workflow"]))
+        seed_repo(tmp_path, "workflow")
 
         overview_module.ensure_overview_docs(tmp_path, state)
 
@@ -66,6 +61,7 @@ class TestVibeFlowOverview:
         assert "## 技术快照" in architecture_doc
         assert "<!-- 生成区块:技术快照 开始 -->" in architecture_doc
         assert "# 当前状态" in current_state_doc
+        assert "## 当前变更关注点" in current_state_doc
         assert "## 文档同步状态" in current_state_doc
         assert "`PROJECT.md`：已同步" in current_state_doc
         assert "`ARCHITECTURE.md`：已同步" in current_state_doc
@@ -78,8 +74,7 @@ class TestVibeFlowOverview:
         state = paths_module.default_state(tmp_path, topic="demo")
         paths_module.save_state(tmp_path, state)
         write_json(tmp_path / "feature-list.json", {"project": "demo", "features": []})
-        codebase_map_path = tmp_path / ".vibeflow" / "codebase-map.json"
-        write_json(codebase_map_path, minimal_codebase_map(["alpha"]))
+        seed_repo(tmp_path, "alpha")
 
         overview_module.ensure_overview_docs(tmp_path, state)
 
@@ -91,23 +86,21 @@ class TestVibeFlowOverview:
         )
         write(project_path, project_doc)
 
-        write_json(codebase_map_path, minimal_codebase_map(["beta"]))
+        write(tmp_path / "src" / "beta" / "__init__.py", "")
         overview_module.ensure_overview_docs(tmp_path, state)
 
         refreshed = project_path.read_text(encoding="utf-8")
         assert "- 自定义目标：保持人工正文不被覆盖。" in refreshed
-        assert "- 主要模块：beta" in refreshed
-        assert "- 主要模块：alpha" not in refreshed
+        assert "beta" in refreshed
 
     def test_refresh_current_state_surfaces_stale_overview_docs(self, tmp_path):
         state = paths_module.default_state(tmp_path, topic="demo")
         paths_module.save_state(tmp_path, state)
         write_json(tmp_path / "feature-list.json", {"project": "demo", "features": []})
-        codebase_map_path = tmp_path / ".vibeflow" / "codebase-map.json"
-        write_json(codebase_map_path, minimal_codebase_map(["alpha"]))
+        seed_repo(tmp_path, "alpha")
 
         overview_module.ensure_overview_docs(tmp_path, state)
-        write_json(codebase_map_path, minimal_codebase_map(["beta"]))
+        write(tmp_path / "src" / "beta" / "__init__.py", "")
 
         overview_module.refresh_current_state(tmp_path, state)
 
@@ -124,7 +117,7 @@ class TestVibeFlowOverview:
         state = paths_module.default_state(tmp_path, topic="demo")
         paths_module.save_state(tmp_path, state)
         write_json(tmp_path / "feature-list.json", {"project": "demo", "features": []})
-        write_json(tmp_path / ".vibeflow" / "codebase-map.json", minimal_codebase_map(["alpha"]))
+        seed_repo(tmp_path, "alpha")
 
         overview_module.ensure_overview_docs(tmp_path, state)
 

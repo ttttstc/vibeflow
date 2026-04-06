@@ -148,8 +148,7 @@ description: 维护 `docs/overview/` 轻量 RepoWiki 层，负责中文标准格
 - `.vibeflow/state.json`
 - `feature-list.json`
 - `rules/`
-- `docs/architecture/.spec-facts.json` 或 `.vibeflow/codebase-map.json`
-- `docs/architecture/full-spec.md`（如存在）
+- 当前源码目录与测试目录
 - `docs/changes/<change-id>/...`
 - `.vibeflow/wiki-status.json`（如存在）
 
@@ -202,14 +201,14 @@ description: 维护 `docs/overview/` 轻量 RepoWiki 层，负责中文标准格
 
 ### `vibeflow-reverse-spec`
 
-- `reverse-spec` 负责生成深层分析素材
-- `wiki` 负责把这些素材收敛成可工作的轻量 overview
+- `reverse-spec` 负责触发现有仓库的 overview 刷新
+- `wiki` 负责把 overview 保持为可读、可提交、可持续同步的标准入口
 
 具体边界：
 
-- `.spec-facts.json` 是 wiki 自动刷新时优先读取的结构化事实源
-- `full-spec.md` 是深度分析参考，不应整篇拷贝进 `ARCHITECTURE.md`
-- `ARCHITECTURE.md` 应只沉淀长期有效的结构、边界和约束；需要时由人工从 `full-spec.md` 提炼稳定结论后回写
+- `wiki` 直接基于源码、规则、feature-list 和 active change 生成 overview
+- `ARCHITECTURE.md` 应只沉淀长期有效的结构、边界和约束
+- `CURRENT-STATE.md` 承担当前变更关注点、风险提示和建议阅读顺序
 
 ### `vibeflow-router`
 

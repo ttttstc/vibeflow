@@ -6,7 +6,7 @@ The refactor keeps VibeFlow file-driven, but separates:
 - internal state under .vibeflow/
 - change artifacts under docs/changes/<change-id>/
 - build execution state in feature-list.json
-- architecture specs under docs/architecture/
+- long-lived project context under docs/overview/
 
 This module is intentionally lightweight so both scripts and tests can import it.
 """
@@ -253,14 +253,6 @@ def build_reports_dir(project_root: Path) -> Path:
     return project_root / ".vibeflow" / "build-reports"
 
 
-def codebase_map_json_path(project_root: Path) -> Path:
-    return project_root / ".vibeflow" / "codebase-map.json"
-
-
-def codebase_map_md_path(project_root: Path) -> Path:
-    return project_root / ".vibeflow" / "codebase-map.md"
-
-
 def change_root(project_root: Path, state: dict) -> Path:
     active = state.get("active_change") or {}
     rel = active.get("root")
@@ -278,14 +270,6 @@ def resolve_artifact_path(project_root: Path, state: dict, key: str) -> Path:
     if key == "spark":
         return change_root(project_root, state) / "brief.md"
     return change_root(project_root, state) / f"{key}.md"
-
-
-def codebase_impact_json_path(project_root: Path, state: dict) -> Path:
-    return change_root(project_root, state) / "codebase-impact.json"
-
-
-def codebase_impact_md_path(project_root: Path, state: dict) -> Path:
-    return change_root(project_root, state) / "codebase-impact.md"
 
 
 def path_contract(project_root: Path, state: dict | None = None) -> dict:
@@ -313,13 +297,6 @@ def path_contract(project_root: Path, state: dict | None = None) -> dict:
         "build_reports_dir": build_reports_dir(project_root),
         "rules_dir": project_rules_dir(project_root),
         "change_root": change_root(project_root, loaded_state),
-        "codebase_map_json": codebase_map_json_path(project_root),
-        "codebase_map_md": codebase_map_md_path(project_root),
-        "spec_facts": project_root / "docs" / "architecture" / ".spec-facts.json",
-        "spec_inferences": project_root / "docs" / "architecture" / ".spec-inferences.json",
-        "spec_architecture": project_root / "docs" / "architecture" / "full-spec.md",
-        "codebase_impact_json": codebase_impact_json_path(project_root, loaded_state),
-        "codebase_impact_md": codebase_impact_md_path(project_root, loaded_state),
         "artifacts": {
             key: resolve_artifact_path(project_root, loaded_state, key)
             for key in [

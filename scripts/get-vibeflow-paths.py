@@ -32,10 +32,7 @@ def main():
         "build_reports_dir": str(contract["build_reports_dir"]),
         "rules_dir": str(contract["rules_dir"]),
         "change_root": str(contract["change_root"]),
-        "codebase_map_json": str(contract["codebase_map_json"]),
-        "codebase_map_md": str(contract["codebase_map_md"]),
-        "codebase_impact_json": str(contract["codebase_impact_json"]),
-        "codebase_impact_md": str(contract["codebase_impact_md"]),
+        "wiki_status": str(contract["wiki_status"]),
         "artifacts": {k: str(v) for k, v in contract["artifacts"].items()},
     }
 

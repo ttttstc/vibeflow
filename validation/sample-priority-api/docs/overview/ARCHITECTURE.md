@@ -4,7 +4,7 @@
 > 维护方式：人工正文 + 生成区块
 > 状态：正式
 > 最近审阅：2026-04-06
-> 主要输入：docs/architecture/.spec-facts.json、rules/、源码目录
+> 主要输入：源码目录、rules/、feature-list.json
 
 ## 架构摘要
 
@@ -13,7 +13,7 @@
 ## 技术快照
 
 <!-- 生成区块:技术快照 开始 -->
-- 代码事实来源：`codebase-map`
+- 代码事实来源：`live-repo-scan`
 - 主要语言：python
 - 框架线索：待补充
 - 源码根目录：src

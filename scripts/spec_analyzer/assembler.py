@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Document Assembly Layer — renders Arc42 full-spec.md from spec-facts.json and spec-inferences.json."""
+"""Document Assembly Layer — renders internal architecture analysis markdown."""
 from __future__ import annotations
 
 import argparse
@@ -415,7 +415,7 @@ def assemble(project_root: Path, facts_path: Path, inferences_path: Path, output
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(new_spec_content, encoding="utf-8")
-    print(f"Full spec written to: {output_path}")
+    print(f"Architecture analysis written to: {output_path}")
 
     if old_spec_content is not None:
         change_id = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
@@ -435,18 +435,18 @@ def assemble(project_root: Path, facts_path: Path, inferences_path: Path, output
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Assemble Arc42 full-spec.md from spec-facts.json and spec-inferences.json"
+        description="Assemble architecture-analysis.md from spec-facts.json and spec-inferences.json"
     )
     parser.add_argument("--project-root", type=Path, default=Path("."), help="Root directory of the project")
-    parser.add_argument("--facts", type=Path, default=None, help="Path to .spec-facts.json")
-    parser.add_argument("--inferences", type=Path, default=None, help="Path to .spec-inferences.json")
-    parser.add_argument("--output", type=Path, default=None, help="Output path for full-spec.md")
+    parser.add_argument("--facts", type=Path, default=None, help="Path to spec-facts.json")
+    parser.add_argument("--inferences", type=Path, default=None, help="Path to spec-inferences.json")
+    parser.add_argument("--output", type=Path, default=None, help="Output path for architecture-analysis.md")
     args = parser.parse_args()
 
     project_root = args.project_root.resolve()
-    facts_path = args.facts or (project_root / "docs" / "architecture" / ".spec-facts.json")
-    inferences_path = args.inferences or (project_root / "docs" / "architecture" / ".spec-inferences.json")
-    output_path = args.output or (project_root / "docs" / "architecture" / "full-spec.md")
+    facts_path = args.facts or (project_root / ".vibeflow" / "analysis" / "spec-facts.json")
+    inferences_path = args.inferences or (project_root / ".vibeflow" / "analysis" / "spec-inferences.json")
+    output_path = args.output or (project_root / ".vibeflow" / "analysis" / "architecture-analysis.md")
 
     print(f"Project root: {project_root}")
     print(f"Facts: {facts_path}")

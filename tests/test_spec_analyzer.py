@@ -1,4 +1,4 @@
-"""Tests for reverse-spec assembly and TypeScript fallback analysis."""
+"""Tests for internal architecture analysis assembly and TypeScript fallback analysis."""
 
 from __future__ import annotations
 
@@ -32,9 +32,9 @@ def write_json(path: Path, data: object) -> None:
 
 class TestSpecAnalyzer:
     def test_assemble_first_run_does_not_create_delta(self, tmp_path):
-        facts_path = tmp_path / "docs" / "architecture" / ".spec-facts.json"
-        inferences_path = tmp_path / "docs" / "architecture" / ".spec-inferences.json"
-        output_path = tmp_path / "docs" / "architecture" / "full-spec.md"
+        facts_path = tmp_path / ".vibeflow" / "analysis" / "spec-facts.json"
+        inferences_path = tmp_path / ".vibeflow" / "analysis" / "spec-inferences.json"
+        output_path = tmp_path / ".vibeflow" / "analysis" / "architecture-analysis.md"
         write_json(facts_path, {"modules": [], "entities": [], "tech_stack": [], "api_surface": {}, "diagrams": {}})
         write_json(inferences_path, {})
 
@@ -45,9 +45,9 @@ class TestSpecAnalyzer:
         assert not delta_root.exists()
 
     def test_assemble_existing_spec_creates_delta_against_previous_snapshot(self, tmp_path):
-        facts_path = tmp_path / "docs" / "architecture" / ".spec-facts.json"
-        inferences_path = tmp_path / "docs" / "architecture" / ".spec-inferences.json"
-        output_path = tmp_path / "docs" / "architecture" / "full-spec.md"
+        facts_path = tmp_path / ".vibeflow" / "analysis" / "spec-facts.json"
+        inferences_path = tmp_path / ".vibeflow" / "analysis" / "spec-inferences.json"
+        output_path = tmp_path / ".vibeflow" / "analysis" / "architecture-analysis.md"
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text("# Old Spec\n\nLegacy snapshot.\n", encoding="utf-8")
         write_json(

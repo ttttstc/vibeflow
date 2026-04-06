@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""LLM inference layer for architecture spec generation.
+"""LLM inference layer for internal architecture analysis generation.
 
-This module generates LLM prompts from spec-facts.json and creates
-a template .spec-inferences.json with placeholders for the skill layer
+This module generates LLM prompts from internal spec facts and creates
+a template spec-inferences.json with placeholders for the skill layer
 to populate via actual LLM inference.
 """
 from __future__ import annotations
@@ -65,7 +65,7 @@ def build_inference_prompt(facts_path: Path) -> tuple[str, str]:
     """Build system and user prompts from facts file.
 
     Args:
-        facts_path: Path to .spec-facts.json
+        facts_path: Path to spec-facts.json
 
     Returns:
         Tuple of (system_prompt, user_prompt) where user_prompt has facts injected
@@ -88,7 +88,7 @@ def generate_inference_context(facts_path: Path) -> dict:
     """Generate condensed context from facts file for LLM injection.
 
     Args:
-        facts_path: Path to .spec-facts.json
+        facts_path: Path to spec-facts.json
 
     Returns:
         Condensed dict with only the information LLM needs
@@ -156,7 +156,7 @@ def write_inference_output(output_path: Path, inferences: dict) -> None:
     """Write inference results to output JSON file.
 
     Args:
-        output_path: Path to .spec-inferences.json
+        output_path: Path to spec-inferences.json
         inferences: Inference data dict
     """
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -171,19 +171,19 @@ def run_inference_phase(
     """Run inference phase: generate prompts and template structure.
 
     Note: This function does NOT call any LLM API. It generates:
-    1. .inference-prompt.md - full prompt for skill layer to use
-    2. .spec-inferences.json - template structure with placeholders
+    1. inference-prompt.md - full prompt for skill layer to use
+    2. spec-inferences.json - template structure with placeholders
 
     Args:
-        facts_path: Path to .spec-facts.json
-        output_path: Path to .spec-inferences.json (template)
-        prompt_output_path: Path to .inference-prompt.md, defaults to same dir as output_path
+        facts_path: Path to spec-facts.json
+        output_path: Path to spec-inferences.json (template)
+        prompt_output_path: Path to inference-prompt.md, defaults to same dir as output_path
 
     Returns:
         Dict containing prompt content and template structure
     """
     if prompt_output_path is None:
-        prompt_output_path = output_path.parent / ".inference-prompt.md"
+        prompt_output_path = output_path.parent / "inference-prompt.md"
 
     # Ensure output directory exists
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -248,19 +248,19 @@ def run_inference_phase(
 def main():
     """CLI entry point."""
     parser = argparse.ArgumentParser(
-        description="Generate LLM inference prompts from spec-facts.json"
+        description="Generate LLM inference prompts from internal spec facts"
     )
     parser.add_argument(
         "--facts-path",
         type=Path,
-        default=Path("docs/architecture/.spec-facts.json"),
-        help="Path to .spec-facts.json",
+        default=Path(".vibeflow/analysis/spec-facts.json"),
+        help="Path to spec-facts.json",
     )
     parser.add_argument(
         "--output",
         type=Path,
-        default=Path("docs/architecture/.spec-inferences.json"),
-        help="Output path for .spec-inferences.json template",
+        default=Path(".vibeflow/analysis/spec-inferences.json"),
+        help="Output path for spec-inferences.json template",
     )
 
     args = parser.parse_args()
