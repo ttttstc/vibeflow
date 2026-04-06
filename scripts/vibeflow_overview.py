@@ -18,6 +18,7 @@ PROJECT_BLOCK = "代码面速览"
 ARCHITECTURE_BLOCK = "技术快照"
 LEGACY_PROJECT_MARKERS = ("# Project - ", "## Summary", "## Current Capabilities")
 LEGACY_ARCHITECTURE_MARKERS = ("# Architecture", "## Technical Snapshot", "## Major Modules")
+GENERATED_BLOCK_MARKER_TEMPLATE = "<!-- 生成区块:{name} {edge} -->"
 
 
 def now_iso() -> str:
@@ -217,6 +218,7 @@ def update_doc_status(status: dict, name: str, *, source_hash: str, generated_bl
     doc_status.update(
         {
             "last_refreshed_at": now_iso(),
+            "last_checked_at": now_iso(),
             "stale": False,
             "stale_reasons": [],
             "source_hash": source_hash,
@@ -225,14 +227,71 @@ def update_doc_status(status: dict, name: str, *, source_hash: str, generated_bl
     )
 
 
-def doc_stale_status(status: dict, name: str, current_source_hash: str) -> tuple[bool, list[str]]:
+def update_doc_check_status(status: dict, name: str, *, stale: bool, reasons: list[str]) -> None:
+    docs = status.setdefault("docs", {})
+    doc_status = docs.setdefault(name, {})
+    doc_status["last_checked_at"] = now_iso()
+    doc_status["stale"] = stale
+    doc_status["stale_reasons"] = reasons
+
+
+def generated_block_marker(name: str, edge: str) -> str:
+    return GENERATED_BLOCK_MARKER_TEMPLATE.format(name=name, edge=edge)
+
+
+def generated_block_pattern(name: str) -> re.Pattern[str]:
+    start = re.escape(generated_block_marker(name, "开始"))
+    end = re.escape(generated_block_marker(name, "结束"))
+    return re.compile(rf"{start}\n(?P<body>.*?)(?:\n{end})", re.DOTALL)
+
+
+def normalize_generated_block_content(content: str) -> str:
+    return content.rstrip()
+
+
+def generated_block_state(content: str) -> dict[str, str]:
+    return {"content_hash": stable_hash(normalize_generated_block_content(content))}
+
+
+def stored_generated_block_hash(payload: dict) -> str:
+    return str(payload.get("content_hash") or payload.get("source_hash") or "")
+
+
+def read_generated_block_content(doc_path: Path, block_name: str) -> str | None:
+    if not doc_path.exists():
+        return None
+    match = generated_block_pattern(block_name).search(doc_path.read_text(encoding="utf-8"))
+    if not match:
+        return None
+    return normalize_generated_block_content(match.group("body"))
+
+
+def doc_stale_status(status: dict, name: str, current_source_hash: str, *, doc_path: Path | None = None) -> tuple[bool, list[str]]:
+    reasons: list[str] = []
     doc_status = (status.get("docs") or {}).get(name) or {}
     previous_hash = str(doc_status.get("source_hash") or "")
     if not previous_hash:
-        return True, ["尚未建立同步记录"]
-    if previous_hash != current_source_hash:
-        return True, ["源输入已变化，尚未重新同步"]
-    return False, []
+        reasons.append("尚未建立同步记录")
+    elif previous_hash != current_source_hash:
+        reasons.append("源输入已变化，尚未重新同步")
+
+    generated_blocks = doc_status.get("generated_blocks") or {}
+    if doc_path is not None:
+        if not doc_path.exists():
+            reasons.append("文档文件缺失")
+        for block_name, block_payload in generated_blocks.items():
+            expected_hash = stored_generated_block_hash(block_payload)
+            if not expected_hash:
+                continue
+            actual_content = read_generated_block_content(doc_path, block_name)
+            if actual_content is None:
+                reasons.append(f"生成区块“{block_name}”缺失或格式无效")
+                continue
+            if stable_hash(actual_content) != expected_hash:
+                reasons.append(f"生成区块“{block_name}”内容已漂移")
+
+    normalized = list(dict.fromkeys(reasons))
+    return bool(normalized), normalized
 
 
 def metadata_block(doc_type: str, maintenance: str, status_label: str, review_label: str, sources: str) -> str:
@@ -274,16 +333,16 @@ def render_overview_readme(project_root: Path, state: dict) -> str:
 
 
 def render_generated_block(name: str, content: str) -> str:
-    body = content.rstrip()
+    body = normalize_generated_block_content(content)
     if body:
-        return f"<!-- 生成区块:{name} 开始 -->\n{body}\n<!-- 生成区块:{name} 结束 -->"
-    return f"<!-- 生成区块:{name} 开始 -->\n<!-- 生成区块:{name} 结束 -->"
+        return f"{generated_block_marker(name, '开始')}\n{body}\n{generated_block_marker(name, '结束')}"
+    return f"{generated_block_marker(name, '开始')}\n{generated_block_marker(name, '结束')}"
 
 
 def replace_generated_block(content: str, name: str, block_content: str, anchor_heading: str) -> str:
     block = render_generated_block(name, block_content)
     pattern = re.compile(
-        rf"<!-- 生成区块:{re.escape(name)} 开始 -->.*?<!-- 生成区块:{re.escape(name)} 结束 -->",
+        rf"{re.escape(generated_block_marker(name, '开始'))}.*?{re.escape(generated_block_marker(name, '结束'))}",
         re.DOTALL,
     )
     if pattern.search(content):
@@ -384,6 +443,35 @@ def architecture_doc_source_inputs(project_root: Path, contract: dict) -> dict:
     return {
         "snapshot": codebase_snapshot(project_root, contract),
         "rules": rules_snapshot(project_root),
+    }
+
+
+def compute_overview_sync_status(project_root: Path, state: dict, contract: dict, wiki_status: dict) -> dict[str, dict]:
+    project_source_hash = stable_hash(project_doc_source_inputs(project_root, state, contract))
+    architecture_source_hash = stable_hash(architecture_doc_source_inputs(project_root, contract))
+    project_stale, project_reasons = doc_stale_status(
+        wiki_status,
+        PROJECT_DOC,
+        project_source_hash,
+        doc_path=contract["overview"]["project"],
+    )
+    architecture_stale, architecture_reasons = doc_stale_status(
+        wiki_status,
+        ARCHITECTURE_DOC,
+        architecture_source_hash,
+        doc_path=contract["overview"]["architecture"],
+    )
+    return {
+        PROJECT_DOC: {
+            "stale": project_stale,
+            "reasons": project_reasons,
+            "current_source_hash": project_source_hash,
+        },
+        ARCHITECTURE_DOC: {
+            "stale": architecture_stale,
+            "reasons": architecture_reasons,
+            "current_source_hash": architecture_source_hash,
+        },
     }
 
 
@@ -516,7 +604,7 @@ def render_architecture_template(project_root: Path, contract: dict) -> tuple[st
     return content.rstrip() + "\n", block_content, source_hash
 
 
-def render_current_state_doc(project_root: Path, state: dict, contract: dict, wiki_status: dict) -> tuple[str, str]:
+def render_current_state_doc(project_root: Path, state: dict, contract: dict, overview_sync_status: dict[str, dict]) -> tuple[str, str]:
     active_change = state.get("active_change") or {}
     change_rel = active_change_rel(state)
     change_link = active_change_link(state)
@@ -528,10 +616,12 @@ def render_current_state_doc(project_root: Path, state: dict, contract: dict, wi
     snapshot = codebase_snapshot(project_root, contract)
     module_preview = "、".join(snapshot.get("modules") or []) or "暂无"
     languages = "、".join(snapshot.get("languages") or []) or "未知"
-    project_hash = stable_hash(project_doc_source_inputs(project_root, state, contract))
-    architecture_hash = stable_hash(architecture_doc_source_inputs(project_root, contract))
-    project_stale, project_reasons = doc_stale_status(wiki_status, PROJECT_DOC, project_hash)
-    architecture_stale, architecture_reasons = doc_stale_status(wiki_status, ARCHITECTURE_DOC, architecture_hash)
+    project_status = overview_sync_status[PROJECT_DOC]
+    architecture_status = overview_sync_status[ARCHITECTURE_DOC]
+    project_stale = bool(project_status["stale"])
+    project_reasons = list(project_status["reasons"])
+    architecture_stale = bool(architecture_status["stale"])
+    architecture_reasons = list(architecture_status["reasons"])
     risks: list[str] = []
     if summary["failing"] > 0:
         risks.append("存在失败功能，需要先回看 review / test 产物。")
@@ -606,8 +696,8 @@ def render_current_state_doc(project_root: Path, state: dict, contract: dict, wi
             "state": state,
             "features": summary,
             "release": release_heading,
-            "project_hash": project_hash,
-            "architecture_hash": architecture_hash,
+            "project_hash": project_status["current_source_hash"],
+            "architecture_hash": architecture_status["current_source_hash"],
         }
     )
     return content.rstrip() + "\n", source_hash
@@ -647,13 +737,13 @@ def ensure_overview_docs(project_root: Path, state: dict | None = None, *, force
         status,
         PROJECT_DOC,
         source_hash=project_hash,
-        generated_blocks={PROJECT_BLOCK: {"source_hash": stable_hash(project_block)}},
+        generated_blocks={PROJECT_BLOCK: generated_block_state(project_block)},
     )
     update_doc_status(
         status,
         ARCHITECTURE_DOC,
         source_hash=architecture_hash,
-        generated_blocks={ARCHITECTURE_BLOCK: {"source_hash": stable_hash(architecture_block)}},
+        generated_blocks={ARCHITECTURE_BLOCK: generated_block_state(architecture_block)},
     )
     save_wiki_status(contract["wiki_status"], status)
     refresh_current_state(project_root, loaded_state)
@@ -665,7 +755,15 @@ def refresh_current_state(project_root: Path, state: dict | None = None) -> Path
     contract = path_contract(project_root, loaded_state)
     contract["overview_root"].mkdir(parents=True, exist_ok=True)
     status = load_wiki_status(contract["wiki_status"])
-    content, source_hash = render_current_state_doc(project_root, loaded_state, contract, status)
+    overview_sync_status = compute_overview_sync_status(project_root, loaded_state, contract, status)
+    for name, sync_status in overview_sync_status.items():
+        update_doc_check_status(
+            status,
+            name,
+            stale=bool(sync_status["stale"]),
+            reasons=list(sync_status["reasons"]),
+        )
+    content, source_hash = render_current_state_doc(project_root, loaded_state, contract, overview_sync_status)
     path = write_text(contract["overview"]["current_state"], content)
     update_doc_status(status, CURRENT_STATE_DOC, source_hash=source_hash, generated_blocks={})
     save_wiki_status(contract["wiki_status"], status)

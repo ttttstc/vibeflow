@@ -99,14 +99,23 @@ cat .vibeflow/increments/queue.json 2>/dev/null || echo "No pending increments"
 
 ### 步骤5：检查 overview freshness
 
+优先读取 `.vibeflow/wiki-status.json`；如果不存在，再回退看 `CURRENT-STATE.md` 的“文档同步状态”段落。
+
 如果满足以下任一条件：
 
 - `docs/overview/PROJECT.md` 不存在
 - `docs/overview/ARCHITECTURE.md` 不存在
 - `docs/overview/CURRENT-STATE.md` 不存在
+- `.vibeflow/wiki-status.json` 中任一正式 overview 文档 `stale=true`
 - `CURRENT-STATE.md` 显示 overview 文档待同步
 
 则在进入 Spark / Design / Review / Ship 前，优先调用 `skills/vibeflow-wiki/SKILL.md`。
+
+调用时应明确说明：
+
+- 缺的是哪份文档
+- 还是 freshness 已过期
+- 刷新后应重新检查 `.vibeflow/wiki-status.json`
 
 ---
 

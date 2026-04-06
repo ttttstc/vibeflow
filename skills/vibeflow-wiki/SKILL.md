@@ -87,7 +87,7 @@ description: 维护 `docs/overview/` 轻量 RepoWiki 层，负责中文标准格
 
 - `PROJECT.md`：只更新生成区块
 - `ARCHITECTURE.md`：只更新生成区块
-- `CURRENT-STATE.md`：允许整篇自动刷新
+- `CURRENT-STATE.md`：允许整篇自动刷新，因为它是纯派生快照，不承载人工正文
 
 ### 规则 5：wiki 状态必须可追踪
 
@@ -97,6 +97,12 @@ description: 维护 `docs/overview/` 轻量 RepoWiki 层，负责中文标准格
 - 源输入 hash
 - stale 状态
 - 生成区块 hash
+
+字段语义：
+
+- 顶层 `source_hash`：当前文档“上次完成同步时”的源输入组合 hash
+- `generated_blocks.<区块名>.content_hash`：该生成区块渲染结果的内容 hash
+- `stale` / `stale_reasons`：最近一次 freshness 检查得到的状态，而不是人工判断
 
 ## 文件职责
 
@@ -127,6 +133,12 @@ description: 维护 `docs/overview/` 轻量 RepoWiki 层，负责中文标准格
 - 现在进展如何
 - 哪些 overview 文档可能需要同步
 
+说明：
+
+- 这是纯派生文档
+- 允许整篇自动刷新
+- 不承载需要人工长期维护的正文
+
 ## 执行流程
 
 ### 步骤 1：读取现状
@@ -137,6 +149,7 @@ description: 维护 `docs/overview/` 轻量 RepoWiki 层，负责中文标准格
 - `feature-list.json`
 - `rules/`
 - `docs/architecture/.spec-facts.json` 或 `.vibeflow/codebase-map.json`
+- `docs/architecture/full-spec.md`（如存在）
 - `docs/changes/<change-id>/...`
 - `.vibeflow/wiki-status.json`（如存在）
 
@@ -167,6 +180,8 @@ description: 维护 `docs/overview/` 轻量 RepoWiki 层，负责中文标准格
 - `generated_blocks`
 - `stale`
 
+如果本次只是刷新 `CURRENT-STATE.md`，也要同步回写 `PROJECT.md` / `ARCHITECTURE.md` 的 stale 状态。
+
 ### 步骤 5：报告结果
 
 报告应简要说明：
@@ -189,6 +204,12 @@ description: 维护 `docs/overview/` 轻量 RepoWiki 层，负责中文标准格
 
 - `reverse-spec` 负责生成深层分析素材
 - `wiki` 负责把这些素材收敛成可工作的轻量 overview
+
+具体边界：
+
+- `.spec-facts.json` 是 wiki 自动刷新时优先读取的结构化事实源
+- `full-spec.md` 是深度分析参考，不应整篇拷贝进 `ARCHITECTURE.md`
+- `ARCHITECTURE.md` 应只沉淀长期有效的结构、边界和约束；需要时由人工从 `full-spec.md` 提炼稳定结论后回写
 
 ### `vibeflow-router`
 

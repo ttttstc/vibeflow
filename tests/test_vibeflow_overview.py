@@ -71,6 +71,7 @@ class TestVibeFlowOverview:
         assert "`ARCHITECTURE.md`：已同步" in current_state_doc
         assert wiki_status["docs"]["PROJECT.md"]["stale"] is False
         assert wiki_status["docs"]["ARCHITECTURE.md"]["stale"] is False
+        assert "content_hash" in wiki_status["docs"]["PROJECT.md"]["generated_blocks"]["代码面速览"]
         assert "CURRENT-STATE.md" in wiki_status["docs"]
 
     def test_refresh_preserves_manual_sections_and_updates_generated_block(self, tmp_path):
@@ -111,6 +112,35 @@ class TestVibeFlowOverview:
         overview_module.refresh_current_state(tmp_path, state)
 
         current_state_doc = (tmp_path / "docs" / "overview" / "CURRENT-STATE.md").read_text(encoding="utf-8")
+        wiki_status = json.loads((tmp_path / ".vibeflow" / "wiki-status.json").read_text(encoding="utf-8"))
         assert "`PROJECT.md`：待同步" in current_state_doc
         assert "`ARCHITECTURE.md`：待同步" in current_state_doc
         assert "源输入已变化" in current_state_doc
+        assert wiki_status["docs"]["PROJECT.md"]["stale"] is True
+        assert wiki_status["docs"]["ARCHITECTURE.md"]["stale"] is True
+        assert "源输入已变化，尚未重新同步" in wiki_status["docs"]["PROJECT.md"]["stale_reasons"]
+
+    def test_refresh_current_state_detects_generated_block_drift(self, tmp_path):
+        state = paths_module.default_state(tmp_path, topic="demo")
+        paths_module.save_state(tmp_path, state)
+        write_json(tmp_path / "feature-list.json", {"project": "demo", "features": []})
+        write_json(tmp_path / ".vibeflow" / "codebase-map.json", minimal_codebase_map(["alpha"]))
+
+        overview_module.ensure_overview_docs(tmp_path, state)
+
+        project_path = tmp_path / "docs" / "overview" / "PROJECT.md"
+        project_doc = project_path.read_text(encoding="utf-8")
+        assert "- 主要模块：alpha" in project_doc
+        write(project_path, project_doc.replace("- 主要模块：alpha", "- 主要模块：manual-edit"))
+
+        overview_module.refresh_current_state(tmp_path, state)
+
+        current_state_doc = (tmp_path / "docs" / "overview" / "CURRENT-STATE.md").read_text(encoding="utf-8")
+        wiki_status = json.loads((tmp_path / ".vibeflow" / "wiki-status.json").read_text(encoding="utf-8"))
+
+        assert "`PROJECT.md`：待同步" in current_state_doc
+        assert "生成区块“代码面速览”内容已漂移" in current_state_doc
+        assert "`ARCHITECTURE.md`：已同步" in current_state_doc
+        assert wiki_status["docs"]["PROJECT.md"]["stale"] is True
+        assert "生成区块“代码面速览”内容已漂移" in wiki_status["docs"]["PROJECT.md"]["stale_reasons"]
+        assert wiki_status["docs"]["ARCHITECTURE.md"]["stale"] is False

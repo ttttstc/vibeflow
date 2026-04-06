@@ -2,33 +2,36 @@
   "version": 1,
   "docs": {
     "PROJECT.md": {
-      "last_refreshed_at": "2026-04-06T12:08:49+08:00",
+      "last_refreshed_at": "2026-04-06T12:40:55+08:00",
       "stale": false,
       "stale_reasons": [],
       "source_hash": "83b8433520d347fce4c12d154a2179f09b04db9ce2398d003f55d666ff90edbb",
       "generated_blocks": {
         "代码面速览": {
-          "source_hash": "ec1173958a8b8973390ca23065bcf1e2bed7b4bb0eb26069bd160f49dac7f4b0"
+          "content_hash": "ec1173958a8b8973390ca23065bcf1e2bed7b4bb0eb26069bd160f49dac7f4b0"
         }
-      }
+      },
+      "last_checked_at": "2026-04-06T12:40:55+08:00"
     },
     "ARCHITECTURE.md": {
-      "last_refreshed_at": "2026-04-06T12:08:49+08:00",
+      "last_refreshed_at": "2026-04-06T12:40:55+08:00",
       "stale": false,
       "stale_reasons": [],
       "source_hash": "c64d0ebd7ea520ab2bb660a6efb31760f03c67e19eed24207643b5f0e7c3a5de",
       "generated_blocks": {
         "技术快照": {
-          "source_hash": "7deac3527733ab10c7c9009095a856e0289b2e4bac9e32c4e801f5fa27719f93"
+          "content_hash": "7deac3527733ab10c7c9009095a856e0289b2e4bac9e32c4e801f5fa27719f93"
         }
-      }
+      },
+      "last_checked_at": "2026-04-06T12:40:55+08:00"
     },
     "CURRENT-STATE.md": {
-      "last_refreshed_at": "2026-04-06T12:08:49+08:00",
+      "last_refreshed_at": "2026-04-06T12:40:55+08:00",
       "stale": false,
       "stale_reasons": [],
       "source_hash": "a11b3f4635d307c4e7b845f8b5199bb10bbe76efdee4de1e753e87eb50ca81c2",
-      "generated_blocks": {}
+      "generated_blocks": {},
+      "last_checked_at": "2026-04-06T12:40:55+08:00"
     }
   }
 }
