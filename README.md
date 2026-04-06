@@ -11,6 +11,9 @@
 
 [安装](#安装) · [3 分钟上手](#3-分钟上手) · [核心能力](#核心能力) · [Skills](#skills) · [能力对比](#vibeflow-与主流-ai-编排框架能力对比)
 
+  <a href="https://github.com/ttttstc/vibeflow/releases"><img src="https://img.shields.io/github/v/tag/ttttstc/vibeflow?label=version&style=flat-square" alt="Version"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square" alt="License"></a>
+
 </div>
 
 ---
