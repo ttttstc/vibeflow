@@ -6,7 +6,9 @@
 # 使用方法：复制以下命令，粘贴到 Claude Code 对话框运行：
 #
 #   /sh curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.sh | bash
-#   /sh curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.sh | VIBEFLOW_VERSION=v1.0.0 bash
+#
+# 可选：指定版本（默认安装 latest）
+#   /sh curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.sh | VIBEFLOW_VERSION=0.8.0 bash
 #
 # 安装后运行：
 #   /plugin install vibeflow@vibeflow

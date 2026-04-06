@@ -4,7 +4,9 @@
 #
 # Usage:
 #   irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.ps1 | iex
-#   $env:VIBEFLOW_VERSION="v1.0.0"; irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.ps1 | iex
+#
+# Optional: specify version (default installs latest)
+#   $env:VIBEFLOW_VERSION="0.8.0"; irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.ps1 | iex
 #
 # After installation, use Claude Code to install plugins:
 #   /plugin install vibeflow@vibeflow
