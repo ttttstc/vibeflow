@@ -151,6 +151,7 @@ ls skills/vibeflow-*/
 
 预期技能：
 - vibeflow-router
+- vibeflow-wiki
 - vibeflow-spark
 - vibeflow-office-hours
 - vibeflow-roundtable
@@ -401,6 +402,7 @@ VibeFlow支持四种工作流程模板。根据项目范围、团队规模和治
 | 技能 | 目的 |
 |------|------|
 | `vibeflow-router` | 在会话开始时路由整个VibeFlow生命周期的工作 |
+| `vibeflow-wiki` | 维护 `docs/overview/` 轻量 RepoWiki 层，负责中文格式、生成区块、局部刷新和 freshness 检查 |
 | `vibeflow-spark` | 灵感迸发：编排 Office Hours、复杂度扫描、DeepResearch、Roundtable、CEO 价值评估和 Spark 收口确认 |
 | `vibeflow-office-hours` | Spark 默认起点：做问题框定、范围梳理和验收标准确认 |
 | `vibeflow-deepresearch` | 深度调研：竞品分析、技术栈分析、能力矩阵、产品护城河调研 |

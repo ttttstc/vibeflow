@@ -1,46 +1,59 @@
-# Project - sample-priority-api
+# 项目总览 - sample-priority-api
 
-## Summary
+> 文档类型：项目底座
+> 维护方式：人工正文 + 生成区块
+> 状态：正式
+> 最近审阅：2026-04-06
+> 主要输入：README.md、feature-list.json、rules/、docs/changes/
 
-This sample project validates the VibeFlow delivery flow on a small backend-style codebase.
+## 项目摘要
 
-## Current Project Context
+sample-priority-api 由 VibeFlow 管理。这份文档用于沉淀项目长期有效的上下文和边界。
 
-- Delivery context: `greenfield`
-- Active change package: [Current Change](../changes/2026-03-21-sample-priority-api/)
-- Long-lived project context lives under `docs/overview/`.
-- Per-change decisions live under `docs/changes/<change-id>/...`.
+## 项目目标
 
-## Where To Start
+- 待补充：用 2 到 5 条描述项目长期要达成的目标。
 
-- Project overview: [README.md](../../README.md)
-- Current state snapshot: [CURRENT-STATE.md](CURRENT-STATE.md)
-- Active change package: [Current Change](../changes/2026-03-21-sample-priority-api/)
+## 非目标
 
-## Key Directories
+- 待补充：明确项目当前不解决的问题，帮助后续设计收边界。
 
-- `src/` or the main source root: implementation code
-- `tests/`: verification and regression coverage
-- `docs/overview/`: long-lived project context
-- `docs/changes/`: change-by-change delivery records
+## 核心概念
 
-## Current Capabilities
+- 待补充：列出项目领域概念、关键术语和内部对象。
 
-- Normalize priority aliases
-- Summarize normalized work items
-- Publish runnable example and delivery artifacts
+## 能力地图
 
-## Core User Flows
+- 待补充：只写长期稳定能力，不写一次性变更任务。
 
-- Capture the main stable user flow here when the product surface stabilizes.
-- Keep this section long-lived; do not rewrite it for every individual change.
+## 主流程
 
-## Non-Goals
+- 待补充：描述最关键的业务链路或交付链路。
 
-- Record what this project intentionally does not do when boundaries become explicit.
+## 外部依赖
 
-## Update Policy
+- 待补充：记录外部系统、外部平台、重要文件契约。
 
-- Update this file when project positioning, stable capabilities, or product boundaries change.
-- Do not rewrite it for every small implementation detail.
+## 关键决策
 
+- 待补充：记录当前已经生效、应长期遵守的关键设计决策。
+
+## 开放问题
+
+- 待补充：记录下一步设计仍需回答的问题。
+
+## 代码面速览
+
+<!-- 生成区块:代码面速览 开始 -->
+- 代码面来源：`codebase-map`
+- 主要语言：python
+- 主要模块：sample_priority_api
+- 关键入口：待补充
+- 规则文件数：0
+- 规则文件示例：无
+<!-- 生成区块:代码面速览 结束 -->
+
+## 更新规则
+
+- 当项目目标、能力边界、关键决策或外部依赖变化时，必须回写本文件。
+- 自动化只允许修改生成区块，其他正文由人工维护。
