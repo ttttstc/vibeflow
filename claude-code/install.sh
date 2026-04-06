@@ -8,7 +8,7 @@
 #   /sh curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.sh | bash
 #
 # 可选：指定版本（默认安装 latest）
-#   /sh curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.sh | VIBEFLOW_VERSION=0.8.0 bash
+#   /sh curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/claude-code/install.sh | VIBEFLOW_VERSION=1.1.1 bash
 #
 # 安装后运行：
 #   /plugin install vibeflow@vibeflow
