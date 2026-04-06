@@ -54,6 +54,7 @@ class TestVibeFlowV2:
         contract = paths_module.path_contract(tmp_path, state)
         assert contract["build_reports_dir"].name == "build-reports"
         assert contract["overview"]["project"].name == "PROJECT.md"
+        assert contract["wiki_status"].name == "wiki-status.json"
         assert contract["artifacts"]["spark"].name == "brief.md"
         assert contract["artifacts"]["design_review"] == contract["artifacts"]["design"]
 
@@ -63,10 +64,12 @@ class TestVibeFlowV2:
         assert (project_root / ".vibeflow" / "state.json").exists()
         assert not (project_root / ".vibeflow" / "runtime.json").exists()
         assert not (project_root / ".vibeflow" / "work-config.json").exists()
+        assert (project_root / ".vibeflow" / "wiki-status.json").exists()
         assert (project_root / "docs" / "overview" / "CURRENT-STATE.md").exists()
         assert (project_root / "docs" / "overview" / "PROJECT.md").exists()
         assert (project_root / "docs" / "overview" / "ARCHITECTURE.md").exists()
         assert not (project_root / "docs" / "overview" / "README.md").exists()
+        assert "# 项目总览 - demo" in (project_root / "docs" / "overview" / "PROJECT.md").read_text(encoding="utf-8")
 
     def test_runtime_is_embedded_in_state(self, tmp_path):
         state = paths_module.default_state(tmp_path, topic="demo")

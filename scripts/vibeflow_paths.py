@@ -209,6 +209,10 @@ def overview_current_state_path(project_root: Path) -> Path:
     return overview_root(project_root) / "CURRENT-STATE.md"
 
 
+def wiki_status_path(project_root: Path) -> Path:
+    return project_root / ".vibeflow" / "wiki-status.json"
+
+
 def increments_dir(project_root: Path) -> Path:
     return project_root / ".vibeflow" / "increments"
 
@@ -299,6 +303,7 @@ def path_contract(project_root: Path, state: dict | None = None) -> dict:
             "architecture": overview_architecture_path(project_root),
             "current_state": overview_current_state_path(project_root),
         },
+        "wiki_status": wiki_status_path(project_root),
         "increment_queue": increment_queue_path(project_root),
         "increment_history": increment_history_path(project_root),
         "increment_requests_dir": increment_requests_dir(project_root),

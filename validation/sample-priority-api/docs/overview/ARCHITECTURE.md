@@ -1,29 +1,52 @@
-# Architecture
+# 架构总览
 
-## Technical Snapshot
+> 文档类型：工程结构
+> 维护方式：人工正文 + 生成区块
+> 状态：正式
+> 最近审阅：2026-04-06
+> 主要输入：docs/architecture/.spec-facts.json、rules/、源码目录
 
-- Languages: python
-- Frameworks: TBD
-- Source roots: src
-- Test roots: tests
+## 架构摘要
 
-## Major Modules
+- 待补充：用一句话概括当前系统如何组织。
 
-- `sample_priority_api`
+## 技术快照
 
-## Entrypoints
+<!-- 生成区块:技术快照 开始 -->
+- 代码事实来源：`codebase-map`
+- 主要语言：python
+- 框架线索：待补充
+- 源码根目录：src
+- 测试根目录：tests
+- 主要模块：sample_priority_api
+- 关键入口：待补充
+<!-- 生成区块:技术快照 结束 -->
 
-- Add the main runtime entrypoints here.
+## 模块职责
 
-## Delivery Files
+- 待补充：解释每个主要模块负责什么，而不是简单列目录。
 
-- `docs/overview/`: long-lived project context
-- `docs/changes/<change-id>/`: per-change context, design, tasks, and verification
-- `feature-list.json`: feature execution state
-- `.vibeflow/`: workflow state and internal execution files
+## 依赖规则
 
-## Update Policy
+- 待补充：说明依赖方向、禁止关系和边界约束。
 
-- Update this file when architecture, module boundaries, or runtime flow changes.
-- Avoid rewriting it for minor implementation details.
+## 入口与运行流
 
+- 待补充：描述 CLI、脚本、服务入口以及主链路。
+
+## 关键状态与数据
+
+- 待补充：记录状态文件、数据文件、关键运行对象。
+
+## 验证策略
+
+- 待补充：说明 review、system test、qa、coverage 分别验证什么。
+
+## 已知约束与风险
+
+- 待补充：记录技术债、边界条件、宿主差异和高风险区域。
+
+## 更新规则
+
+- 当目录结构、主要模块、入口点、依赖方向或关键状态模型变化时，必须回写本文件。
+- 自动化只允许修改生成区块，其他正文由人工维护。

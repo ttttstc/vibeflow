@@ -1,18 +1,18 @@
-# Project Overview
+# 总览入口
 
-Start here when you are new to this repository.
+首次进入仓库时，建议按下面的顺序阅读：
 
-## Read in this order
+## 阅读顺序
 
-1. [CURRENT-STATE.md](CURRENT-STATE.md) - Where the project stands right now
-2. [PROJECT.md](PROJECT.md) - What this project is and what it is intentionally trying to be
-3. [ARCHITECTURE.md](ARCHITECTURE.md) - System structure and technical flow
-4. [Current Change Package](../changes/2026-03-21-sample-priority-api/) - The active delivery package
+1. [CURRENT-STATE.md](CURRENT-STATE.md) - 当前项目状态、阻塞与下一步建议
+2. [PROJECT.md](PROJECT.md) - 项目底座、目标边界与核心概念
+3. [ARCHITECTURE.md](ARCHITECTURE.md) - 模块结构、依赖规则与运行流
+4. [当前变更包](../changes/2026-03-21-sample-priority-api/) - 本次交付的 brief / design / tasks / verification
 
-## Quick links
+## 快速链接
 
-- [Project README](../../README.md)
-- [Current Change Package](../changes/2026-03-21-sample-priority-api/)
+- [项目 README](../../README.md)
+- [当前变更包](../changes/2026-03-21-sample-priority-api/)
 - [feature-list.json](../../feature-list.json)
 - [RELEASE_NOTES.md](../../RELEASE_NOTES.md)
 

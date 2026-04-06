@@ -1,41 +1,48 @@
-# Current State
+# 当前状态
 
-- Last updated: 2026-04-04T20:17:38+08:00
-- Mode: `full`
-- Context: `greenfield`
-- Current phase: `reflect`
-- Active change: `2026-03-21-sample-priority-api`
+> 文档类型：运行态快照
+> 维护方式：自动生成
+> 状态：派生
+> 最近刷新：2026-04-06 12:40:55
+> 主要输入：.vibeflow/state.json、feature-list.json、RELEASE_NOTES.md、active change
 
-## Recommended Reading
+## 快照
 
-- [Project brief](PROJECT.md)
-- [Architecture](ARCHITECTURE.md)
-- [Active change package](../changes/2026-03-21-sample-priority-api/)
+- 模式：`full`
+- 上下文：`greenfield`
+- 当前阶段：`reflect`
+- 当前活跃变更：`2026-03-21-sample-priority-api`
+
+## 当前变更
+
+- 变更目录：`docs/changes/2026-03-21-sample-priority-api`
+- 关键文件：`docs/changes/2026-03-21-sample-priority-api/brief.md`、`docs/changes/2026-03-21-sample-priority-api/design.md`、`docs/changes/2026-03-21-sample-priority-api/tasks.md`
+- 验证目录：`docs/changes/2026-03-21-sample-priority-api/verification/`
+
+## 交付状态
+
+- 功能状态：3/3 通过，0 失败，0 待处理
+- 已完成 checkpoint：spark、design、tasks、build init、build config、build work、review、test system
+- 待完成 checkpoint：quick ready、build、test、test qa
+
+## 最新信号
+
+- 最新发布记录：0.1.0 - 2026-03-21
+- 主要语言：python
+- 模块快照：sample_priority_api
+
+## 当前风险与未知项
+
+- 仍有未完成 checkpoint：quick ready、build、test、test qa
+
+## 建议阅读顺序
+
+- [项目总览](PROJECT.md)
+- [架构总览](ARCHITECTURE.md)
+- [当前变更包](../changes/2026-03-21-sample-priority-api/)
 - [feature-list.json](../../feature-list.json)
 
-## Delivery Snapshot
+## 文档同步状态
 
-- Active change root: `docs/changes/2026-03-21-sample-priority-api`
-- Feature status: 3/3 passing, 0 failing, 0 pending
-- Completed checkpoints: spark, design, tasks, build init, build config, build work, review, test system
-- Pending checkpoints: quick ready, test qa
-- Latest release note heading: 0.1.0 - 2026-03-21
-
-## Current Implementation Surface
-
-- Languages: python
-- Module snapshot: sample_priority_api
-- Codebase map: available
-
-## Key Files To Open Next
-
-- [Brief](../changes/2026-03-21-sample-priority-api/brief.md)
-- [Design](../changes/2026-03-21-sample-priority-api/design.md)
-- [Tasks](../changes/2026-03-21-sample-priority-api/tasks.md)
-- [Verification](../changes/2026-03-21-sample-priority-api/verification/)
-
-## Notes
-
-- This file is refreshed automatically to summarize the latest project state.
-- Stable project positioning belongs in PROJECT.md.
-
+- `PROJECT.md`：已同步
+- `ARCHITECTURE.md`：已同步
