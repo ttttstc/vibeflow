@@ -24,7 +24,12 @@ if ($phaseInfo.open_files) {
     }
 }
 
-$statusHint = "`n`nDetected phase: $($phaseInfo.phase). Reason: $($phaseInfo.reason)`nResume mode: $($phaseInfo.resume_mode)`nNext action: $($phaseInfo.next_action)$openFiles"
+$overviewHint = ""
+if ($phaseInfo.overview_suggestion) {
+    $overviewHint = "`nOverview hint: $($phaseInfo.overview_suggestion)"
+}
+
+$statusHint = "`n`nDetected phase: $($phaseInfo.phase). Reason: $($phaseInfo.reason)`nResume mode: $($phaseInfo.resume_mode)`nNext action: $($phaseInfo.next_action)$overviewHint$openFiles"
 
 $sessionContext = @"
 <EXTREMELY_IMPORTANT>

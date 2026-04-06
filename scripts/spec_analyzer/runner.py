@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Run full static analysis and produce docs/architecture/.spec-facts.json"""
+"""Run static analysis and produce internal architecture facts."""
 from __future__ import annotations
 
 import argparse
@@ -14,7 +14,13 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from spec_analyzer._utils import iter_code_files, write_json
 from spec_analyzer.python_analyzer import analyze_python
 from spec_analyzer.typescript_analyzer import analyze_typescript
-from spec_analyzer.diagrams import generate_module_graph_mermaid, generate_er_diagram_mermaid
+from spec_analyzer.diagrams import (
+    generate_c4_component_mermaid,
+    generate_c4_container_mermaid,
+    generate_c4_context_mermaid,
+    generate_er_diagram_mermaid,
+    generate_module_graph_mermaid,
+)
 
 
 def run_analysis(
@@ -27,17 +33,12 @@ def run_analysis(
     Args:
         project_root: Root directory of the project to analyze
         include_tests: Whether to include test files
-        output_path: Output path for .spec-facts.json, defaults to docs/architecture/.spec-facts.json
+        output_path: Optional output path for spec-facts.json. If omitted, analysis
+            is returned in-memory without writing process files.
 
     Returns:
         The complete spec_facts dict
     """
-    if output_path is None:
-        output_path = project_root / "docs" / "architecture" / ".spec-facts.json"
-
-    # Ensure output directory exists
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-
     # Get all code files to detect languages
     all_files = iter_code_files(project_root, include_tests)
 
@@ -82,10 +83,14 @@ def run_analysis(
     spec_facts["diagrams"] = {
         "module_graph_mermaid": generate_module_graph_mermaid(spec_facts["modules"]),
         "er_diagram_mermaid": generate_er_diagram_mermaid(spec_facts["entities"]),
+        "c4_context_mermaid": generate_c4_context_mermaid(project_root.name, spec_facts["tech_stack"]),
+        "c4_container_mermaid": generate_c4_container_mermaid(project_root.name, spec_facts["modules"]),
+        "c4_component_mermaid": generate_c4_component_mermaid(spec_facts["modules"]),
     }
 
-    # Write output
-    write_json(output_path, spec_facts)
+    if output_path is not None:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        write_json(output_path, spec_facts)
 
     return spec_facts
 
@@ -93,7 +98,7 @@ def run_analysis(
 def main():
     """CLI entry point."""
     parser = argparse.ArgumentParser(
-        description="Run static analysis and produce .spec-facts.json"
+        description="Run static analysis and produce internal architecture facts"
     )
     parser.add_argument(
         "--project-root",
@@ -110,7 +115,7 @@ def main():
         "--output",
         type=Path,
         default=None,
-        help="Output path for .spec-facts.json",
+        help="Optional output path for spec-facts.json",
     )
 
     args = parser.parse_args()
@@ -128,9 +133,11 @@ def main():
             output_path=args.output,
         )
 
-        output_path = args.output or project_root / "docs" / "architecture" / ".spec-facts.json"
         print(f"\nAnalysis complete!")
-        print(f"Output written to: {output_path}")
+        if args.output:
+            print(f"Output written to: {args.output}")
+        else:
+            print("Output written to: [in-memory only]")
         print(f"Source files analyzed: {result['source_files_count']}")
         print(f"Languages detected: {[l['name'] for l in result['languages']]}")
         print(f"Modules found: {len(result['modules'])}")

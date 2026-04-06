@@ -157,18 +157,6 @@ def now_iso() -> str:
     return datetime.now().astimezone().isoformat(timespec="seconds")
 
 
-def write_json(path: Path, data: object) -> Path:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
-    return path
-
-
-def write_text(path: Path, content: str) -> Path:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(content, encoding="utf-8")
-    return path
-
-
 def read_json(path: Path, default):
     if not path.exists():
         return default
@@ -421,41 +409,15 @@ def render_codebase_map_markdown(data: dict) -> str:
     return "\n".join(lines).rstrip() + "\n"
 
 
-def load_existing_codebase_map(project_root: Path) -> dict | None:
-    contract = path_contract(project_root)
-    if not contract["codebase_map_json"].exists():
-        return None
-    return read_json(contract["codebase_map_json"], None)
-
-
 def ensure_codebase_map(
     project_root: Path,
     *,
     refresh: str = "auto",
     include_markdown: bool = False,
 ) -> tuple[dict, str]:
-    contract = path_contract(project_root)
-    current_fingerprint = repo_fingerprint(project_root)
-    existing = load_existing_codebase_map(project_root)
-    if (
-        refresh == "auto"
-        and existing
-        and existing.get("version") == MAP_VERSION
-        and existing.get("repo_fingerprint") == current_fingerprint
-    ):
-        if include_markdown and not contract["codebase_map_md"].exists():
-            write_text(contract["codebase_map_md"], render_codebase_map_markdown(existing))
-        if not include_markdown and contract["codebase_map_md"].exists():
-            contract["codebase_map_md"].unlink()
-        return existing, "reused"
-
-    data = build_codebase_map(project_root)
-    write_json(contract["codebase_map_json"], data)
-    if include_markdown:
-        write_text(contract["codebase_map_md"], render_codebase_map_markdown(data))
-    elif contract["codebase_map_md"].exists():
-        contract["codebase_map_md"].unlink()
-    return data, "built"
+    del refresh
+    del include_markdown
+    return build_codebase_map(project_root), "built"
 
 
 def read_change_sources(project_root: Path, change_root: Path) -> tuple[dict[str, str], str]:
@@ -546,13 +508,13 @@ def build_risk_notes(terms: list[str], relevant_paths: list[str]) -> list[str]:
     risk_notes = []
     haystack = " ".join(terms + relevant_paths).lower()
     if any(token in haystack for token in ("auth", "login", "session", "permission")):
-        risk_notes.append("Touches authentication or session related paths; verify compatibility carefully.")
+        risk_notes.append("涉及认证、登录或会话相关路径，实施前要重点确认兼容性。")
     if any(token in haystack for token in ("payment", "billing", "invoice")):
-        risk_notes.append("Touches payment or billing related paths; treat changes as high risk.")
+        risk_notes.append("涉及支付或计费相关路径，应按高风险改动处理。")
     if any(token in haystack for token in ("data", "model", "schema", "migration", "db")):
-        risk_notes.append("Touches data model surfaces; confirm backward compatibility before implementation.")
+        risk_notes.append("涉及数据模型、Schema 或迁移面，实施前要确认向后兼容。")
     if not risk_notes:
-        risk_notes.append("No elevated risk detected from the current lightweight scan; verify manually if scope expands.")
+        risk_notes.append("当前轻量扫描未发现明显高风险点；如果范围继续扩大，仍需人工复核。")
     return risk_notes
 
 
@@ -602,7 +564,7 @@ def build_change_impact(project_root: Path, state: dict, codebase_map: dict, *, 
         "config_surfaces": config_surfaces[:8],
         "risk_notes": build_risk_notes(terms, relevant_paths),
         "suggested_read_order": suggested_read_order[:12],
-        "unknowns": [] if docs else ["No change documents were found; impact analysis used repository structure only."],
+        "unknowns": [] if docs else ["未找到当前变更文档，本次判断仅基于仓库结构推断。"],
         "current_structure_summary": {
             "languages": [item["name"] for item in codebase_map.get("languages", [])[:3]],
             "source_roots": codebase_map.get("roots", {}).get("source", []),
@@ -665,19 +627,11 @@ def render_change_impact_markdown(data: dict) -> str:
     return "\n".join(lines).rstrip() + "\n"
 
 
-def write_change_impact(
-    project_root: Path,
-    state: dict,
-    data: dict,
-    *,
-    include_json: bool = False,
-) -> tuple[Path | None, Path]:
-    contract = path_contract(project_root, state)
-    json_path = contract["codebase_impact_json"]
-    md_path = contract["codebase_impact_md"]
-    if include_json:
-        write_json(json_path, data)
-    elif json_path.exists():
-        json_path.unlink()
-    write_text(md_path, render_change_impact_markdown(data))
-    return (json_path if include_json else None), md_path
+def change_focus_summary(data: dict) -> dict:
+    return {
+        "relevant_modules": [item.get("path") for item in data.get("relevant_modules", []) if item.get("path")][:6],
+        "integration_points": [item for item in data.get("integration_points", []) if item][:6],
+        "affected_tests": [item for item in data.get("affected_tests", []) if item][:6],
+        "risk_notes": [item for item in data.get("risk_notes", []) if item][:4],
+        "suggested_read_order": [item for item in data.get("suggested_read_order", []) if item][:8],
+    }

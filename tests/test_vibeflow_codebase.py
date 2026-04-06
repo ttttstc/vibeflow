@@ -41,10 +41,10 @@ def copy_sample_project(tmp_path: Path, name: str) -> Path:
 
 
 class TestCodebaseArtifacts:
-    def test_map_codebase_builds_and_then_reuses(self, tmp_path):
+    def test_map_codebase_refreshes_overview_without_persisting_process_files(self, tmp_path):
         project_root = copy_sample_project(tmp_path, "sample-codebase-map")
 
-        first = run_python(
+        result = run_python(
             ROOT / "scripts" / "map-codebase.py",
             "--project-root",
             project_root,
@@ -52,24 +52,23 @@ class TestCodebaseArtifacts:
             "force",
             "--json",
         )
-        second = run_python(ROOT / "scripts" / "map-codebase.py", "--project-root", project_root, "--json")
+        payload = json.loads(result.stdout)
+        assert payload["status"] == "built"
+        assert payload["overview"]["project"].endswith("docs\\overview\\PROJECT.md")
+        assert payload["overview"]["architecture"].endswith("docs\\overview\\ARCHITECTURE.md")
+        assert not (project_root / ".vibeflow" / "codebase-map.json").exists()
+        assert not (project_root / ".vibeflow" / "codebase-map.md").exists()
+        assert not (project_root / ".vibeflow" / "analysis").exists()
 
-        first_payload = json.loads(first.stdout)
-        second_payload = json.loads(second.stdout)
-        assert first_payload["status"] == "built"
-        assert second_payload["status"] == "reused"
+        project_doc = (project_root / "docs" / "overview" / "PROJECT.md").read_text(encoding="utf-8")
+        architecture_doc = (project_root / "docs" / "overview" / "ARCHITECTURE.md").read_text(encoding="utf-8")
+        assert "sample_priority_api" in project_doc
+        assert "src" in architecture_doc
+        assert "tests" in architecture_doc
+        assert "C4 分层结构" in architecture_doc
+        assert "Arc42 深度架构视图" in architecture_doc
 
-        map_json = project_root / ".vibeflow" / "codebase-map.json"
-        map_md = project_root / ".vibeflow" / "codebase-map.md"
-        assert map_json.exists()
-        assert not map_md.exists()
-
-        data = read_json(map_json)
-        assert data["roots"]["source"] == ["src"]
-        assert data["roots"]["tests"] == ["tests"]
-        assert any(module["path"] == "src/sample_priority_api" for module in data["modules"])
-
-    def test_map_change_impact_writes_change_scoped_artifacts(self, tmp_path):
+    def test_map_change_impact_refreshes_current_state_without_writing_change_scoped_process_files(self, tmp_path):
         project_root = copy_sample_project(tmp_path, "sample-codebase-impact")
 
         result = run_python(ROOT / "scripts" / "map-change-impact.py", "--project-root", project_root, "--json")
@@ -83,12 +82,13 @@ class TestCodebaseArtifacts:
         impact_md_path = change_root / "codebase-impact.md"
 
         assert not impact_json_path.exists()
-        assert impact_md_path.exists()
+        assert not impact_md_path.exists()
+        assert not (project_root / ".vibeflow" / "analysis").exists()
         assert payload["matched_terms"]
         assert payload["relevant_modules"] >= 1
 
-        content = impact_md_path.read_text(encoding="utf-8")
-        assert "## Relevant Modules" in content
-        assert "## Integration Points" in content
-        assert "## Suggested Read Order" in content
-        assert "sample_priority_api" in content
+        current_state = (project_root / "docs" / "overview" / "CURRENT-STATE.md").read_text(encoding="utf-8")
+        assert "## 当前变更关注点" in current_state
+        assert "重点模块" in current_state
+        assert "建议先读" in current_state
+        assert "sample_priority_api" in current_state

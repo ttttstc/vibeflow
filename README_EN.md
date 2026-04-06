@@ -232,7 +232,7 @@ Note: `High / Medium / Low` indicates how central that capability is to each fra
 | `brief.md` | Goal, scope, constraints, and acceptance baseline |
 | `design.md` | Implementation plan and Build Contract source of truth |
 | `tasks.md` | Execution-grade task handoff |
-| `codebase-impact.md` | Modules and tests affected by this change |
+| `docs/overview/CURRENT-STATE.md` | Current change focus, affected areas, and recommended reading order |
 | `verification/review.md` | Global review result |
 | `verification/system-test.md` | System test result |
 | `verification/qa.md` | UI / browser verification result |

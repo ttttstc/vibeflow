@@ -8,6 +8,8 @@ import re
 from datetime import datetime
 from pathlib import Path
 
+from spec_analyzer.assembler import build_architecture_analysis
+from vibeflow_codebase import build_change_impact, build_codebase_map, change_focus_summary
 from vibeflow_paths import feature_list_path, load_state, path_contract
 
 
@@ -16,6 +18,7 @@ ARCHITECTURE_DOC = "ARCHITECTURE.md"
 CURRENT_STATE_DOC = "CURRENT-STATE.md"
 PROJECT_BLOCK = "代码面速览"
 ARCHITECTURE_BLOCK = "技术快照"
+ARCHITECTURE_ANALYSIS_BLOCK = "Arc42 架构视图"
 LEGACY_PROJECT_MARKERS = ("# Project - ", "## Summary", "## Current Capabilities")
 LEGACY_ARCHITECTURE_MARKERS = ("# Architecture", "## Technical Snapshot", "## Major Modules")
 GENERATED_BLOCK_MARKER_TEMPLATE = "<!-- 生成区块:{name} {edge} -->"
@@ -130,43 +133,25 @@ def rules_snapshot(project_root: Path) -> dict:
     return {"count": len(files), "files": files[:20]}
 
 
-def codebase_snapshot(project_root: Path, contract: dict) -> dict:
-    spec_facts_path = contract["spec_facts"]
-    if spec_facts_path.exists():
-        data = read_json(spec_facts_path, {})
-        languages = []
-        for item in data.get("languages", []):
-            if isinstance(item, dict) and item.get("name"):
-                languages.append(str(item["name"]))
-            elif isinstance(item, str):
-                languages.append(item)
-        modules = []
-        for item in data.get("modules", []):
-            if isinstance(item, dict) and item.get("name"):
-                modules.append(str(item["name"]))
-        entrypoints = []
-        for item in data.get("api_surface", []):
-            if isinstance(item, dict) and item.get("path"):
-                entrypoints.append(str(item["path"]))
-        return {
-            "source": "spec-facts",
-            "languages": languages[:5],
-            "modules": modules[:10],
-            "frameworks": [],
-            "roots": {},
-            "entrypoints": entrypoints[:6],
-        }
-    path = contract["codebase_map_json"]
-    if not path.exists():
-        return {"source": "none", "languages": [], "modules": [], "frameworks": [], "roots": {}, "entrypoints": []}
-    data = read_json(path, {})
+def codebase_snapshot(project_root: Path, contract: dict, codebase_map: dict | None = None) -> dict:
+    del contract
+    data = codebase_map or build_codebase_map(project_root)
     return {
-        "source": "codebase-map",
+        "source": "live-repo-scan",
         "languages": [item.get("name") for item in data.get("languages", []) if item.get("name")][:5],
         "modules": [item.get("name") for item in data.get("modules", []) if item.get("name")][:10],
         "frameworks": [item.get("name") for item in data.get("frameworks", []) if item.get("name")][:5],
         "roots": data.get("roots") or {},
         "entrypoints": [item.get("path") for item in data.get("entrypoints", []) if item.get("path")][:6],
+    }
+
+
+def change_focus_snapshot(project_root: Path, state: dict, codebase_map: dict | None = None) -> dict:
+    impact = build_change_impact(project_root, state, codebase_map or build_codebase_map(project_root))
+    return {
+        "change_id": impact.get("change_id", ""),
+        "matched_terms": [item for item in impact.get("matched_terms", []) if item][:8],
+        **change_focus_summary(impact),
     }
 
 
@@ -210,6 +195,29 @@ def load_wiki_status(path: Path) -> dict:
 
 def save_wiki_status(path: Path, data: dict) -> Path:
     return write_json(path, data)
+
+
+def cleanup_legacy_process_files(project_root: Path, contract: dict) -> None:
+    legacy_paths = [
+        project_root / ".vibeflow" / "codebase-map.json",
+        project_root / ".vibeflow" / "codebase-map.md",
+        project_root / ".vibeflow" / "analysis" / "spec-facts.json",
+        project_root / ".vibeflow" / "analysis" / "spec-inferences.json",
+        project_root / ".vibeflow" / "analysis" / "inference-prompt.md",
+        project_root / ".vibeflow" / "analysis" / "architecture-analysis.md",
+        project_root / "docs" / "architecture" / ".spec-facts.json",
+        project_root / "docs" / "architecture" / ".spec-inferences.json",
+        project_root / "docs" / "architecture" / ".inference-prompt.md",
+        project_root / "docs" / "architecture" / "full-spec.md",
+        contract["change_root"] / "codebase-impact.json",
+        contract["change_root"] / "codebase-impact.md",
+    ]
+    for path in legacy_paths:
+        if path.exists():
+            path.unlink()
+    analysis_dir = project_root / ".vibeflow" / "analysis"
+    if analysis_dir.exists() and not any(analysis_dir.iterdir()):
+        analysis_dir.rmdir()
 
 
 def update_doc_status(status: dict, name: str, *, source_hash: str, generated_blocks: dict[str, dict]) -> None:
@@ -365,9 +373,7 @@ def sync_hybrid_doc(
     path: Path,
     template: str,
     *,
-    block_name: str,
-    block_content: str,
-    anchor_heading: str,
+    blocks: list[tuple[str, str, str]],
     force: bool,
     legacy_markers: tuple[str, ...],
 ) -> Path:
@@ -378,7 +384,9 @@ def sync_hybrid_doc(
     if force or looks_like_legacy_doc(current, legacy_markers):
         return write_text(path, template)
 
-    updated = replace_generated_block(current, block_name, block_content, anchor_heading)
+    updated = current
+    for block_name, block_content, anchor_heading in blocks:
+        updated = replace_generated_block(updated, block_name, block_content, anchor_heading)
     if updated != current:
         return write_text(path, updated)
     return path
@@ -418,6 +426,7 @@ def render_architecture_block(snapshot: dict) -> str:
             f"- 测试根目录：{test_roots}",
             f"- 主要模块：{modules}",
             f"- 关键入口：{entrypoints}",
+            "- 深度架构分析：见下方 Arc42 架构视图生成区块",
         ]
     )
 
@@ -429,26 +438,39 @@ def project_summary_text(project_root: Path) -> str:
     return f"{project_name(project_root)} 由 VibeFlow 管理。这份文档用于沉淀项目长期有效的上下文和边界。"
 
 
-def project_doc_source_inputs(project_root: Path, state: dict, contract: dict) -> dict:
+def project_doc_source_inputs(project_root: Path, state: dict, contract: dict, snapshot: dict | None = None) -> dict:
     return {
         "summary": project_summary_text(project_root),
         "features": feature_status_summary(project_root),
         "rules": rules_snapshot(project_root),
-        "snapshot": codebase_snapshot(project_root, contract),
+        "snapshot": snapshot or codebase_snapshot(project_root, contract),
         "context": state.get("context"),
     }
 
 
-def architecture_doc_source_inputs(project_root: Path, contract: dict) -> dict:
+def architecture_doc_source_inputs(
+    project_root: Path,
+    contract: dict,
+    snapshot: dict | None = None,
+    analysis: dict | None = None,
+) -> dict:
     return {
-        "snapshot": codebase_snapshot(project_root, contract),
+        "snapshot": snapshot or codebase_snapshot(project_root, contract),
         "rules": rules_snapshot(project_root),
+        "arc42": (analysis or build_architecture_analysis(project_root)).get("signature", {}),
     }
 
 
-def compute_overview_sync_status(project_root: Path, state: dict, contract: dict, wiki_status: dict) -> dict[str, dict]:
-    project_source_hash = stable_hash(project_doc_source_inputs(project_root, state, contract))
-    architecture_source_hash = stable_hash(architecture_doc_source_inputs(project_root, contract))
+def compute_overview_sync_status(
+    project_root: Path,
+    state: dict,
+    contract: dict,
+    wiki_status: dict,
+    snapshot: dict | None = None,
+) -> dict[str, dict]:
+    current_snapshot = snapshot or codebase_snapshot(project_root, contract)
+    project_source_hash = stable_hash(project_doc_source_inputs(project_root, state, contract, current_snapshot))
+    architecture_source_hash = stable_hash(architecture_doc_source_inputs(project_root, contract, current_snapshot))
     project_stale, project_reasons = doc_stale_status(
         wiki_status,
         PROJECT_DOC,
@@ -475,14 +497,14 @@ def compute_overview_sync_status(project_root: Path, state: dict, contract: dict
     }
 
 
-def render_project_template(project_root: Path, state: dict, contract: dict) -> tuple[str, str, str]:
+def render_project_template(project_root: Path, state: dict, contract: dict, snapshot: dict | None = None) -> tuple[str, str, str]:
     name = project_name(project_root)
     summary = read_project_summary(project_root)
     if not summary or not contains_cjk(summary):
         summary = f"{name} 由 VibeFlow 管理。这份文档用于沉淀项目长期有效的上下文和边界。"
-    snapshot = codebase_snapshot(project_root, contract)
+    current_snapshot = snapshot or codebase_snapshot(project_root, contract)
     rules_info = rules_snapshot(project_root)
-    block_content = render_project_block(snapshot, rules_info)
+    block_content = render_project_block(current_snapshot, rules_info)
     content = "\n".join(
         [
             f"# 项目总览 - {name}",
@@ -542,13 +564,20 @@ def render_project_template(project_root: Path, state: dict, contract: dict) -> 
             "",
         ]
     )
-    source_hash = stable_hash(project_doc_source_inputs(project_root, state, contract))
+    source_hash = stable_hash(project_doc_source_inputs(project_root, state, contract, current_snapshot))
     return content.rstrip() + "\n", block_content, source_hash
 
 
-def render_architecture_template(project_root: Path, contract: dict) -> tuple[str, str, str]:
-    snapshot = codebase_snapshot(project_root, contract)
-    block_content = render_architecture_block(snapshot)
+def render_architecture_template(
+    project_root: Path,
+    contract: dict,
+    snapshot: dict | None = None,
+    analysis: dict | None = None,
+) -> tuple[str, dict[str, str], str]:
+    current_snapshot = snapshot or codebase_snapshot(project_root, contract)
+    block_content = render_architecture_block(current_snapshot)
+    current_analysis = analysis or build_architecture_analysis(project_root)
+    analysis_block = current_analysis["markdown"]
     content = "\n".join(
         [
             "# 架构总览",
@@ -558,7 +587,7 @@ def render_architecture_template(project_root: Path, contract: dict) -> tuple[st
                 "人工正文 + 生成区块",
                 "正式",
                 "最近审阅",
-                "docs/architecture/.spec-facts.json、rules/、源码目录",
+                "源码目录、rules/、feature-list.json",
             ),
             "",
             "## 架构摘要",
@@ -569,42 +598,53 @@ def render_architecture_template(project_root: Path, contract: dict) -> tuple[st
             "",
             render_generated_block(ARCHITECTURE_BLOCK, block_content),
             "",
-            "## 模块职责",
+            "## Arc42 深度架构视图",
             "",
-            "- 待补充：解释每个主要模块负责什么，而不是简单列目录。",
+            render_generated_block(ARCHITECTURE_ANALYSIS_BLOCK, analysis_block),
             "",
-            "## 依赖规则",
+            "## 人工补充",
             "",
-            "- 待补充：说明依赖方向、禁止关系和边界约束。",
-            "",
-            "## 入口与运行流",
-            "",
-            "- 待补充：描述 CLI、脚本、服务入口以及主链路。",
-            "",
-            "## 关键状态与数据",
-            "",
-            "- 待补充：记录状态文件、数据文件、关键运行对象。",
-            "",
-            "## 验证策略",
-            "",
-            "- 待补充：说明 review、system test、qa、coverage 分别验证什么。",
-            "",
-            "## 已知约束与风险",
-            "",
-            "- 待补充：记录技术债、边界条件、宿主差异和高风险区域。",
+            "- 待补充：记录业务边界、静态分析无法看出的外部系统契约，以及已确认的长期设计决策。",
             "",
             "## 更新规则",
             "",
             "- 当目录结构、主要模块、入口点、依赖方向或关键状态模型变化时，必须回写本文件。",
+            "- reverse-spec / spec_analyzer 的深度结果统一刷新到 Arc42 生成区块，不再额外维护过程文件。",
             "- 自动化只允许修改生成区块，其他正文由人工维护。",
             "",
         ]
     )
-    source_hash = stable_hash(architecture_doc_source_inputs(project_root, contract))
-    return content.rstrip() + "\n", block_content, source_hash
+    source_hash = stable_hash(architecture_doc_source_inputs(project_root, contract, current_snapshot, current_analysis))
+    return content.rstrip() + "\n", {
+        ARCHITECTURE_BLOCK: block_content,
+        ARCHITECTURE_ANALYSIS_BLOCK: analysis_block,
+    }, source_hash
 
 
-def render_current_state_doc(project_root: Path, state: dict, contract: dict, overview_sync_status: dict[str, dict]) -> tuple[str, str]:
+def render_change_focus_lines(change_focus: dict) -> list[str]:
+    relevant_modules = "、".join(change_focus.get("relevant_modules") or []) or "暂无明确热点"
+    integration_points = "、".join(change_focus.get("integration_points") or []) or "暂无明显入口"
+    affected_tests = "、".join(change_focus.get("affected_tests") or []) or "暂无明确测试影响"
+    read_order = "、".join(change_focus.get("suggested_read_order") or []) or "先看 CURRENT-STATE.md / PROJECT.md / ARCHITECTURE.md"
+    lines = [
+        f"- 重点模块：{relevant_modules}",
+        f"- 关键入口：{integration_points}",
+        f"- 受影响测试：{affected_tests}",
+        f"- 建议先读：{read_order}",
+    ]
+    for note in change_focus.get("risk_notes") or []:
+        lines.append(f"- 风险提示：{note}")
+    return lines
+
+
+def render_current_state_doc(
+    project_root: Path,
+    state: dict,
+    contract: dict,
+    overview_sync_status: dict[str, dict],
+    snapshot: dict | None = None,
+    change_focus: dict | None = None,
+) -> tuple[str, str]:
     active_change = state.get("active_change") or {}
     change_rel = active_change_rel(state)
     change_link = active_change_link(state)
@@ -613,9 +653,10 @@ def render_current_state_doc(project_root: Path, state: dict, contract: dict, ov
     completed_preview = "、".join(completed[:8]) or "无"
     pending_preview = "、".join(pending[:8]) or "无"
     release_heading = latest_release_heading(contract) or "暂无发布记录"
-    snapshot = codebase_snapshot(project_root, contract)
-    module_preview = "、".join(snapshot.get("modules") or []) or "暂无"
-    languages = "、".join(snapshot.get("languages") or []) or "未知"
+    current_snapshot = snapshot or codebase_snapshot(project_root, contract)
+    current_change_focus = change_focus or change_focus_snapshot(project_root, state)
+    module_preview = "、".join(current_snapshot.get("modules") or []) or "暂无"
+    languages = "、".join(current_snapshot.get("languages") or []) or "未知"
     project_status = overview_sync_status[PROJECT_DOC]
     architecture_status = overview_sync_status[ARCHITECTURE_DOC]
     project_stale = bool(project_status["stale"])
@@ -656,12 +697,17 @@ def render_current_state_doc(project_root: Path, state: dict, contract: dict, ov
             f"- 变更目录：`{change_rel}`",
             f"- 关键文件：`{change_rel}/brief.md`、`{change_rel}/design.md`、`{change_rel}/tasks.md`",
             f"- 验证目录：`{change_rel}/verification/`",
+            f"- 关注关键词：{'、'.join(current_change_focus.get('matched_terms') or []) or '待从变更文档继续补充'}",
             "",
             "## 交付状态",
             "",
             f"- 功能状态：{summary['passing']}/{summary['total']} 通过，{summary['failing']} 失败，{summary['pending']} 待处理",
             f"- 已完成 checkpoint：{completed_preview}",
             f"- 待完成 checkpoint：{pending_preview}",
+            "",
+            "## 当前变更关注点",
+            "",
+            *render_change_focus_lines(current_change_focus),
             "",
             "## 最新信号",
             "",
@@ -698,6 +744,7 @@ def render_current_state_doc(project_root: Path, state: dict, contract: dict, ov
             "release": release_heading,
             "project_hash": project_status["current_source_hash"],
             "architecture_hash": architecture_status["current_source_hash"],
+            "change_focus": current_change_focus,
         }
     )
     return content.rstrip() + "\n", source_hash
@@ -707,25 +754,38 @@ def ensure_overview_docs(project_root: Path, state: dict | None = None, *, force
     loaded_state = state or load_state(project_root)
     contract = path_contract(project_root, loaded_state)
     contract["overview_root"].mkdir(parents=True, exist_ok=True)
+    cleanup_legacy_process_files(project_root, contract)
+    codebase_map = build_codebase_map(project_root)
+    current_snapshot = codebase_snapshot(project_root, contract, codebase_map)
 
-    project_doc, project_block, project_hash = render_project_template(project_root, loaded_state, contract)
-    architecture_doc, architecture_block, architecture_hash = render_architecture_template(project_root, contract)
+    project_doc, project_block, project_hash = render_project_template(
+        project_root,
+        loaded_state,
+        contract,
+        current_snapshot,
+    )
+    architecture_analysis = build_architecture_analysis(project_root)
+    architecture_doc, architecture_blocks, architecture_hash = render_architecture_template(
+        project_root,
+        contract,
+        current_snapshot,
+        architecture_analysis,
+    )
 
     sync_hybrid_doc(
         contract["overview"]["project"],
         project_doc,
-        block_name=PROJECT_BLOCK,
-        block_content=project_block,
-        anchor_heading="代码面速览",
+        blocks=[(PROJECT_BLOCK, project_block, "代码面速览")],
         force=force,
         legacy_markers=LEGACY_PROJECT_MARKERS,
     )
     sync_hybrid_doc(
         contract["overview"]["architecture"],
         architecture_doc,
-        block_name=ARCHITECTURE_BLOCK,
-        block_content=architecture_block,
-        anchor_heading="技术快照",
+        blocks=[
+            (ARCHITECTURE_BLOCK, architecture_blocks[ARCHITECTURE_BLOCK], "技术快照"),
+            (ARCHITECTURE_ANALYSIS_BLOCK, architecture_blocks[ARCHITECTURE_ANALYSIS_BLOCK], "Arc42 深度架构视图"),
+        ],
         force=force,
         legacy_markers=LEGACY_ARCHITECTURE_MARKERS,
     )
@@ -743,19 +803,38 @@ def ensure_overview_docs(project_root: Path, state: dict | None = None, *, force
         status,
         ARCHITECTURE_DOC,
         source_hash=architecture_hash,
-        generated_blocks={ARCHITECTURE_BLOCK: generated_block_state(architecture_block)},
+        generated_blocks={
+            name: generated_block_state(content)
+            for name, content in architecture_blocks.items()
+        },
     )
     save_wiki_status(contract["wiki_status"], status)
-    refresh_current_state(project_root, loaded_state)
+    refresh_current_state(project_root, loaded_state, snapshot=current_snapshot, codebase_map=codebase_map)
     return contract["overview"]
 
 
-def refresh_current_state(project_root: Path, state: dict | None = None) -> Path:
+def refresh_current_state(
+    project_root: Path,
+    state: dict | None = None,
+    *,
+    snapshot: dict | None = None,
+    codebase_map: dict | None = None,
+) -> Path:
     loaded_state = state or load_state(project_root)
     contract = path_contract(project_root, loaded_state)
     contract["overview_root"].mkdir(parents=True, exist_ok=True)
+    cleanup_legacy_process_files(project_root, contract)
     status = load_wiki_status(contract["wiki_status"])
-    overview_sync_status = compute_overview_sync_status(project_root, loaded_state, contract, status)
+    live_codebase_map = codebase_map or build_codebase_map(project_root)
+    current_snapshot = snapshot or codebase_snapshot(project_root, contract, live_codebase_map)
+    current_change_focus = change_focus_snapshot(project_root, loaded_state, live_codebase_map)
+    overview_sync_status = compute_overview_sync_status(
+        project_root,
+        loaded_state,
+        contract,
+        status,
+        current_snapshot,
+    )
     for name, sync_status in overview_sync_status.items():
         update_doc_check_status(
             status,
@@ -763,7 +842,14 @@ def refresh_current_state(project_root: Path, state: dict | None = None) -> Path
             stale=bool(sync_status["stale"]),
             reasons=list(sync_status["reasons"]),
         )
-    content, source_hash = render_current_state_doc(project_root, loaded_state, contract, overview_sync_status)
+    content, source_hash = render_current_state_doc(
+        project_root,
+        loaded_state,
+        contract,
+        overview_sync_status,
+        current_snapshot,
+        current_change_focus,
+    )
     path = write_text(contract["overview"]["current_state"], content)
     update_doc_status(status, CURRENT_STATE_DOC, source_hash=source_hash, generated_blocks={})
     save_wiki_status(contract["wiki_status"], status)

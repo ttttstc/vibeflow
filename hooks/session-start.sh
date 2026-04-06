@@ -17,12 +17,18 @@ reason=$(echo "$phase_info" | python -c "import sys,json; print(json.load(sys.st
 
 resume_mode=$(echo "$phase_info" | python -c "import sys,json; print(json.load(sys.stdin).get('resume_mode',''))" 2>/dev/null || echo "")
 next_action=$(echo "$phase_info" | python -c "import sys,json; print(json.load(sys.stdin).get('next_action',''))" 2>/dev/null || echo "")
+overview_suggestion=$(echo "$phase_info" | python -c "import sys,json; print(json.load(sys.stdin).get('overview_suggestion',''))" 2>/dev/null || echo "")
 open_files=$(echo "$phase_info" | python -c "import sys,json; data=json.load(sys.stdin); print('\n- '.join(data.get('open_files',[])))" 2>/dev/null || echo "")
 
 status_hint="
 Detected phase: $phase. Reason: $reason
 Resume mode: $resume_mode
 Next action: $next_action"
+
+if [ -n "$overview_suggestion" ]; then
+  status_hint="$status_hint
+Overview hint: $overview_suggestion"
+fi
 
 if [ -n "$open_files" ]; then
   status_hint="$status_hint

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""LLM inference layer for architecture spec generation.
+"""LLM inference layer for internal architecture analysis generation.
 
-This module generates LLM prompts from spec-facts.json and creates
-a template .spec-inferences.json with placeholders for the skill layer
+This module generates LLM prompts from internal spec facts and creates
+a template spec-inferences.json with placeholders for the skill layer
 to populate via actual LLM inference.
 """
 from __future__ import annotations
@@ -61,21 +61,9 @@ Only output valid JSON. If you cannot determine a module's responsibility, use "
 """
 
 
-def build_inference_prompt(facts_path: Path) -> tuple[str, str]:
-    """Build system and user prompts from facts file.
-
-    Args:
-        facts_path: Path to .spec-facts.json
-
-    Returns:
-        Tuple of (system_prompt, user_prompt) where user_prompt has facts injected
-    """
-    facts_data = read_json(facts_path)
-    if facts_data is None:
-        raise FileNotFoundError(f"Facts file not found: {facts_path}")
-
-    # Generate condensed context for LLM
-    context = generate_inference_context(facts_path)
+def build_inference_prompt_from_facts_data(facts_data: dict) -> tuple[str, str]:
+    """Build system and user prompts from an in-memory facts dict."""
+    context = generate_inference_context_from_facts_data(facts_data)
     facts_json = json.dumps(context, indent=2, ensure_ascii=False)
 
     system_prompt = LLM_INFERENCE_SYSTEM_PROMPT
@@ -84,20 +72,19 @@ def build_inference_prompt(facts_path: Path) -> tuple[str, str]:
     return system_prompt, user_prompt
 
 
-def generate_inference_context(facts_path: Path) -> dict:
-    """Generate condensed context from facts file for LLM injection.
-
-    Args:
-        facts_path: Path to .spec-facts.json
-
-    Returns:
-        Condensed dict with only the information LLM needs
-    """
+def build_inference_prompt(facts_path: Path) -> tuple[str, str]:
+    """Build system and user prompts from facts file."""
     facts_data = read_json(facts_path)
+    if facts_data is None:
+        raise FileNotFoundError(f"Facts file not found: {facts_path}")
+    return build_inference_prompt_from_facts_data(facts_data)
+
+
+def generate_inference_context_from_facts_data(facts_data: dict | None) -> dict:
+    """Generate condensed LLM context from an in-memory facts dict."""
     if facts_data is None:
         return {}
 
-    # Build condensed context - only what LLM needs
     modules_summary = []
     for module in facts_data.get("modules", []):
         modules_summary.append({
@@ -122,6 +109,12 @@ def generate_inference_context(facts_path: Path) -> dict:
     }
 
     return context
+
+
+def generate_inference_context(facts_path: Path) -> dict:
+    """Generate condensed context from facts file for LLM injection."""
+    facts_data = read_json(facts_path)
+    return generate_inference_context_from_facts_data(facts_data)
 
 
 def parse_inference_response(response_text: str) -> dict:
@@ -156,50 +149,208 @@ def write_inference_output(output_path: Path, inferences: dict) -> None:
     """Write inference results to output JSON file.
 
     Args:
-        output_path: Path to .spec-inferences.json
+        output_path: Path to spec-inferences.json
         inferences: Inference data dict
     """
     output_path.parent.mkdir(parents=True, exist_ok=True)
     write_json(output_path, inferences)
 
 
+def build_inference_template_from_facts(facts_data: dict) -> dict:
+    """Build a conservative inference template with heuristic fallbacks.
+
+    Real LLM output can overwrite these values later, but overview generation
+    should still surface a useful architecture narrative when no extra process
+    file exists.
+    """
+    modules = facts_data.get("modules", [])
+    entities = facts_data.get("entities", [])
+    responsibilities = {
+        str(module.get("name") or "unknown"): infer_module_responsibility(module, facts_data)
+        for module in modules
+    }
+    flows = infer_runtime_flows(facts_data)
+    confidence_notes = (
+        "基于模块名、公开 API、依赖边和实体信息做静态推断；如果 reverse-spec skill 注入真实 LLM 结果，"
+        "应优先采用外部推断覆盖此模板。"
+    )
+
+    return {
+        "version": 1,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "inference_metadata": {
+            "facts_version": facts_data.get("version"),
+            "modules_analyzed": len(modules),
+            "entities_analyzed": len(entities),
+            "confidence_notes": confidence_notes,
+            "llm_model_used": None,
+            "prompt_injected": False,
+            "source": "heuristic-fallback",
+        },
+        "module_responsibilities": responsibilities or {
+            "__PLACEHOLDER__": "Run the skill with an LLM to populate this field"
+        },
+        "runtime_flows": flows,
+        "llm_raw_response": None,
+    }
+
+
+def infer_module_responsibility(module: dict, facts_data: dict) -> str:
+    """Infer a conservative module responsibility from static facts."""
+    name = str(module.get("name") or "unknown")
+    path = str(module.get("path") or "")
+    kind = str(module.get("kind") or "module")
+    exports = list((facts_data.get("api_surface") or {}).get(name, []))
+    lowered = f"{name} {path}".lower()
+
+    hints = []
+    if any(token in lowered for token in ("test", "spec")):
+        hints.append("负责测试或验证相关行为")
+    if any(token in lowered for token in ("main", "cli", "entry", "app")):
+        hints.append("充当程序入口或编排启动流程")
+    if any(token in lowered for token in ("api", "route", "router", "controller")):
+        hints.append("承接接口或路由暴露")
+    if any(token in lowered for token in ("service", "workflow", "task", "job")):
+        hints.append("封装核心流程或服务编排")
+    if any(token in lowered for token in ("model", "schema", "entity", "dto")):
+        hints.append("定义数据模型或结构化契约")
+    if any(token in lowered for token in ("config", "setting")):
+        hints.append("集中管理配置和运行参数")
+    if any(token in lowered for token in ("util", "helper", "common")):
+        hints.append("提供通用工具能力")
+    if any(token in lowered for token in ("repo", "repository", "store", "db")):
+        hints.append("处理持久化或数据访问")
+
+    if exports:
+        preview = "、".join(exports[:4])
+        hints.append(f"对外主要暴露 `{preview}` 等接口")
+
+    if not hints:
+        normalized_path = (path or name).replace("\\", "/")
+        hints.append(f"当前识别为 `{kind}`，但仅能从静态结构确认其位于 `{normalized_path}`")
+
+    return "；".join(hints[:3]) + "。"
+
+
+def infer_runtime_flows(facts_data: dict) -> list[dict]:
+    """Infer a few runtime flows from dependency structure."""
+    modules = facts_data.get("modules", [])
+    if not modules:
+        return []
+
+    by_name = {str(module.get("name") or ""): module for module in modules if module.get("name")}
+    incoming: dict[str, int] = {name: 0 for name in by_name}
+    for module in modules:
+        for dep in module.get("deps", []):
+            if dep in incoming:
+                incoming[dep] += 1
+
+    preferred = sorted(
+        by_name.values(),
+        key=lambda item: (
+            -int(_looks_like_entry(item)),
+            _module_priority(item),
+            int(_looks_like_test(item)),
+            incoming.get(str(item.get("name") or ""), 0),
+            -len(item.get("deps", [])),
+        ),
+    )
+    flows = []
+    for module in preferred[:3]:
+        chain = [str(module.get("name") or "unknown")]
+        visited = set(chain)
+        current = module
+        while current.get("deps"):
+            next_candidates = [dep for dep in current.get("deps", []) if dep in by_name and dep not in visited]
+            if not next_candidates:
+                break
+            next_name = sorted(next_candidates, key=lambda dep: len(by_name[dep].get("deps", [])), reverse=True)[0]
+            chain.append(next_name)
+            visited.add(next_name)
+            current = by_name[next_name]
+            if len(chain) >= 4:
+                break
+
+        mermaid_lines = ["```mermaid", "sequenceDiagram"]
+        mermaid_lines.append('    participant Caller as "调用方"')
+        for index, name in enumerate(chain, 1):
+            mermaid_lines.append(f'    participant M{index} as "{name}"')
+        mermaid_lines.append('    Caller->>M1: 触发入口 / 调用公开接口')
+        for index in range(len(chain) - 1):
+            mermaid_lines.append(f"    M{index + 1}->>M{index + 2}: 委托下游能力")
+        mermaid_lines.append(f'    M{len(chain)}-->>Caller: 返回结果 / 状态')
+        mermaid_lines.append("```")
+        flows.append(
+            {
+                "name": f"{chain[0]} 驱动链路",
+                "description": " -> ".join(chain),
+                "mermaid": "\n".join(mermaid_lines),
+                "steps": [],
+            }
+        )
+    return flows
+
+
+def _looks_like_entry(module: dict) -> bool:
+    marker = f"{module.get('name', '')} {module.get('path', '')}".lower()
+    return any(token in marker for token in ("main", "cli", "app", "index", "server", "entry"))
+
+
+def _looks_like_test(module: dict) -> bool:
+    marker = f"{module.get('name', '')} {module.get('path', '')}".lower()
+    return "test" in marker or "spec" in marker
+
+
+def _module_priority(module: dict) -> int:
+    path = str(module.get("path") or "").replace("\\", "/").lower()
+    if path.startswith("src/"):
+        return 0
+    if path.startswith("app/"):
+        return 1
+    if path.startswith("examples/"):
+        return 2
+    if path.startswith("tests/"):
+        return 3
+    return 4
+
+
 def run_inference_phase(
-    facts_path: Path,
-    output_path: Path,
+    facts_path: Path | None = None,
+    output_path: Path | None = None,
     prompt_output_path: Path | None = None,
+    facts_data: dict | None = None,
 ) -> dict:
     """Run inference phase: generate prompts and template structure.
 
-    Note: This function does NOT call any LLM API. It generates:
-    1. .inference-prompt.md - full prompt for skill layer to use
-    2. .spec-inferences.json - template structure with placeholders
+    Note: This function does NOT call any LLM API. It prepares:
+    1. prompt content for the skill layer
+    2. an inference template / heuristic fallback structure
 
     Args:
-        facts_path: Path to .spec-facts.json
-        output_path: Path to .spec-inferences.json (template)
-        prompt_output_path: Path to .inference-prompt.md, defaults to same dir as output_path
+        facts_path: Path to spec-facts.json
+        output_path: Optional path to spec-inferences.json (template)
+        prompt_output_path: Optional path to inference-prompt.md
+        facts_data: Optional in-memory facts dict
 
     Returns:
         Dict containing prompt content and template structure
     """
-    if prompt_output_path is None:
-        prompt_output_path = output_path.parent / ".inference-prompt.md"
-
-    # Ensure output directory exists
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-
-    # Load facts to get metadata
-    facts_data = read_json(facts_path)
+    if facts_data is None:
+        if facts_path is None:
+            raise ValueError("Either facts_path or facts_data must be provided")
+        facts_data = read_json(facts_path)
     if facts_data is None:
         raise FileNotFoundError(f"Facts file not found: {facts_path}")
 
-    # Build prompts
-    system_prompt, user_prompt = build_inference_prompt(facts_path)
+    if prompt_output_path is None and output_path is not None:
+        prompt_output_path = output_path.parent / "inference-prompt.md"
 
-    # Write prompt file for skill layer
+    # Build prompts
+    system_prompt, user_prompt = build_inference_prompt_from_facts_data(facts_data)
+
     prompt_content = f"""<!-- INFERENCE-PROMPT: LLM prompt for architecture inference -->
 <!-- Generated: {datetime.now(timezone.utc).isoformat()} -->
-<!-- Facts source: {facts_path} -->
+<!-- Facts source: {facts_path or '[in-memory]'} -->
 
 # System Prompt
 
@@ -209,32 +360,14 @@ def run_inference_phase(
 
 {user_prompt}
 """
-    prompt_output_path.write_text(prompt_content, encoding="utf-8")
+    if prompt_output_path is not None:
+        prompt_output_path.parent.mkdir(parents=True, exist_ok=True)
+        prompt_output_path.write_text(prompt_content, encoding="utf-8")
 
-    # Build template structure with placeholders
-    modules_analyzed = len(facts_data.get("modules", []))
-    entities_analyzed = len(facts_data.get("entities", []))
-
-    template = {
-        "version": 1,
-        "generated_at": datetime.now(timezone.utc).isoformat(),
-        "inference_metadata": {
-            "facts_version": facts_data.get("version"),
-            "modules_analyzed": modules_analyzed,
-            "entities_analyzed": entities_analyzed,
-            "confidence_notes": "",
-            "llm_model_used": None,
-            "prompt_injected": False,
-        },
-        "module_responsibilities": {
-            "__PLACEHOLDER__": "Run the skill with an LLM to populate this field"
-        },
-        "runtime_flows": [],
-        "llm_raw_response": None,
-    }
-
-    # Write template
-    write_inference_output(output_path, template)
+    template = build_inference_template_from_facts(facts_data)
+    if output_path is not None:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        write_inference_output(output_path, template)
 
     return {
         "prompt_path": prompt_output_path,
@@ -248,32 +381,32 @@ def run_inference_phase(
 def main():
     """CLI entry point."""
     parser = argparse.ArgumentParser(
-        description="Generate LLM inference prompts from spec-facts.json"
+        description="Generate LLM inference prompts from internal spec facts"
     )
     parser.add_argument(
         "--facts-path",
         type=Path,
-        default=Path("docs/architecture/.spec-facts.json"),
-        help="Path to .spec-facts.json",
+        default=None,
+        help="Path to spec-facts.json",
     )
     parser.add_argument(
         "--output",
         type=Path,
-        default=Path("docs/architecture/.spec-inferences.json"),
-        help="Output path for .spec-inferences.json template",
+        default=None,
+        help="Optional output path for spec-inferences.json template",
     )
 
     args = parser.parse_args()
 
     # Resolve paths
-    facts_path = args.facts_path.resolve()
-    output_path = args.output.resolve()
+    facts_path = args.facts_path.resolve() if args.facts_path else None
+    output_path = args.output.resolve() if args.output else None
 
-    print(f"Facts path: {facts_path}")
-    print(f"Output path: {output_path}")
+    print(f"Facts path: {facts_path or '[required via --facts-path]'}")
+    print(f"Output path: {output_path or '[in-memory only]'}")
 
-    if not facts_path.exists():
-        print(f"Error: Facts file not found: {facts_path}", file=sys.stderr)
+    if facts_path is None or not facts_path.exists():
+        print("Error: --facts-path is required and must exist", file=sys.stderr)
         return 1
 
     try:
@@ -283,8 +416,8 @@ def main():
         )
 
         print(f"\nInference phase setup complete!")
-        print(f"Prompt file: {result['prompt_path']}")
-        print(f"Template file: {result['inference_template_path']}")
+        print(f"Prompt file: {result['prompt_path'] or '[in-memory only]'}")
+        print(f"Template file: {result['inference_template_path'] or '[in-memory only]'}")
         print(f"Modules in template: {result['template']['inference_metadata']['modules_analyzed']}")
         print(f"Entities in template: {result['template']['inference_metadata']['entities_analyzed']}")
         print("\nNOTE: This script generates prompts and templates only.")
