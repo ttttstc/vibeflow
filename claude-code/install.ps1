@@ -140,17 +140,25 @@ $CleanVersion = $ResolvedRef -replace '^v', ''
 $VersionFile = Join-Path $TargetDir "VERSION"
 [System.IO.File]::WriteAllText($VersionFile, "$CleanVersion`n", (New-Object System.Text.UTF8Encoding($false)))
 
-# Update marketplace.json version
+# Update plugin.json + marketplace.json version
+$PluginJson = Join-Path $TargetDir ".claude-plugin\plugin.json"
 try {
+    if (Test-Path $PluginJson) {
+        $pluginContent = Get-Content $PluginJson -Raw | ConvertFrom-Json
+        $pluginContent.version = $CleanVersion
+        $pluginJson = $pluginContent | ConvertTo-Json -Depth 10
+        [System.IO.File]::WriteAllText($PluginJson, $pluginJson, (New-Object System.Text.UTF8Encoding($false)))
+    }
+
     $mpContent = Get-Content $MarketplaceJson -Raw | ConvertFrom-Json
     if ($mpContent.plugins -and $mpContent.plugins.Count -gt 0) {
         $mpContent.plugins[0].version = $CleanVersion
     }
     $mpJson = $mpContent | ConvertTo-Json -Depth 10
     [System.IO.File]::WriteAllText($MarketplaceJson, $mpJson, (New-Object System.Text.UTF8Encoding($false)))
-    Write-Info "Version updated to $CleanVersion"
+    Write-Info "Manifest versions updated to $CleanVersion"
 } catch {
-    Write-Info "Warning: Could not update marketplace.json version: $_"
+    Write-Info "Warning: Could not update plugin manifests: $_"
 }
 
 # =============================================================================
