@@ -26,6 +26,7 @@ from validate_phase_invariants import validate_phase  # noqa: E402
 
 
 MANUAL_PHASES = {"increment", "spark", "design", "tasks", "quick"}
+OVERVIEW_DOC_KEYS = ("project", "architecture", "current_state")
 
 
 def workflow_text(path: Path) -> str:
@@ -114,6 +115,30 @@ def phase_open_files(contract: dict, phase: str) -> list[str]:
     return [str(contract["state"])]
 
 
+def overview_hint(contract: dict) -> dict:
+    overview = contract.get("overview") or {}
+    missing = [overview[key].name for key in OVERVIEW_DOC_KEYS if key in overview and not overview[key].exists()]
+    if not missing:
+        return {
+            "missing": False,
+            "missing_files": [],
+            "suggestion": "",
+        }
+
+    files_text = "、".join(missing)
+    suggestion = (
+        f"docs/overview 下缺少 {files_text}。建议先运行 "
+        "`python scripts/map-codebase.py --project-root . --refresh force` 生成项目概览；"
+        "如果这是现有项目改动，再运行 "
+        "`python scripts/map-change-impact.py --project-root . --source design` 补当前变更关注点。"
+    )
+    return {
+        "missing": True,
+        "missing_files": missing,
+        "suggestion": suggestion,
+    }
+
+
 def next_action_for_phase(phase: str, reason: str, *, ui_required_flag: bool, ship_required_flag: bool, reflect_required_flag: bool) -> str:
     if phase == "increment":
         return "先处理增量队列，再继续主链。"
@@ -148,6 +173,7 @@ def next_action_for_phase(phase: str, reason: str, *, ui_required_flag: bool, sh
 
 def result_with_guidance(result: dict, contract: dict, *, ui_required_flag: bool, ship_required_flag: bool, reflect_required_flag: bool) -> dict:
     phase = result["phase"]
+    overview_state = overview_hint(contract)
     result["resume_mode"] = "manual" if phase in MANUAL_PHASES else ("completed" if phase == "done" else "auto")
     result["next_action"] = next_action_for_phase(
         phase,
@@ -157,6 +183,9 @@ def result_with_guidance(result: dict, contract: dict, *, ui_required_flag: bool
         reflect_required_flag=reflect_required_flag,
     )
     result["open_files"] = phase_open_files(contract, phase)
+    result["overview_missing"] = overview_state["missing"]
+    result["overview_missing_files"] = overview_state["missing_files"]
+    result["overview_suggestion"] = overview_state["suggestion"]
     return result
 
 

@@ -137,12 +137,32 @@ class TestDetectPhase:
         assert result["next_action"]
         assert result["open_files"]
 
+    def test_missing_overview_docs_returns_generation_suggestion(self, tmp_path):
+        make_stateful_project(tmp_path)
+        result = detect_phase(tmp_path, verbose=True)
+        assert result["overview_missing"] is True
+        assert "PROJECT.md" in result["overview_missing_files"]
+        assert "map-codebase.py" in result["overview_suggestion"]
+        assert "map-change-impact.py" in result["overview_suggestion"]
+
     def test_spark_guidance_mentions_office_hours_and_design_confirmation(self, tmp_path):
         make_stateful_project(tmp_path)
         result = detect_phase(tmp_path, verbose=True)
         assert "vibeflow-office-hours" in result["next_action"]
         assert "验收标准" in result["next_action"]
         assert "是否进入 design" in result["next_action"]
+
+    def test_existing_overview_docs_clear_generation_suggestion(self, tmp_path):
+        state = make_stateful_project(tmp_path)
+        overview_root = tmp_path / "docs" / "overview"
+        write(overview_root / "PROJECT.md", "# 项目总览\n")
+        write(overview_root / "ARCHITECTURE.md", "# 架构总览\n")
+        write(overview_root / "CURRENT-STATE.md", "# 当前状态\n")
+        paths_module.save_state(tmp_path, state)
+        result = detect_phase(tmp_path, verbose=True)
+        assert result["overview_missing"] is False
+        assert result["overview_missing_files"] == []
+        assert result["overview_suggestion"] == ""
 
     def test_design_guidance_mentions_confirmation_before_tasks(self, tmp_path):
         state = make_stateful_project(tmp_path)
