@@ -178,6 +178,7 @@ VibeFlow is not only one `/vibeflow` entry command. It is a family of Claude Cod
 | `vibeflow-plan-value-review` | You are still deciding whether the scope is worth doing | Reviews value, scope, and expected ROI before implementation starts. |
 | `vibeflow-plan-eng-review` | The design needs engineering scrutiny | Reviews architecture, data flow, test strategy, performance, and risk. |
 | `vibeflow-plan-design-review` | The design needs UX scrutiny | Reviews information architecture, interaction states, AI-slop risk, responsiveness, and accessibility. |
+| `vibeflow-browser-testing` | Test phase needs real browser runtime evidence | Runs real browser verification for page-interaction changes and captures screenshot, console, network, and accessibility evidence; Playwright MCP first, DevTools MCP second, local CLI as fallback. |
 | `vibeflow-tdd` + `vibeflow-quality` + `vibeflow-feature-st` + `vibeflow-spec-review` | Build needs tighter quality gates | Tightens implementation with TDD, coverage/mutation gates, feature acceptance, and spec review. |
 | `vibeflow-careful` / `vibeflow-freeze` / `vibeflow-guard` / `vibeflow-unfreeze` | You need safety rails | Restricts destructive commands, limits edit scope, or lifts those restrictions. |
 

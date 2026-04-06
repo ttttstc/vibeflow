@@ -29,13 +29,19 @@ description: "系统测试通过后且工作流要求 UI QA 时使用 — 运行
 
 ### 2. 视觉走查
 
-使用 Chrome DevTools MCP 逐页面检查：
+调用 `skills/vibeflow-browser-testing/SKILL.md` 做真实浏览器验证，优先使用：
+
+- Playwright MCP：执行关键交互和断言
+- Chrome DevTools MCP：补充 screenshot / console / network / DOM / a11y 诊断
+- MCP 不可用时，回退到 `python scripts/browser_verify.py --url <url> --out-dir <dir>`
+
+涉及页面交互时，不得跳过真实浏览器验证。
 
 #### 2a. 页面级检查
 
 对 UCD 中定义的每个页面：
-1. `navigate_page` 到页面 URL
-2. `take_screenshot` 捕获全页截图
+1. 在真实浏览器打开页面 URL
+2. 捕获全页截图
 3. 对照 UCD 页面提示词验证：
    - 布局结构是否匹配
    - 视觉层次是否正确
@@ -45,7 +51,7 @@ description: "系统测试通过后且工作流要求 UI QA 时使用 — 运行
 
 对关键交互组件：
 1. 验证各状态（默认、悬停、激活、禁用、错误、加载）
-2. 通过 `evaluate_script()` 检查 CSS 属性匹配 UCD Token：
+2. 检查 CSS 属性匹配 UCD Token：
    - 颜色值匹配调色板
    - 字体匹配排版比例
    - 间距匹配间距 Token
@@ -62,6 +68,7 @@ description: "系统测试通过后且工作流要求 UI QA 时使用 — 运行
 2. 验证每步的视觉反馈和状态转换
 3. 检查加载状态、错误状态、空状态的视觉处理
 4. 验证表单验证的视觉提示
+5. 检查 console 是否干净、network 是否存在失败请求
 
 ### 4. 无障碍手工检查
 
@@ -74,7 +81,7 @@ description: "系统测试通过后且工作流要求 UI QA 时使用 — 运行
 ### 5. 记录发现
 
 对每个发现记录：
-- **截图**：通过 `take_screenshot` 捕获
+- **截图**：通过真实浏览器采集
 - **位置**：页面 URL + 元素定位
 - **预期**：UCD 定义的外观/行为
 - **实际**：当前外观/行为
@@ -135,4 +142,5 @@ QA 通过后进入 `vibeflow-ship`。
 **调用者：** vibeflow-router 或 vibeflow-test-system
 **依赖：** 系统测试通过、UCD 文档存在
 **产出：** `docs/changes/<change-id>/verification/qa.md`
+**可调用：** vibeflow-browser-testing
 **链接到：** vibeflow-ship
