@@ -202,7 +202,7 @@ Spark 收口后必须向用户总结方向与范围，并确认是否进入 desi
 
 ### 阶段：`test`
 **条件**：审查通过，需完成系统测试与必要的 QA 验证。
-**操作**：作为自动继续链路的一部分运行 `skills/vibeflow-test-system/SKILL.md`；UI 项目再继续运行 `skills/vibeflow-test-qa/SKILL.md`，统一产出到 `docs/changes/<change-id>/verification/`。
+**操作**：作为自动继续链路的一部分运行 `skills/vibeflow-test-system/SKILL.md`；涉及页面交互、表单、路由、前端 API 或 UI 状态切换的项目，必须在 test 阶段调用 `skills/vibeflow-browser-testing/SKILL.md` 做真实浏览器验证；UI 项目再继续运行 `skills/vibeflow-test-qa/SKILL.md`，统一产出到 `docs/changes/<change-id>/verification/`。
 
 ### 阶段：`ship`
 **条件**：所有测试通过，部署就绪。
