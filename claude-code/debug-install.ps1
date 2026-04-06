@@ -115,6 +115,24 @@ if (Test-Path $SkillsDir) {
 }
 Write-Host ""
 
+# 5b. Check plugin-visible command skills
+Write-Host "5b. Checking plugin-visible command skills..." -ForegroundColor Yellow
+$EntryCommandSkills = @("vibeflow-status", "vibeflow-dashboard")
+if (Test-Path $SkillsDir) {
+    foreach ($skill in $EntryCommandSkills) {
+        $skillPath = Join-Path $SkillsDir $skill
+        $skillMd = Join-Path $skillPath "SKILL.md"
+        if (Test-Path $skillMd) {
+            Write-Host "   [OK] $skill/SKILL.md exists" -ForegroundColor Green
+        } else {
+            Write-Host "   [FAIL] $skill/SKILL.md NOT FOUND" -ForegroundColor Red
+        }
+    }
+} else {
+    Write-Host "   [FAIL] skills directory missing, cannot verify command skills" -ForegroundColor Red
+}
+Write-Host ""
+
 # 6. Summary
 Write-Host "=== Summary ===" -ForegroundColor Cyan
 $issues = 0
@@ -131,6 +149,8 @@ if (-not (Test-Path $TargetDir)) { $issues++; Write-Host "  - marketplace direct
 if (-not (Test-Path $MarketplaceJson)) { $issues++; Write-Host "  - marketplace.json missing" -ForegroundColor Red }
 if (-not (Test-Path $PluginJson)) { $issues++; Write-Host "  - plugin.json missing" -ForegroundColor Red }
 if (-not (Test-Path $SkillsDir)) { $issues++; Write-Host "  - skills directory missing" -ForegroundColor Red }
+if (-not (Test-Path (Join-Path $SkillsDir "vibeflow-status\\SKILL.md"))) { $issues++; Write-Host "  - vibeflow-status plugin-visible command skill missing" -ForegroundColor Red }
+if (-not (Test-Path (Join-Path $SkillsDir "vibeflow-dashboard\\SKILL.md"))) { $issues++; Write-Host "  - vibeflow-dashboard plugin-visible command skill missing" -ForegroundColor Red }
 
 if ($issues -eq 0) {
     Write-Host "  All checks passed! Run Claude Code and try:" -ForegroundColor Green

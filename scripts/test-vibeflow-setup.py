@@ -19,7 +19,8 @@ SKILL_NAMES = [
     'vibeflow-requirements', 'vibeflow-ucd', 'vibeflow-design', 'vibeflow-tasks', 'vibeflow-build-init',
     'vibeflow-build-work', 'vibeflow-tdd', 'vibeflow-quality', 'vibeflow-feature-st',
     'vibeflow-spec-review', 'vibeflow-review', 'vibeflow-test-system', 'vibeflow-test-qa',
-    'vibeflow-browser-testing', 'vibeflow-ship', 'vibeflow-reflect', 'vibeflow-quick', 'vibeflow-learn'
+    'vibeflow-browser-testing', 'vibeflow-ship', 'vibeflow-reflect', 'vibeflow-quick', 'vibeflow-learn',
+    'vibeflow-status', 'vibeflow-dashboard'
 ]
 
 

@@ -173,6 +173,8 @@ ls skills/vibeflow-*/
 - vibeflow-ship
 - vibeflow-reflect
 - vibeflow-learn（独立 companion flow，不参与主链路阶段推进）
+- vibeflow-status
+- vibeflow-dashboard
 
 ### 4. 验证功能列表已初始化（仅Build阶段）
 
@@ -422,6 +424,8 @@ VibeFlow支持四种工作流程模板。根据项目范围、团队规模和治
 | `vibeflow-test-qa` | 系统测试后的浏览器导向QA验证 |
 | `vibeflow-browser-testing` | 测试阶段的真实浏览器验证底座：对页面交互类改动采集 screenshot、console、network、a11y 等运行时证据 |
 | `vibeflow-learn` | 独立学习流：把陌生领域学习、研究写作和资料到输出过程工程化，不写入主链路状态 |
+| `vibeflow-status` | 插件可见状态入口：输出当前 phase、恢复原因、建议下一步和推荐查看文件 |
+| `vibeflow-dashboard` | 插件可见看板入口：启动本地 dashboard，展示 workflow 状态、feature 状态和最近事件 |
 
 ---
 
