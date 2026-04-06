@@ -95,16 +95,7 @@ Requirements:
 
 ### Other Hosts
 
-<details>
-<summary>Non-Claude Code install options</summary>
-
-| Host | Command |
-|---|---|
-| Codex / macOS / Linux | `curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/codex/install.sh \| bash` |
-| Codex / Windows PowerShell | `irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/codex/install.ps1 \| iex` |
-| OpenCode / macOS / Linux | `curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/opencode/install.sh \| bash` |
-
-</details>
+Install entry points for Codex, OpenCode, and other hosts still exist in the repository, but this README keeps the primary install path focused on Claude Code so the main onboarding flow stays clear.
 
 ### Verify Installation
 

@@ -96,16 +96,7 @@ VibeFlow 是一个面向 Claude Code 的 AI 软件交付控制面。
 
 ### 其他宿主
 
-<details>
-<summary>非 Claude Code 环境的安装入口</summary>
-
-| 宿主 | 命令 |
-|---|---|
-| Codex / macOS / Linux | `curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/codex/install.sh \| bash` |
-| Codex / Windows PowerShell | `irm https://raw.githubusercontent.com/ttttstc/vibeflow/main/codex/install.ps1 \| iex` |
-| OpenCode / macOS / Linux | `curl -fsSL https://raw.githubusercontent.com/ttttstc/vibeflow/main/opencode/install.sh \| bash` |
-
-</details>
+Codex、OpenCode 等其他宿主的安装入口仍然保留在仓库内，但本 README 只保留 Claude Code 的官方安装路径，避免主阅读面分散。
 
 ### 验证安装
 
