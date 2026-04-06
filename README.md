@@ -10,7 +10,7 @@
 >
 > 先定章法，再求速度；先有节奏，后有规模。
 
-[安装](#安装) · [3 分钟上手](#3-分钟上手) · [核心能力](#核心能力) · [能力对比](#vibeflow-与主流-ai-编排框架能力对比)
+[安装](#安装) · [3 分钟上手](#3-分钟上手) · [核心能力](#核心能力) · [Skills](#skills) · [能力对比](#vibeflow-与主流-ai-编排框架能力对比)
 
 </div>
 
@@ -135,11 +135,54 @@ Codex、OpenCode 等其他宿主的安装入口仍然保留在仓库内，但本
 |---|---|
 | 开始或继续工作流 | `/vibeflow` |
 | 快速处理小改动 | `/vibeflow-quick` |
+| 启动独立学习流 | `/vibeflow-learn` |
 | 查看当前状态摘要 | `/vibeflow-status` |
 | 打开本地 live 看板 | `/vibeflow-dashboard` |
 | 脚本方式启动看板 | `python scripts/run-vibeflow-dashboard.py` |
 | 脚本方式打印看板快照 | `python scripts/run-vibeflow-dashboard.py --snapshot-json` |
 | 脚本方式继续当前流程 | `python scripts/run-vibeflow-autopilot.py --project-root <repo>` |
+
+---
+
+## Skills
+
+VibeFlow 不只是一条 `/vibeflow` 命令，而是一组按交付链和工程协作分工的 Claude Code skills。你触发入口命令后，系统会调用对应 playbook，而不是把所有工作都塞进一个大 prompt。
+
+### 入口 Skills
+
+| Skill | When | What it does |
+|---|---|---|
+| `/vibeflow` | 需要开始或继续完整软件交付 | 进入主控制面，按仓库状态路由到 Spark / Design / Tasks / Build / Review / Test / Ship / Reflect。 |
+| `/vibeflow-quick` | 小范围、低风险、可快速回滚的改动 | 走压缩前置分析的 Quick Mode，保留最小设计、Review 和 Test。 |
+| `/vibeflow-learn` | 陌生领域学习、研究文章写作、把资料变成输出 | 进入独立学习流，用 `Collect -> Digest -> Outline -> Fill In -> Refine -> Publish` 六阶段推进，不写入 `/vibeflow` 主链路状态。 |
+| `/vibeflow-status` | 想快速知道当前做到哪 | 输出当前 phase、恢复原因、建议下一步和推荐打开文件。 |
+| `/vibeflow-dashboard` | 想可视化查看整个运行态 | 打开本地 live dashboard，看 mode、phase、feature 状态、关键产物和最近事件。 |
+
+### 主链路 Skills
+
+| Skill | When | What it does |
+|---|---|---|
+| `vibeflow-spark` | 还在定义问题和范围 | 编排 Office Hours、复杂度扫描、DeepResearch、Roundtable 和价值评估，输出 `brief.md`。 |
+| `vibeflow-design` | 方向确定后，要把 HOW 设计清楚 | 产出 `design.md`，并在涉及前端/UI 时吸收 Waza 风格的设计约束，先锁定审美方向、字体、色彩、动效和布局策略。 |
+| `vibeflow-tasks` | 设计获批后，要把执行顺序落细 | 生成 execution-grade `tasks.md`，作为 Build 前的正式 handoff。 |
+| `vibeflow-build-init` + `vibeflow-build-work` | 进入 Build 后推进实现 | 初始化实现产物、按 feature 合同推进开发，并把执行真相写回 `feature-list.json`。 |
+| `vibeflow-review` | 功能实现后做整体变更审查 | 从跨功能角度检查架构、安全、性能和完整性问题。 |
+| `vibeflow-test-system` + `vibeflow-test-qa` | 审查通过后做系统验证 | 覆盖系统测试、集成验证和 UI/浏览器 QA。 |
+| `vibeflow-ship` + `vibeflow-reflect` | 测试通过后收尾 | 处理发布说明、交付收尾和迭代复盘。 |
+
+### 辅助 Skills
+
+| Skill | When | What it does |
+|---|---|---|
+| `vibeflow-wiki` | 需要补齐或刷新项目长期上下文 | 维护 `docs/overview/`，让项目记忆和 change 上下文保持新鲜。 |
+| `vibeflow-deepresearch` | Spark 中需要竞品或技术调研 | 系统化分析 GitHub 同领域项目，输出能力矩阵、技术栈分布和差异化机会。 |
+| `vibeflow-plan-value-review` | 还在判断值不值得做 | 从价值、范围和投入产出角度做前置审视。 |
+| `vibeflow-plan-eng-review` | 需要在设计阶段做工程审查 | 审架构、数据流、测试策略、性能与风险。 |
+| `vibeflow-plan-design-review` | 需要在设计阶段做体验审查 | 审信息架构、交互状态、AI slop 风险、响应式和无障碍。 |
+| `vibeflow-tdd` + `vibeflow-quality` + `vibeflow-feature-st` + `vibeflow-spec-review` | Build 内部质量关卡 | 用 TDD、覆盖率/变异测试、功能验收和规格审查把实现链路收紧。 |
+| `vibeflow-careful` / `vibeflow-freeze` / `vibeflow-guard` / `vibeflow-unfreeze` | 需要安全护栏时 | 限制危险命令、限制编辑边界，或解除这些限制。 |
+
+这些 skill 是文件夹，不只是单个 Markdown。它们可以带自己的 reference、脚本、约束和 gotchas，所以 VibeFlow 的能力不是一段提示词，而是一套可维护的交付 playbooks。
 
 ---
 

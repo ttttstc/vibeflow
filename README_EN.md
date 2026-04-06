@@ -10,7 +10,7 @@
 >
 > First establish the form, then let the system carry the work to completion.
 
-[Install](#install) · [3-Minute Quick Start](#3-minute-quick-start) · [Core Capabilities](#core-capabilities) · [Comparison](#vibeflow-vs-leading-ai-harness-frameworks)
+[Install](#install) · [3-Minute Quick Start](#3-minute-quick-start) · [Core Capabilities](#core-capabilities) · [Skills](#skills) · [Comparison](#vibeflow-vs-leading-ai-harness-frameworks)
 
 </div>
 
@@ -134,11 +134,54 @@ Short version: **You make decisions in the first half. The system drives the sec
 |---|---|
 | Start or resume the workflow | `/vibeflow` |
 | Fast-track a small change | `/vibeflow-quick` |
+| Start the independent learning flow | `/vibeflow-learn` |
 | View a quick status summary | `/vibeflow-status` |
 | Open the live dashboard | `/vibeflow-dashboard` |
 | Start dashboard from CLI | `python scripts/run-vibeflow-dashboard.py` |
 | Print one dashboard snapshot | `python scripts/run-vibeflow-dashboard.py --snapshot-json` |
 | Continue the current workflow from CLI | `python scripts/run-vibeflow-autopilot.py --project-root <repo>` |
+
+---
+
+## Skills
+
+VibeFlow is not only one `/vibeflow` entry command. It is a family of Claude Code skills split by delivery stage and engineering task, so each command activates a focused playbook instead of one oversized prompt.
+
+### Entry Skills
+
+| Skill | When | What it does |
+|---|---|---|
+| `/vibeflow` | You want to start or resume full software delivery | Enters the control plane and routes work by repo state across Spark / Design / Tasks / Build / Review / Test / Ship / Reflect. |
+| `/vibeflow-quick` | The change is small, low-risk, and easy to roll back | Uses Quick Mode with compressed upfront work while still keeping minimal design, review, and testing. |
+| `/vibeflow-learn` | You are learning an unfamiliar domain or writing a research article | Starts an independent learning flow with `Collect -> Digest -> Outline -> Fill In -> Refine -> Publish`, without touching the main `/vibeflow` state machine. |
+| `/vibeflow-status` | You want a fast progress check | Prints the current phase, pause reason, suggested next step, and recommended files to open. |
+| `/vibeflow-dashboard` | You want a live operational view | Opens the local dashboard showing mode, phase, feature status, key artifacts, and recent events. |
+
+### Main Workflow Skills
+
+| Skill | When | What it does |
+|---|---|---|
+| `vibeflow-spark` | The problem still needs framing | Orchestrates Office Hours, complexity scan, DeepResearch, Roundtable, and value review, then writes `brief.md`. |
+| `vibeflow-design` | The direction is chosen and the HOW needs to be designed | Produces `design.md`; when UI is involved it also absorbs Waza-style frontend design constraints so the design locks aesthetic direction, typography, color, motion, and layout early. |
+| `vibeflow-tasks` | Design is approved and execution needs to be staged | Turns the design into execution-grade `tasks.md` for Build handoff. |
+| `vibeflow-build-init` + `vibeflow-build-work` | Build has started | Initializes build artifacts, drives feature implementation, and writes execution truth back into `feature-list.json`. |
+| `vibeflow-review` | Feature work is done and the branch needs global review | Reviews the whole change for cross-feature architecture, security, performance, and integrity issues. |
+| `vibeflow-test-system` + `vibeflow-test-qa` | Review passed and the system needs validation | Covers system testing, integration verification, and browser/UI QA where applicable. |
+| `vibeflow-ship` + `vibeflow-reflect` | The work is ready for wrap-up | Handles release notes, delivery wrap-up, and iteration retrospectives. |
+
+### Support Skills
+
+| Skill | When | What it does |
+|---|---|---|
+| `vibeflow-wiki` | Project-level context is missing or stale | Maintains `docs/overview/` so long-lived project memory stays fresh. |
+| `vibeflow-deepresearch` | Spark needs competitor or technical landscape research | Analyzes similar GitHub projects and produces capability matrices, stack distributions, and gap opportunities. |
+| `vibeflow-plan-value-review` | You are still deciding whether the scope is worth doing | Reviews value, scope, and expected ROI before implementation starts. |
+| `vibeflow-plan-eng-review` | The design needs engineering scrutiny | Reviews architecture, data flow, test strategy, performance, and risk. |
+| `vibeflow-plan-design-review` | The design needs UX scrutiny | Reviews information architecture, interaction states, AI-slop risk, responsiveness, and accessibility. |
+| `vibeflow-tdd` + `vibeflow-quality` + `vibeflow-feature-st` + `vibeflow-spec-review` | Build needs tighter quality gates | Tightens implementation with TDD, coverage/mutation gates, feature acceptance, and spec review. |
+| `vibeflow-careful` / `vibeflow-freeze` / `vibeflow-guard` / `vibeflow-unfreeze` | You need safety rails | Restricts destructive commands, limits edit scope, or lifts those restrictions. |
+
+These skills are folders, not just markdown prompts. They can carry their own references, scripts, constraints, and gotchas, which is why VibeFlow behaves like a maintainable delivery system rather than a pile of prompts.
 
 ---
 
