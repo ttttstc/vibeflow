@@ -309,9 +309,7 @@ echo -e "${GREEN}========================================${RESET}"
 echo -e "${GREEN}  安装完成！${RESET}"
 echo -e "${GREEN}========================================${RESET}"
 echo ""
-if [[ -f "${TARGET_DIR}/VERSION" ]]; then
-  echo -e "已安装版本：$(<"${TARGET_DIR}/VERSION")"
-fi
+echo -e "已安装版本：${CLEAN_VERSION}"
 echo -e "下一步（在 Claude Code 中运行）："
 echo -e "  ${CYAN}/plugin install vibeflow@vibeflow${RESET}"
 echo ""

@@ -207,9 +207,7 @@ Write-Host ""
 Write-Host "  Marketplace key: $MarketplaceName"
 Write-Host "  Install path:    $TargetDir"
 Write-Host "  Git repo:       $MarketplaceGitUrl"
-if (Test-Path (Join-Path $TargetDir "VERSION")) {
-    Write-Host "  Version:        $((Get-Content (Join-Path $TargetDir 'VERSION') -Raw).Trim())"
-}
+Write-Host "  Version:        $CleanVersion"
 Write-Host ""
 Write-Host "To activate the plugin, run in Claude Code:"
 Write-Host "  /plugin install vibeflow@vibeflow"
