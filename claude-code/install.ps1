@@ -128,6 +128,32 @@ if (-not (Test-Path $MarketplaceJson)) {
 }
 
 # =============================================================================
+# Update version files to reflect installed tag/version
+# =============================================================================
+
+Write-Info "Updating version to $ResolvedRef..."
+
+# Strip "v" prefix if present for cleaner version display
+$CleanVersion = $ResolvedRef -replace '^v', ''
+
+# Update VERSION file
+$VersionFile = Join-Path $TargetDir "VERSION"
+[System.IO.File]::WriteAllText($VersionFile, "$CleanVersion`n", (New-Object System.Text.UTF8Encoding($false)))
+
+# Update marketplace.json version
+try {
+    $mpContent = Get-Content $MarketplaceJson -Raw | ConvertFrom-Json
+    if ($mpContent.plugins -and $mpContent.plugins.Count -gt 0) {
+        $mpContent.plugins[0].version = $CleanVersion
+    }
+    $mpJson = $mpContent | ConvertTo-Json -Depth 10
+    [System.IO.File]::WriteAllText($MarketplaceJson, $mpJson, (New-Object System.Text.UTF8Encoding($false)))
+    Write-Info "Version updated to $CleanVersion"
+} catch {
+    Write-Info "Warning: Could not update marketplace.json version: $_"
+}
+
+# =============================================================================
 # Register in known_marketplaces.json
 # =============================================================================
 

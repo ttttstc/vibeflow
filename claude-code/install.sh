@@ -185,7 +185,56 @@ fi
 SKILL_COUNT=$(find "${TARGET_DIR}/skills" -maxdepth 1 -type d | wc -l | xargs)
 success "验证通过 (${SKILL_COUNT} skills)"
 
-# 5. Register in known_marketplaces.json
+# 5. Update version files to reflect installed tag/version
+info "更新版本为 ${RESOLVED_REF}..."
+
+# Strip "v" prefix if present for cleaner version display
+CLEAN_VERSION="${RESOLVED_REF#v}"
+
+# Update VERSION file
+echo "$CLEAN_VERSION" > "${TARGET_DIR}/VERSION"
+
+# Update marketplace.json version
+update_marketplace_version() {
+  local mp_json="$1"
+  local version="$2"
+  if [[ -f "$mp_json" ]]; then
+    if command -v jq >/dev/null 2>&1; then
+      # Use jq to update the version in plugins array
+      local tmp_file="${mp_json}.tmp"
+      jq --arg v "$version" '(.. | objects | select(has("plugins")) | .plugins[0].version) = $v' "$mp_json" > "$tmp_file" && mv "$tmp_file" "$mp_json"
+    elif command -v python3 >/dev/null 2>&1; then
+      python3 - "$mp_json" "$version" <<'PYEOF'
+import json, sys
+path = sys.argv[1]
+version = sys.argv[2]
+with open(path) as f:
+    data = json.load(f)
+if "plugins" in data and len(data["plugins"]) > 0:
+    data["plugins"][0]["version"] = version
+with open(path, 'w') as f:
+    json.dump(data, f, indent=2)
+PYEOF
+    elif command -v python >/dev/null 2>&1; then
+      python - "$mp_json" "$version" <<'PYEOF'
+import json, sys
+path = sys.argv[1]
+version = sys.argv[2]
+with open(path) as f:
+    data = json.load(f)
+if "plugins" in data and len(data["plugins"]) > 0:
+    data["plugins"][0]["version"] = version
+with open(path, 'w') as f:
+    json.dump(data, f, indent=2)
+PYEOF
+    fi
+  fi
+}
+
+update_marketplace_version "$MARKETPLACE_JSON" "$CLEAN_VERSION"
+success "版本已更新为 ${CLEAN_VERSION}"
+
+# 6. Register in known_marketplaces.json
 info "注册 marketplace..."
 mkdir -p "$CLAUDE_PLUGINS_DIR"
 
