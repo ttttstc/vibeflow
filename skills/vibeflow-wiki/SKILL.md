@@ -123,6 +123,7 @@ description: 维护 `docs/overview/` 轻量 RepoWiki 层，负责中文标准格
 - 模块职责和依赖规则是什么
 - 入口与运行流是什么
 - 哪些结构约束不能被破坏
+- Arc42 / C4 / reverse-spec 推断需要沉淀到哪里
 
 ### `CURRENT-STATE.md`
 
@@ -207,7 +208,7 @@ description: 维护 `docs/overview/` 轻量 RepoWiki 层，负责中文标准格
 具体边界：
 
 - `wiki` 直接基于源码、规则、feature-list 和 active change 生成 overview
-- `ARCHITECTURE.md` 应只沉淀长期有效的结构、边界和约束
+- `ARCHITECTURE.md` 应沉淀长期有效的结构、边界和约束，并统一承接 spec_analyzer / reverse-spec 的 Arc42 深度视图
 - `CURRENT-STATE.md` 承担当前变更关注点、风险提示和建议阅读顺序
 
 ### `vibeflow-router`

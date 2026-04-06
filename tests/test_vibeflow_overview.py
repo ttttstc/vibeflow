@@ -60,6 +60,11 @@ class TestVibeFlowOverview:
         assert "# 架构总览" in architecture_doc
         assert "## 技术快照" in architecture_doc
         assert "<!-- 生成区块:技术快照 开始 -->" in architecture_doc
+        assert "## Arc42 深度架构视图" in architecture_doc
+        assert "<!-- 生成区块:Arc42 架构视图 开始 -->" in architecture_doc
+        assert "C4 分层结构" in architecture_doc
+        assert "模块职责" in architecture_doc
+        assert "Runtime View" in architecture_doc
         assert "# 当前状态" in current_state_doc
         assert "## 当前变更关注点" in current_state_doc
         assert "## 文档同步状态" in current_state_doc
@@ -68,6 +73,8 @@ class TestVibeFlowOverview:
         assert wiki_status["docs"]["PROJECT.md"]["stale"] is False
         assert wiki_status["docs"]["ARCHITECTURE.md"]["stale"] is False
         assert "content_hash" in wiki_status["docs"]["PROJECT.md"]["generated_blocks"]["代码面速览"]
+        assert "content_hash" in wiki_status["docs"]["ARCHITECTURE.md"]["generated_blocks"]["技术快照"]
+        assert "content_hash" in wiki_status["docs"]["ARCHITECTURE.md"]["generated_blocks"]["Arc42 架构视图"]
         assert "CURRENT-STATE.md" in wiki_status["docs"]
 
     def test_refresh_preserves_manual_sections_and_updates_generated_block(self, tmp_path):

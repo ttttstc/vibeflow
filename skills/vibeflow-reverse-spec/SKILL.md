@@ -13,6 +13,7 @@ Refresh the current `docs/overview/` context for an existing codebase so new con
 - key entry points
 - current change focus
 - risks and suggested reading order
+- deep architecture context rendered in `ARCHITECTURE.md` (Arc42 + C4 + inferred runtime/module view)
 
 ## Trigger
 - Explicit: `/vibeflow-reverse-spec`
@@ -30,6 +31,11 @@ Run: python scripts/map-codebase.py --project-root {project_root} --refresh forc
 Output: docs/overview/PROJECT.md + docs/overview/ARCHITECTURE.md
 ```
 
+说明：
+- `ARCHITECTURE.md` 内会统一包含 `spec_analyzer` 的结果
+- 不再额外依赖 `.vibeflow/analysis/` 下过程文件
+- 需要更高保真的职责/运行流时，应把 LLM 推断直接补充进 `ARCHITECTURE.md` 的 Arc42 生成区块
+
 ### Step 2: Refresh current change focus
 ```
 Run: python scripts/map-change-impact.py --project-root {project_root} --source design
@@ -44,7 +50,7 @@ Output: docs/overview/CURRENT-STATE.md
 
 ## Output
 - `docs/overview/PROJECT.md` — long-lived project context
-- `docs/overview/ARCHITECTURE.md` — long-lived architecture context
+- `docs/overview/ARCHITECTURE.md` — long-lived architecture context with Arc42 / C4 / inferred runtime view
 - `docs/overview/CURRENT-STATE.md` — current change focus and sync status
 - `.vibeflow/wiki-status.json` — freshness tracking
 

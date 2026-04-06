@@ -2,7 +2,7 @@
   "version": 1,
   "docs": {
     "PROJECT.md": {
-      "last_refreshed_at": "2026-04-06T18:26:00+08:00",
+      "last_refreshed_at": "2026-04-06T19:04:47+08:00",
       "stale": false,
       "stale_reasons": [],
       "source_hash": "d95cfd1b1c3e2ddc1979114932635da3164428a4515905b00835cb4683846ece",
@@ -11,27 +11,30 @@
           "content_hash": "a32dc60bfb290177a82f7108e72e60dd48342db0f3c3cf1b7ec021ac93ef4ec1"
         }
       },
-      "last_checked_at": "2026-04-06T18:26:00+08:00"
+      "last_checked_at": "2026-04-06T19:04:47+08:00"
     },
     "ARCHITECTURE.md": {
-      "last_refreshed_at": "2026-04-06T18:26:00+08:00",
+      "last_refreshed_at": "2026-04-06T19:04:47+08:00",
       "stale": false,
       "stale_reasons": [],
-      "source_hash": "b290aa6ef2b27fe8ef95f5172b7ec3e72fe262fa5cf10d8ba03c2623cdedfed1",
+      "source_hash": "140a58bad68a1665a848169581c5343a468db1038444409725da40ff8878a58e",
       "generated_blocks": {
         "技术快照": {
-          "content_hash": "4c3e7931e6febcbaba7c459ffe427284339fe8eec7cd64f2e9f1df23c6e7ac5e"
+          "content_hash": "2e2d699e3672ee4442b2417e7729f82224fd81b05755db141d5fd956f13a36fb"
+        },
+        "Arc42 架构视图": {
+          "content_hash": "9b3990931d3fa39759c39c5561a937fae069c33ebfe55009fcdc93b84a46a4ff"
         }
       },
-      "last_checked_at": "2026-04-06T18:26:00+08:00"
+      "last_checked_at": "2026-04-06T19:04:47+08:00"
     },
     "CURRENT-STATE.md": {
-      "last_refreshed_at": "2026-04-06T18:26:00+08:00",
+      "last_refreshed_at": "2026-04-06T19:04:47+08:00",
       "stale": false,
       "stale_reasons": [],
-      "source_hash": "75bf929800dd588cf419a6c329a58cc9e8f13ab3b92b59f5e57df49de851366e",
+      "source_hash": "6da47af4486b12b20d385b820b92b88391677d970ba37109f7f8e75a7a04f382",
       "generated_blocks": {},
-      "last_checked_at": "2026-04-06T18:26:00+08:00"
+      "last_checked_at": "2026-04-06T19:04:47+08:00"
     }
   }
 }

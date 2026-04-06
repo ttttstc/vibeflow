@@ -8,6 +8,7 @@ import re
 from datetime import datetime
 from pathlib import Path
 
+from spec_analyzer.assembler import build_architecture_analysis
 from vibeflow_codebase import build_change_impact, build_codebase_map, change_focus_summary
 from vibeflow_paths import feature_list_path, load_state, path_contract
 
@@ -17,6 +18,7 @@ ARCHITECTURE_DOC = "ARCHITECTURE.md"
 CURRENT_STATE_DOC = "CURRENT-STATE.md"
 PROJECT_BLOCK = "代码面速览"
 ARCHITECTURE_BLOCK = "技术快照"
+ARCHITECTURE_ANALYSIS_BLOCK = "Arc42 架构视图"
 LEGACY_PROJECT_MARKERS = ("# Project - ", "## Summary", "## Current Capabilities")
 LEGACY_ARCHITECTURE_MARKERS = ("# Architecture", "## Technical Snapshot", "## Major Modules")
 GENERATED_BLOCK_MARKER_TEMPLATE = "<!-- 生成区块:{name} {edge} -->"
@@ -199,6 +201,10 @@ def cleanup_legacy_process_files(project_root: Path, contract: dict) -> None:
     legacy_paths = [
         project_root / ".vibeflow" / "codebase-map.json",
         project_root / ".vibeflow" / "codebase-map.md",
+        project_root / ".vibeflow" / "analysis" / "spec-facts.json",
+        project_root / ".vibeflow" / "analysis" / "spec-inferences.json",
+        project_root / ".vibeflow" / "analysis" / "inference-prompt.md",
+        project_root / ".vibeflow" / "analysis" / "architecture-analysis.md",
         project_root / "docs" / "architecture" / ".spec-facts.json",
         project_root / "docs" / "architecture" / ".spec-inferences.json",
         project_root / "docs" / "architecture" / ".inference-prompt.md",
@@ -209,6 +215,9 @@ def cleanup_legacy_process_files(project_root: Path, contract: dict) -> None:
     for path in legacy_paths:
         if path.exists():
             path.unlink()
+    analysis_dir = project_root / ".vibeflow" / "analysis"
+    if analysis_dir.exists() and not any(analysis_dir.iterdir()):
+        analysis_dir.rmdir()
 
 
 def update_doc_status(status: dict, name: str, *, source_hash: str, generated_blocks: dict[str, dict]) -> None:
@@ -364,9 +373,7 @@ def sync_hybrid_doc(
     path: Path,
     template: str,
     *,
-    block_name: str,
-    block_content: str,
-    anchor_heading: str,
+    blocks: list[tuple[str, str, str]],
     force: bool,
     legacy_markers: tuple[str, ...],
 ) -> Path:
@@ -377,7 +384,9 @@ def sync_hybrid_doc(
     if force or looks_like_legacy_doc(current, legacy_markers):
         return write_text(path, template)
 
-    updated = replace_generated_block(current, block_name, block_content, anchor_heading)
+    updated = current
+    for block_name, block_content, anchor_heading in blocks:
+        updated = replace_generated_block(updated, block_name, block_content, anchor_heading)
     if updated != current:
         return write_text(path, updated)
     return path
@@ -417,6 +426,7 @@ def render_architecture_block(snapshot: dict) -> str:
             f"- 测试根目录：{test_roots}",
             f"- 主要模块：{modules}",
             f"- 关键入口：{entrypoints}",
+            "- 深度架构分析：见下方 Arc42 架构视图生成区块",
         ]
     )
 
@@ -438,10 +448,16 @@ def project_doc_source_inputs(project_root: Path, state: dict, contract: dict, s
     }
 
 
-def architecture_doc_source_inputs(project_root: Path, contract: dict, snapshot: dict | None = None) -> dict:
+def architecture_doc_source_inputs(
+    project_root: Path,
+    contract: dict,
+    snapshot: dict | None = None,
+    analysis: dict | None = None,
+) -> dict:
     return {
         "snapshot": snapshot or codebase_snapshot(project_root, contract),
         "rules": rules_snapshot(project_root),
+        "arc42": (analysis or build_architecture_analysis(project_root)).get("signature", {}),
     }
 
 
@@ -552,9 +568,16 @@ def render_project_template(project_root: Path, state: dict, contract: dict, sna
     return content.rstrip() + "\n", block_content, source_hash
 
 
-def render_architecture_template(project_root: Path, contract: dict, snapshot: dict | None = None) -> tuple[str, str, str]:
+def render_architecture_template(
+    project_root: Path,
+    contract: dict,
+    snapshot: dict | None = None,
+    analysis: dict | None = None,
+) -> tuple[str, dict[str, str], str]:
     current_snapshot = snapshot or codebase_snapshot(project_root, contract)
     block_content = render_architecture_block(current_snapshot)
+    current_analysis = analysis or build_architecture_analysis(project_root)
+    analysis_block = current_analysis["markdown"]
     content = "\n".join(
         [
             "# 架构总览",
@@ -575,39 +598,27 @@ def render_architecture_template(project_root: Path, contract: dict, snapshot: d
             "",
             render_generated_block(ARCHITECTURE_BLOCK, block_content),
             "",
-            "## 模块职责",
+            "## Arc42 深度架构视图",
             "",
-            "- 待补充：解释每个主要模块负责什么，而不是简单列目录。",
+            render_generated_block(ARCHITECTURE_ANALYSIS_BLOCK, analysis_block),
             "",
-            "## 依赖规则",
+            "## 人工补充",
             "",
-            "- 待补充：说明依赖方向、禁止关系和边界约束。",
-            "",
-            "## 入口与运行流",
-            "",
-            "- 待补充：描述 CLI、脚本、服务入口以及主链路。",
-            "",
-            "## 关键状态与数据",
-            "",
-            "- 待补充：记录状态文件、数据文件、关键运行对象。",
-            "",
-            "## 验证策略",
-            "",
-            "- 待补充：说明 review、system test、qa、coverage 分别验证什么。",
-            "",
-            "## 已知约束与风险",
-            "",
-            "- 待补充：记录技术债、边界条件、宿主差异和高风险区域。",
+            "- 待补充：记录业务边界、静态分析无法看出的外部系统契约，以及已确认的长期设计决策。",
             "",
             "## 更新规则",
             "",
             "- 当目录结构、主要模块、入口点、依赖方向或关键状态模型变化时，必须回写本文件。",
+            "- reverse-spec / spec_analyzer 的深度结果统一刷新到 Arc42 生成区块，不再额外维护过程文件。",
             "- 自动化只允许修改生成区块，其他正文由人工维护。",
             "",
         ]
     )
-    source_hash = stable_hash(architecture_doc_source_inputs(project_root, contract, current_snapshot))
-    return content.rstrip() + "\n", block_content, source_hash
+    source_hash = stable_hash(architecture_doc_source_inputs(project_root, contract, current_snapshot, current_analysis))
+    return content.rstrip() + "\n", {
+        ARCHITECTURE_BLOCK: block_content,
+        ARCHITECTURE_ANALYSIS_BLOCK: analysis_block,
+    }, source_hash
 
 
 def render_change_focus_lines(change_focus: dict) -> list[str]:
@@ -753,27 +764,28 @@ def ensure_overview_docs(project_root: Path, state: dict | None = None, *, force
         contract,
         current_snapshot,
     )
-    architecture_doc, architecture_block, architecture_hash = render_architecture_template(
+    architecture_analysis = build_architecture_analysis(project_root)
+    architecture_doc, architecture_blocks, architecture_hash = render_architecture_template(
         project_root,
         contract,
         current_snapshot,
+        architecture_analysis,
     )
 
     sync_hybrid_doc(
         contract["overview"]["project"],
         project_doc,
-        block_name=PROJECT_BLOCK,
-        block_content=project_block,
-        anchor_heading="代码面速览",
+        blocks=[(PROJECT_BLOCK, project_block, "代码面速览")],
         force=force,
         legacy_markers=LEGACY_PROJECT_MARKERS,
     )
     sync_hybrid_doc(
         contract["overview"]["architecture"],
         architecture_doc,
-        block_name=ARCHITECTURE_BLOCK,
-        block_content=architecture_block,
-        anchor_heading="技术快照",
+        blocks=[
+            (ARCHITECTURE_BLOCK, architecture_blocks[ARCHITECTURE_BLOCK], "技术快照"),
+            (ARCHITECTURE_ANALYSIS_BLOCK, architecture_blocks[ARCHITECTURE_ANALYSIS_BLOCK], "Arc42 深度架构视图"),
+        ],
         force=force,
         legacy_markers=LEGACY_ARCHITECTURE_MARKERS,
     )
@@ -791,7 +803,10 @@ def ensure_overview_docs(project_root: Path, state: dict | None = None, *, force
         status,
         ARCHITECTURE_DOC,
         source_hash=architecture_hash,
-        generated_blocks={ARCHITECTURE_BLOCK: generated_block_state(architecture_block)},
+        generated_blocks={
+            name: generated_block_state(content)
+            for name, content in architecture_blocks.items()
+        },
     )
     save_wiki_status(contract["wiki_status"], status)
     refresh_current_state(project_root, loaded_state, snapshot=current_snapshot, codebase_map=codebase_map)

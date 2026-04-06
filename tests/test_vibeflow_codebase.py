@@ -58,12 +58,15 @@ class TestCodebaseArtifacts:
         assert payload["overview"]["architecture"].endswith("docs\\overview\\ARCHITECTURE.md")
         assert not (project_root / ".vibeflow" / "codebase-map.json").exists()
         assert not (project_root / ".vibeflow" / "codebase-map.md").exists()
+        assert not (project_root / ".vibeflow" / "analysis").exists()
 
         project_doc = (project_root / "docs" / "overview" / "PROJECT.md").read_text(encoding="utf-8")
         architecture_doc = (project_root / "docs" / "overview" / "ARCHITECTURE.md").read_text(encoding="utf-8")
         assert "sample_priority_api" in project_doc
         assert "src" in architecture_doc
         assert "tests" in architecture_doc
+        assert "C4 分层结构" in architecture_doc
+        assert "Arc42 深度架构视图" in architecture_doc
 
     def test_map_change_impact_refreshes_current_state_without_writing_change_scoped_process_files(self, tmp_path):
         project_root = copy_sample_project(tmp_path, "sample-codebase-impact")
@@ -80,6 +83,7 @@ class TestCodebaseArtifacts:
 
         assert not impact_json_path.exists()
         assert not impact_md_path.exists()
+        assert not (project_root / ".vibeflow" / "analysis").exists()
         assert payload["matched_terms"]
         assert payload["relevant_modules"] >= 1
 
