@@ -194,7 +194,42 @@ CLEAN_VERSION="${RESOLVED_REF#v}"
 # Update VERSION file
 echo "$CLEAN_VERSION" > "${TARGET_DIR}/VERSION"
 
-# Update marketplace.json version
+# Update plugin.json + marketplace.json version
+PLUGIN_JSON="${TARGET_DIR}/.claude-plugin/plugin.json"
+
+update_plugin_version() {
+  local plugin_json="$1"
+  local version="$2"
+  if [[ -f "$plugin_json" ]]; then
+    if command -v jq >/dev/null 2>&1; then
+      local tmp_file="${plugin_json}.tmp"
+      jq --arg v "$version" '.version = $v' "$plugin_json" > "$tmp_file" && mv "$tmp_file" "$plugin_json"
+    elif command -v python3 >/dev/null 2>&1; then
+      python3 - "$plugin_json" "$version" <<'PYEOF'
+import json, sys
+path = sys.argv[1]
+version = sys.argv[2]
+with open(path) as f:
+    data = json.load(f)
+data["version"] = version
+with open(path, 'w') as f:
+    json.dump(data, f, indent=2)
+PYEOF
+    elif command -v python >/dev/null 2>&1; then
+      python - "$plugin_json" "$version" <<'PYEOF'
+import json, sys
+path = sys.argv[1]
+version = sys.argv[2]
+with open(path) as f:
+    data = json.load(f)
+data["version"] = version
+with open(path, 'w') as f:
+    json.dump(data, f, indent=2)
+PYEOF
+    fi
+  fi
+}
+
 update_marketplace_version() {
   local mp_json="$1"
   local version="$2"
@@ -231,8 +266,9 @@ PYEOF
   fi
 }
 
+update_plugin_version "$PLUGIN_JSON" "$CLEAN_VERSION"
 update_marketplace_version "$MARKETPLACE_JSON" "$CLEAN_VERSION"
-success "版本已更新为 ${CLEAN_VERSION}"
+success "Manifest 版本已更新为 ${CLEAN_VERSION}"
 
 # 6. Register in known_marketplaces.json
 info "注册 marketplace..."

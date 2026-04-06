@@ -27,4 +27,4 @@ python scripts/run-vibeflow-dashboard.py --project-root .
 ## 说明
 
 - 这是 marketplace plugin 的正式命令入口，供 `/vibeflow-dashboard` 发现与加载
-- 仓库内的 `.claude/commands/vibeflow-dashboard.md` 继续保留，方便本地开发和兼容旧入口
+- 它属于用户可调用 skill，不是内部 skill
