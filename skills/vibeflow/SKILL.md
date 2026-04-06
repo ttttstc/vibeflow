@@ -171,6 +171,7 @@ ls skills/vibeflow-*/
 - vibeflow-test-qa
 - vibeflow-ship
 - vibeflow-reflect
+- vibeflow-learn（独立 companion flow，不参与主链路阶段推进）
 
 ### 4. 验证功能列表已初始化（仅Build阶段）
 
@@ -418,6 +419,7 @@ VibeFlow支持四种工作流程模板。根据项目范围、团队规模和治
 | `vibeflow-review` | 构建后跨功能的整体变更审查 |
 | `vibeflow-test-system` | 构建完成后的系统级测试 |
 | `vibeflow-test-qa` | 系统测试后的浏览器导向QA验证 |
+| `vibeflow-learn` | 独立学习流：把陌生领域学习、研究写作和资料到输出过程工程化，不写入主链路状态 |
 
 ---
 
