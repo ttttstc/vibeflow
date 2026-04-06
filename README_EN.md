@@ -100,6 +100,7 @@ Install entry points for Codex, OpenCode, and other hosts still exist in the rep
 ### Verify Installation
 
 Run `/vibeflow` and confirm the VibeFlow entry flow appears.
+If you also want to verify the plugin-visible utility entries, run `/vibeflow-status` or `/vibeflow-dashboard`.
 
 <details>
 <summary>Update and Uninstall</summary>
