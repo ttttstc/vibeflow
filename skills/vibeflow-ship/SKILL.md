@@ -86,9 +86,112 @@ git tag -a vX.Y.Z -m "Release vX.Y.Z"
 
 ### 7. 创建 PR（如工作流配置启用）
 
-使用 `gh pr create` 创建 Pull Request：
-- 标题：`Release vX.Y.Z`
-- 正文：包含功能摘要、测试结果摘要、变更统计
+#### 7a. 确认 PR 配置
+
+从 `.vibeflow/workflow.yaml` 读取 ship 配置：
+```yaml
+ship:
+  version_bump: true|false
+  tag: true|false
+  pr: true|false
+  release_docs: true|false
+  pr_draft: true|false        # 默认 true
+  pr_reviewer: ""             # 可选，如 "owner1,owner2"
+  pr_milestone: ""            # 可选，如 "v1.0.0"
+```
+
+#### 7b. 构建 PR 正文
+
+生成包含完整测试结果和变更摘要的 PR body：
+
+```markdown
+## 发布摘要
+
+**版本**：vX.Y.Z
+**日期**：YYYY-MM-DD
+
+### 测试结果
+| 检查项 | 结果 |
+|--------|------|
+| 单元测试 | PASS |
+| 覆盖率 | XX% 行 / XX% 分支 |
+| 变异得分 | XX% |
+| 系统测试 | Go |
+| QA | Pass（如适用）|
+
+### 关键交付
+- [功能 1]
+- [功能 2]
+
+### 变更统计
+- 文件变更：X 个
+- 新增行：+XXX
+- 删除行：-XXX
+
+### 关联 Issues
+- 总需求 Issue: #X
+- 子任务 Issues: #Y1, #Y2
+
+---
+*由 VibeFlow 自动生成*
+```
+
+#### 7c. 执行 PR 创建
+
+```bash
+# 基本 PR 创建（draft 默认开启）
+gh pr create \
+  --title "Release vX.Y.Z" \
+  --body "## 发布摘要
+..." \
+  --draft
+
+# 带 reviewer（从 workflow.yaml 读取）
+gh pr create \
+  --title "Release vX.Y.Z" \
+  --body "..." \
+  --reviewer owner1,owner2 \
+  --draft
+
+# 带 milestone
+gh pr create \
+  --title "Release vX.Y.Z" \
+  --body "..." \
+  --milestone "v1.0.0" \
+  --draft
+
+# 完整命令示例
+gh pr create \
+  --title "Release vX.Y.Z" \
+  --body "$(cat <<'EOF'
+## 发布摘要
+...
+EOF
+)" \
+  --reviewer "${PR_REVIEWER}" \
+  --milestone "${PR_MILESTONE}" \
+  --draft
+```
+
+#### 7d. 展示 PR 链接
+
+PR 创建后展示链接供用户确认：
+```bash
+gh pr view --json 'url,number,title'
+```
+
+#### 7e. 询问用户是否立即合并
+
+```
+PR #X 已创建：https://github.com/owner/repo/pull/X
+
+是否现在合并？（输入 "y" 合并，"n" 仅创建，稍后手动合并）
+```
+
+如用户选择合并：
+```bash
+gh pr merge --squash --delete-branch
+```
 
 ### 8. 发布摘要
 
@@ -121,14 +224,17 @@ git tag -a vX.Y.Z -m "Release vX.Y.Z"
 
 ## 工作流配置参考
 
-`.vibeflow/workflow.yaml` 中 `ship` 章节可能包含：
+`.vibeflow/workflow.yaml` 中 `ship` 章节完整配置：
 
 ```yaml
 ship:
-  version_bump: true|false
-  tag: true|false
-  pr: true|false
-  release_docs: true|false
+  version_bump: true|false   # 是否自动更新版本号
+  tag: true|false           # 是否创建 git tag
+  pr: true|false           # 是否创建 PR
+  pr_draft: true|false     # 默认创建 draft PR
+  pr_reviewer: ""           # PR reviewers（如 "owner1,owner2"）
+  pr_milestone: ""          # PR milestone（如 "v1.0.0"）
+  release_docs: true|false  # 是否更新发布文档
 ```
 
 按配置跳过不需要的步骤（如 prototype 模板可能不创建 tag 和 PR）。
@@ -138,4 +244,6 @@ ship:
 **调用者：** vibeflow-router 或 vibeflow-test-system/vibeflow-test-qa
 **依赖：** 系统测试 Go + QA 通过（如需要）
 **产出：** 发布提交、RELEASE_NOTES.md、可选 tag 和 PR
+**关联：** vibeflow-repo-sync（Issue 同步由 Tasks 阶段处理）
+
 **链接到：** vibeflow-reflect
