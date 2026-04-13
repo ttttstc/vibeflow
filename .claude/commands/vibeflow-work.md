@@ -1,3 +1,4 @@
+---
 description: 从 Build 阶段开始自动继续后续链路
 ---
 先运行 `python scripts/get-vibeflow-phase.py --project-root . --json` 确认当前阶段。

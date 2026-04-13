@@ -1,3 +1,4 @@
+---
 description: 启动独立学习流（vibeflow-learn）
 ---
 调用 `skills/vibeflow-learn/SKILL.md` 开始独立学习、资料消化与研究写作流程。
