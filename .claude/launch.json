@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "VibeFlow Dashboard",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["scripts/run-vibeflow-dashboard.py", "--project-root", ".", "--host", "127.0.0.1", "--port", "4317"],
+      "port": 4317
+    }
+  ]
+}
